@@ -1,0 +1,12 @@
+{
+    "schema": "input/metadata",
+    "content": [
+        {
+            "table": "领取核销表CouponVerificationTable",
+            "columns": [
+                "用户编号CustomerId",
+                "优惠券类型CouponType"
+            ]
+        }
+    ]
+}

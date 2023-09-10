@@ -1,0 +1,15 @@
+# environment docker image
+
+FROM acr-uat-registry.cn-shanghai.cr.aliyuncs.com/fx-alliance/algorithms/python:latest
+ENV TZ=Asia/Shanghai
+WORKDIR /
+
+ADD docker/.bashrc /root/
+ADD docker/sources.list /etc/apt/
+RUN apt-get clean all && apt-get update -y && apt install -y curl vim
+
+ADD requirements.txt /requirements.txt
+RUN pip install --no-cache-dir --index-url https://mirrors.aliyun.com/pypi/simple --upgrade pip
+RUN pip install --no-cache-dir --index-url https://mirrors.aliyun.com/pypi/simple --requirement requirements.txt
+
+RUN printf "environment 环境镜像构建成功。\n"
