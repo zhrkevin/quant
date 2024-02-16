@@ -31,24 +31,37 @@ class MinIO:
 
     @classmethod
     def write(cls, data, filename, mode='w'):
+        with open(Config['Paths']['DataPath'] / filename, mode=mode) as file:
+            if 'json' in filename:
+                json.dump(data, file, indent=4, ensure_ascii=False)
+            else:
+                file.write(data + '\n')
+
+    @classmethod
+    def read(cls, filename, mode='r'):
+        with open(Config['Paths']['DataPath'] / filename, mode=mode) as file:
+            if 'json' in filename:
+                data = json.load(file)
+            else:
+                data = file.read() + '\n'
+        return data
+
+    @classmethod
+    def upload(cls, filename):
         try:
-            with open(Config['Paths']['DataPath'] / filename, mode=mode) as file:
-                if 'json' in filename:
-                    json.dump(data, file, indent=4, ensure_ascii=False)
-                else:
-                    file.write(data + '\n')
             if cls.mode not in ['development']:
                 cls.client.fput_object(
                     bucket_name=cls.bucket,
                     object_name=filename,
                     file_path=Config['Paths']['DataPath'] / filename,
                 )
-            return data
+            return True
         except Exception as error:
             print(f"{error}\n{traceback.format_exc()}\n")
+            return False
 
     @classmethod
-    def read(cls, filename, mode='r'):
+    def download(cls, filename):
         try:
             if cls.mode not in ['development']:
                 cls.client.fget_object(
@@ -56,24 +69,7 @@ class MinIO:
                     object_name=filename,
                     file_path=Config['Paths']['DataPath'] / filename,
                 )
-            with open(Config['Paths']['DataPath'] / filename, mode=mode) as file:
-                if 'json' in filename:
-                    data = json.load(file)
-                else:
-                    data = file.read() + '\n'
-            return data
+                return True
         except Exception as error:
             print(f"{error}\n{traceback.format_exc()}\n")
-
-    @classmethod
-    def check(cls, filename):
-        try:
-            if cls.mode not in ['development']:
-                cls.client.fget_object(
-                    bucket_name=cls.bucket,
-                    object_name=filename,
-                    file_path=Config['Paths']['DataPath'] / filename
-                )
-            return True
-        except Exception:
             return False

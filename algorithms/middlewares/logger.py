@@ -12,9 +12,13 @@ from algorithms.middlewares.minios import MinIO
 
 class Logger:
 
-    def __new__(cls, code, taskid, information=None, **kwargs):
-        timestamp = datetime.now(ZoneInfo('Asia/Shanghai')).strftime('%F %T.%f %z %Z')
-        logline = f"[{timestamp}] TaskID @ {taskid} <{code}>: {information}"
+    def __new__(cls, taskid, code, information=None, **kwargs):
+        timestamp = datetime.now(ZoneInfo('Asia/Shanghai')).strftime('%F %T %z')
+        logline = f"[{timestamp}] <{code}> @ {taskid} task: {information}"
+
+
+
+
         MinIO.write(data=logline, filename=f"system/logs-{taskid}.log", mode='a+')
         print(logline)
 

@@ -13,36 +13,28 @@ RootPath = Path(__file__).parent.parent
 
 Defaults = {
     'Information': {
-        'ProjectName': 'chatgpt-modeling',
+        'ProjectName': 'quant',
         'PublicHost': '0.0.0.0',
         'LocalHost': '0.0.0.0',
         'AlgorithmsPort': 15001,
         'SchedulersPort': 16001,
-        'Workers': 1,
         'Security': False,
         'Mode': 'development',
     },
     'Callbacks': {
-        'Mock': 'http://0.0.0.0:15001/mock/callbacks/default',
-        'Data': {
-            'GenerateContent': 'http://0.0.0.0:15001/mock/callbacks/generate-content-data',
-            'NLSQL': 'http://0.0.0.0:15001/mock/callbacks/nlsql-data',
-        },
-        'Results': {
-            'GenerateContent': 'http://0.0.0.0:15001/mock/callbacks/generate-content-results',
-            'NLSQL': 'http://0.0.0.0:15001/mock/callbacks/nlsql-results',
-        },
+        'Data': 'http://0.0.0.0:15001/mock/callbacks/quant-data',
+        'Results': 'http://0.0.0.0:15001/mock/callbacks/quant-results',
     },
     'RabbitMQ': {
         'URL': 'amqp://guest:guest@0.0.0.0:5672//',
-        'AlgorithmQueue': 'chatgpt-modeling-algorithm',
-        'CallbackQueue': 'chatgpt-modeling-callback',
+        'AlgorithmQueue': 'quant-algorithm',
+        'CallbackQueue': 'quant-callback',
     },
     'MinIO': {
         'Endpoint': '0.0.0.0:9089',
         'AccessKey': 'guest',
         'SecretKey': 'guestguest',
-        'Bucket': 'chatgpt-modeling',
+        'Bucket': 'quant',
     },
     'Paths': {
         'ProjectPath': RootPath,
@@ -72,7 +64,6 @@ def callback(ctx, processors):
 @click.option('--LocalHost', 'LocalHost', default=Defaults['Information']['LocalHost'])
 @click.option('--AlgorithmsPort', 'AlgorithmsPort', default=Defaults['Information']['AlgorithmsPort'])
 @click.option('--SchedulersPort', 'SchedulersPort', default=Defaults['Information']['SchedulersPort'])
-@click.option('--Workers', 'Workers', default=Defaults['Information']['Workers'])
 @click.option('--Security', 'Security', default=Defaults['Information']['Security'])
 @click.option('--Mode', 'Mode', default=Defaults['Information']['Mode'])
 @click.pass_context
@@ -98,9 +89,8 @@ def information(ctx, **kwargs):
 def information_config(ctx, **kwargs):
     ctx.meta['Callbacks'].update(
         {
-            'Mock': Defaults['Callbacks']['Mock'],
-            'Data': eval(kwargs['Data']),
-            'Results': eval(kwargs['Results']),
+            'Data': kwargs['Data'],
+            'Results': kwargs['Results'],
         }
     )
 

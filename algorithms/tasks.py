@@ -6,7 +6,7 @@
 
 from project.configuration import Config
 from algorithms.middlewares import Logger, MessageQueue
-from algorithms.core import NLSQL, GenerateContent
+from algorithms.core import NLSQL
 
 
 class DataTask:
@@ -46,20 +46,6 @@ class AlgorithmsTask:
             body = {
                 'url': Config['Callbacks']['Results']['NLSQL'],
                 'information': Logger(code=outputs['code'], taskid=outputs['taskid'], information=outputs['information'], sql=outputs['content'])
-            }
-        elif algorithm == 'generate-content':
-            model = models[algorithm] if models else GenerateContent()
-            outputs = model.run(
-                taskid,
-                version,
-                system=inputs['input/texts']['system'],
-                message=inputs['input/texts']['message'],
-                prompt=inputs['input/texts']['prompt'],
-            )
-
-            body = {
-                'url': Config['Callbacks']['Results']['GenerateContent'],
-                'information': Logger(code=outputs['code'], taskid=outputs['taskid'], information=outputs['information'])
             }
         else:
             raise TypeError(f"算法任务 [{algorithm}] 类型错误，请检查算法任务名称。")
