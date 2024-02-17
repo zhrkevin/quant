@@ -6,7 +6,7 @@
 
 from project.configuration import Config
 from algorithms.middlewares import Logger, MessageQueue
-from algorithms.core import NLSQL, GenerateContent
+from algorithms.core import NLSQL, SSE
 
 
 class DataTask:
@@ -20,7 +20,7 @@ class DataTask:
                 'url': Config['Callbacks']['Data']['NLSQL'],
                 'information': Logger(code=100, taskid=taskid, information=f"算法任务 [{algorithm}] 的所有数据准备完成。"),
             }
-        elif algorithm == 'generate-content':
+        elif algorithm == 'quant':
             body = {
                 'url': Config['Callbacks']['Data']['GenerateContent'],
                 'information': Logger(code=100, taskid=taskid, information=f"算法任务 [{algorithm}] 的所有数据准备完成。"),
@@ -47,15 +47,9 @@ class AlgorithmsTask:
                 'url': Config['Callbacks']['Results']['NLSQL'],
                 'information': Logger(code=outputs['code'], taskid=outputs['taskid'], information=outputs['information'], sql=outputs['content'])
             }
-        elif algorithm == 'generate-content':
-            model = models[algorithm] if models else GenerateContent()
-            outputs = model.run(
-                taskid,
-                version,
-                system=inputs['input/texts']['system'],
-                message=inputs['input/texts']['message'],
-                prompt=inputs['input/texts']['prompt'],
-            )
+        elif algorithm == 'quant':
+            model = models[algorithm] if models else SSE()
+            outputs = model.run()
 
             body = {
                 'url': Config['Callbacks']['Results']['GenerateContent'],

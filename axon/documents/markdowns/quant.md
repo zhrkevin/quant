@@ -17,10 +17,8 @@
 
         &nbsp; :fontawesome-regular-file: &zwnj; __内容 (body)__
         ``` json linenums="1"
-        --8<-- "./examples/generate-content/input-texts.json"
+        --8<-- "./examples/quant/input-texts.json"
         ```
-
-        {{ read_excel('./examples/generate-content/explanation.xlsx', sheet_name='input-texts', engine='openpyxl') }}
 
     ===! "响应 (response)"
 
@@ -92,19 +90,15 @@
  
         &nbsp; :fontawesome-solid-check: &zwnj; __成功 (success)__
         ``` json linenums="1"
-        --8<-- "./examples/generate-content/input-texts.json"
+        --8<-- "./examples/quant/input-texts.json"
         ```
-
-        {{ read_excel('./examples/generate-content/explanation.xlsx', sheet_name='input-texts', engine='openpyxl') }}
 
     === "响应 (output-results)"
  
         &nbsp; :fontawesome-solid-check: &zwnj; __成功 (success)__
         ``` json linenums="1"
-        --8<-- "./examples/generate-content/output-results.json"
+        --8<-- "./examples/quant/output-results.json"
         ```
-
-        {{ read_excel('./examples/generate-content/explanation.xlsx', sheet_name='output-results', engine='openpyxl') }}
 
     === "异常 (exception)"
 

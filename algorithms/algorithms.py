@@ -12,12 +12,12 @@ from algorithms.tasks import DataTask, AlgorithmsTask
 
 Inputs = {
     "nl-sql": ["input/metadata", "input/question"],
-    "generate-content": ["input/texts"],
+    "quant": ["input/texts"],
 }
 
 Outputs = {
     "nl-sql": ["output/results"],
-    "generate-content": ["output/results"],
+    "quant": ["output/results"],
 }
 
 

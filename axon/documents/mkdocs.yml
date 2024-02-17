@@ -1,17 +1,16 @@
-site_name: ChatGPT 算法模型
+site_name: Quant 模型
 copyright: Copyright &copy; 2023
 
 docs_dir: ../documents
 site_dir: ../homepage
 use_directory_urls: false
 
-repo_name: chatgpt-modeling
-repo_url: https://gitlab.fosun.com/fosun-allience/di/algorithms/chatgpt-modeling.git
+repo_name: quant
+repo_url: https://gitlab.com/zhrkevin-privates/quant.git
 
 nav:
     - 主页: index.md
-    - 自然语言转化 SQL: markdowns/nl-sql.md
-    - 内容生成: markdowns/generate-content.md
+    - Quant 模型: markdowns/quant.md
     - 更新日志: changelog.md
 
 theme:

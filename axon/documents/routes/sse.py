@@ -9,18 +9,10 @@ import json
 from project.configuration import Config
 
 
-class GenerateContent:
+class SSE:
 
     def __new__(cls, openapi):
-        GenerateContentDataPreprocess(openapi)
-        GenerateContentAlgorithmStartup(openapi)
-        GenerateContentDataDownload(openapi)
-
-
-class GenerateContentDataPreprocess:
-
-    def __new__(cls, openapi):
-        with open(Config['Paths']['AxonPath'] / 'documents' / 'examples' / 'quant' / 'input-texts.json') as file:
+        with open(Config['Paths']['AxonPath'] / 'documents' / 'examples' / 'quant' / 'input-texts.json', 'r') as file:
             input_texts = json.load(file)
 
         openapi.path(
@@ -54,10 +46,6 @@ class GenerateContentDataPreprocess:
             },
         )
 
-
-class GenerateContentAlgorithmStartup:
-
-    def __new__(cls, openapi):
         openapi.path(
             path='/api/quant/algorithm-startup',
             operations={
@@ -83,10 +71,6 @@ class GenerateContentAlgorithmStartup:
             },
         )
 
-
-class GenerateContentDataDownload:
-
-    def __new__(cls, openapi):
         openapi.path(
             path='/api/quant/data-download',
             operations={
