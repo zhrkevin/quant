@@ -1,6 +1,0 @@
-{
-    "schema": "output/results",
-    "status": "success",
-    "version": "4",
-    "content": "SELECT CustomerId\nFROM CouponVerificationTable\nWHERE CouponType = '黄金优惠券' AND DATEDIFF(day, ReceiveDate, GETDATE()) <= 7 AND IsVerified = 0;"
-}

@@ -52,7 +52,7 @@
                 }
             }
         },
-        "/api/generate-content/data-preprocess": {
+        "/api/quant/data-preprocess": {
             "put": {
                 "tags": [
                     "Generate Content (内容生成)"
@@ -115,7 +115,7 @@
                 }
             }
         },
-        "/api/generate-content/algorithm-startup": {
+        "/api/quant/algorithm-startup": {
             "post": {
                 "tags": [
                     "Generate Content (内容生成)"
@@ -157,7 +157,7 @@
                 }
             }
         },
-        "/api/generate-content/data-download": {
+        "/api/quant/data-download": {
             "get": {
                 "tags": [
                     "Generate Content (内容生成)"
@@ -175,155 +175,6 @@
                         "schema": {
                             "type": "string",
                             "example": "LeLe9hhWK6FGMbEFcmwjZXVX"
-                        }
-                    },
-                    {
-                        "name": "schema",
-                        "required": "true",
-                        "in": "query",
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "system/logs",
-                                "input/texts",
-                                "output/results"
-                            ]
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Success"
-                    }
-                }
-            }
-        },
-        "/api/nl-sql/data-preprocess": {
-            "put": {
-                "tags": [
-                    "NLSQL (自然语言转化 SQL)"
-                ],
-                "security": [
-                    {
-                        "BearerAuthentication": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "taskid",
-                        "required": "true",
-                        "in": "query",
-                        "schema": {
-                            "type": "string",
-                            "example": "17929488"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": "true",
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "Any"
-                            },
-                            "examples": {
-                                "input/metadata": {
-                                    "value": {
-                                        "schema": "input/metadata",
-                                        "content": [
-                                            {
-                                                "table": "领取核销表CouponVerificationTable",
-                                                "columns": [
-                                                    "用户编号CustomerId",
-                                                    "优惠券类型CouponType"
-                                                ]
-                                            }
-                                        ]
-                                    }
-                                },
-                                "input/question": {
-                                    "value": {
-                                        "schema": "input/question",
-                                        "content": "帮我查一下7天内领过黄金优惠券，但没有核销的用户。"
-                                    }
-                                }
-                            }
-                        },
-                        "application/octet-stream": {
-                            "schema": {
-                                "type": "string",
-                                "format": "binary"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Success"
-                    }
-                }
-            }
-        },
-        "/api/nl-sql/algorithm-startup": {
-            "post": {
-                "tags": [
-                    "NLSQL (自然语言转化 SQL)"
-                ],
-                "security": [
-                    {
-                        "BearerAuthentication": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "taskid",
-                        "required": "true",
-                        "in": "query",
-                        "schema": {
-                            "type": "string",
-                            "example": "17929488"
-                        }
-                    },
-                    {
-                        "name": "version",
-                        "required": "true",
-                        "in": "query",
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "3.5",
-                                "3.5-16k",
-                                "4",
-                                "4-32k"
-                            ]
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Success"
-                    }
-                }
-            }
-        },
-        "/api/nl-sql/data-download": {
-            "get": {
-                "tags": [
-                    "NLSQL (自然语言转化 SQL)"
-                ],
-                "security": [
-                    {
-                        "BearerAuthentication": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "taskid",
-                        "required": "true",
-                        "in": "query",
-                        "schema": {
-                            "type": "string",
-                            "example": "17929488"
                         }
                     },
                     {

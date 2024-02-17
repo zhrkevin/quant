@@ -6,7 +6,7 @@
 
 from project.configuration import Config
 from algorithms.middlewares import Logger, MessageQueue
-from algorithms.core import NLSQL
+from algorithms.core import NLSQL, SSE
 
 
 class DataTask:
@@ -20,7 +20,7 @@ class DataTask:
                 'url': Config['Callbacks']['Data']['NLSQL'],
                 'information': Logger(code=100, taskid=taskid, information=f"算法任务 [{algorithm}] 的所有数据准备完成。"),
             }
-        elif algorithm == 'generate-content':
+        elif algorithm == 'quant':
             body = {
                 'url': Config['Callbacks']['Data']['GenerateContent'],
                 'information': Logger(code=100, taskid=taskid, information=f"算法任务 [{algorithm}] 的所有数据准备完成。"),
@@ -46,6 +46,14 @@ class AlgorithmsTask:
             body = {
                 'url': Config['Callbacks']['Results']['NLSQL'],
                 'information': Logger(code=outputs['code'], taskid=outputs['taskid'], information=outputs['information'], sql=outputs['content'])
+            }
+        elif algorithm == 'quant':
+            model = models[algorithm] if models else SSE()
+            outputs = model.run()
+
+            body = {
+                'url': Config['Callbacks']['Results']['GenerateContent'],
+                'information': Logger(code=outputs['code'], taskid=outputs['taskid'], information=outputs['information'])
             }
         else:
             raise TypeError(f"算法任务 [{algorithm}] 类型错误，请检查算法任务名称。")
