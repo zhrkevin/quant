@@ -20,11 +20,11 @@ class GenerateContent:
 class GenerateContentDataPreprocess:
 
     def __new__(cls, openapi):
-        with open(Config['Paths']['AxonPath'] / 'documents' / 'examples' / 'generate-content' / 'input-texts.json') as file:
+        with open(Config['Paths']['AxonPath'] / 'documents' / 'examples' / 'quant' / 'input-texts.json') as file:
             input_texts = json.load(file)
 
         openapi.path(
-            path='/api/generate-content/data-preprocess',
+            path='/api/quant/data-preprocess',
             operations={
                 'put': {
                     'tags': ['Generate Content (内容生成)'],
@@ -59,7 +59,7 @@ class GenerateContentAlgorithmStartup:
 
     def __new__(cls, openapi):
         openapi.path(
-            path='/api/generate-content/algorithm-startup',
+            path='/api/quant/algorithm-startup',
             operations={
                 'post': {
                     'tags': ['Generate Content (内容生成)'],
@@ -88,7 +88,7 @@ class GenerateContentDataDownload:
 
     def __new__(cls, openapi):
         openapi.path(
-            path='/api/generate-content/data-download',
+            path='/api/quant/data-download',
             operations={
                 'get': {
                     'tags': ['Generate Content (内容生成)'],
