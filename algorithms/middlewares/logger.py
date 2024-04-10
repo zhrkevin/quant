@@ -4,33 +4,32 @@
 # Copyright 2023 for Fosun. All Rights Reserved.
 # -----------------------------------------------
 
+import json
 from datetime import datetime
-from zoneinfo import ZoneInfo
 
+from project.configuration import Config
 from algorithms.middlewares.minios import MinIO
 
 
 class Logger:
 
-    def __new__(cls, taskid, code, information=None, **kwargs):
-        timestamp = datetime.now(ZoneInfo('Asia/Shanghai')).strftime('%F %T %z')
-        logline = f"[{timestamp}] <{code}> @ {taskid} task: {information}"
-
-
-
-
-        MinIO.write(data=logline, filename=f"system/logs-{taskid}.log", mode='a+')
-        print(logline)
-
+    def __new__(cls, code, taskid, information, mode='a+', **kwargs):
         message = {
             'code': code,
             'taskid': taskid,
             'information': information,
-            'timestamp': timestamp,
+            'timestamp': datetime.now().strftime('%F %T.%f'),
             **kwargs,
         }
+        line = json.dumps(message, ensure_ascii=False)
+
+        with open(Config['Paths']['DataPath'] / 'system' / f'logs-{taskid}.log', mode=mode) as file:
+            file.write(line + '\n')
+            print(line)
+
+        MinIO.upload(filename=f'system/logs-{taskid}.log')
         return message
 
 
 if __name__ == '__main__':
-    Logger(code=200, taskid='HaHaHa', information="TestHaHa")
+    Logger(code=200, taskid='SystemLogs', information='Testing 测试。')

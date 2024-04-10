@@ -4,21 +4,17 @@
 # Copyright 2023 for Fosun. All Rights Reserved.
 # -----------------------------------------------
 
-from algorithms.middlewares.logger import Logger
-from algorithms.middlewares.callbacks import Callback
-from algorithms.middlewares.messages import MessageQueue
+from algorithms.middlewares.messages import Callback, MessageQueue
 from algorithms.middlewares.minios import MinIO
+from algorithms.middlewares.logger import Logger
 from algorithms.middlewares.process import Process
 from algorithms.middlewares.authentication import Authorization, Registration, protect
 
 
 __all__ = [
-    'Logger',
-    'Callback',
-    'MessageQueue',
+    'Callback', 'MessageQueue',
     'MinIO',
+    'Logger',
     'Process',
-    'Authorization',
-    'Registration',
-    'protect',
+    'Authorization', 'Registration', 'protect',
 ]

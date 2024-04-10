@@ -13,28 +13,30 @@ RootPath = Path(__file__).parent.parent
 
 Defaults = {
     'Information': {
-        'ProjectName': 'quant',
-        'PublicHost': '0.0.0.0',
-        'LocalHost': '0.0.0.0',
-        'AlgorithmsPort': 15001,
-        'SchedulersPort': 16001,
+        'Project': 'quant',
+        'Host': '0.0.0.0',
+        'AlgorithmPort': 10000,
+        'SchedulerPort': 20000,
         'Security': False,
         'Mode': 'development',
     },
-    'Callbacks': {
-        'Data': 'http://0.0.0.0:15001/mock/callbacks/quant-data',
-        'Results': 'http://0.0.0.0:15001/mock/callbacks/quant-results',
-    },
     'RabbitMQ': {
-        'URL': 'amqp://guest:guest@0.0.0.0:5672//',
-        'AlgorithmQueue': 'quant-algorithm',
-        'CallbackQueue': 'quant-callback',
+        'Endpoint': 'rabbitmq.jingzhi-sh.com:5678/algorithm',
+        'Username': 'algorithm-user',
+        'Password': 'HBbB4NUnQ8yTWhHh',
+    },
+    'Queues': {
+        'Data': 'non-standard-aps-data',
+        'Algorithm': 'non-standard-aps-algorithm',
     },
     'MinIO': {
-        'Endpoint': '0.0.0.0:9089',
-        'AccessKey': 'guest',
-        'SecretKey': 'guestguest',
-        'Bucket': 'quant',
+        'Endpoint': 'minio-api.jingzhi-sh.com:3456',
+        'AccessKey': 'algorithm-user',
+        'SecretKey': '1cciUuToLVqi9tja',
+        'Bucket': 'non-standard-aps',
+    },
+    'Callbacks': {
+        'Mock': 'http://0.0.0.0:10000/callback/mock',
     },
     'Paths': {
         'ProjectPath': RootPath,
@@ -59,70 +61,78 @@ def callback(ctx, processors):
 
 
 @group.command('Information')
-@click.option('--ProjectName', 'ProjectName', default=Defaults['Information']['ProjectName'])
-@click.option('--PublicHost', 'PublicHost', default=Defaults['Information']['PublicHost'])
-@click.option('--LocalHost', 'LocalHost', default=Defaults['Information']['LocalHost'])
-@click.option('--AlgorithmsPort', 'AlgorithmsPort', default=Defaults['Information']['AlgorithmsPort'])
-@click.option('--SchedulersPort', 'SchedulersPort', default=Defaults['Information']['SchedulersPort'])
+@click.option('--Project', 'Project', default=Defaults['Information']['Project'])
+@click.option('--Host', 'Host', default=Defaults['Information']['Host'])
+@click.option('--AlgorithmPort', 'AlgorithmPort', default=Defaults['Information']['AlgorithmPort'])
+@click.option('--SchedulerPort', 'SchedulerPort', default=Defaults['Information']['SchedulerPort'])
 @click.option('--Security', 'Security', default=Defaults['Information']['Security'])
 @click.option('--Mode', 'Mode', default=Defaults['Information']['Mode'])
 @click.pass_context
 def information(ctx, **kwargs):
     ctx.meta['Information'].update(
         {
-            'ProjectName': kwargs['ProjectName'],
-            'PublicHost': kwargs['PublicHost'],
-            'LocalHost': kwargs['LocalHost'],
-            'AlgorithmsPort': kwargs['AlgorithmsPort'],
-            'SchedulersPort': kwargs['SchedulersPort'],
-            'Workers': kwargs['Workers'],
+            'Project': kwargs['Project'],
+            'Host': kwargs['Host'],
+            'AlgorithmPort': kwargs['AlgorithmPort'],
+            'SchedulerPort': kwargs['SchedulerPort'],
             'Security': kwargs['Security'],
             'Mode': kwargs['Mode'],
         }
     )
 
 
-@group.command('Callbacks')
-@click.option('--Data', 'Data', default=Defaults['Callbacks']['Data'])
-@click.option('--Results', 'Results', default=Defaults['Callbacks']['Results'])
-@click.pass_context
-def information_config(ctx, **kwargs):
-    ctx.meta['Callbacks'].update(
-        {
-            'Data': kwargs['Data'],
-            'Results': kwargs['Results'],
-        }
-    )
-
-
 @group.command('RabbitMQ')
-@click.option('--URL', 'URL', default=Defaults['RabbitMQ']['URL'])
-@click.option('--AlgorithmQueue', 'AlgorithmQueue', default=Defaults['RabbitMQ']['AlgorithmQueue'])
-@click.option('--CallbackQueue', 'CallbackQueue', default=Defaults['RabbitMQ']['CallbackQueue'])
+@click.option('--Endpoint', 'Endpoint', default=Defaults['RabbitMQ']['Endpoint'])
+@click.option('--Username', 'Username', default=Defaults['RabbitMQ']['Username'])
+@click.option('--Password', 'Password', default=Defaults['RabbitMQ']['Password'])
 @click.pass_context
 def rabbitmq(ctx, **kwargs):
     ctx.meta['RabbitMQ'].update(
         {
-            'URL': kwargs['URL'],
-            'AlgorithmQueue': kwargs['AlgorithmQueue'],
-            'CallbackQueue': kwargs['CallbackQueue'],
+            'Endpoint': kwargs['Endpoint'],
+            'Username': kwargs['Username'],
+            'Password': kwargs['Password'],
+        }
+    )
+
+
+@group.command('Queues')
+@click.option('--Data', 'Data', default=Defaults['Queues']['Data'])
+@click.option('--Algorithm', 'Algorithm', default=Defaults['Queues']['Algorithm'])
+@click.pass_context
+def queues(ctx, **kwargs):
+    ctx.meta['Queues'].update(
+        {
+            'Data': kwargs['Data'],
+            'Algorithm': kwargs['Algorithm'],
         }
     )
 
 
 @group.command('MinIO')
-@click.option('--Bucket', 'Bucket', default=Defaults['MinIO']['Bucket'])
 @click.option('--Endpoint', 'Endpoint', default=Defaults['MinIO']['Endpoint'])
 @click.option('--AccessKey', 'AccessKey', default=Defaults['MinIO']['AccessKey'])
 @click.option('--SecretKey', 'SecretKey', default=Defaults['MinIO']['SecretKey'])
+@click.option('--Bucket', 'Bucket', default=Defaults['MinIO']['Bucket'])
 @click.pass_context
-def rabbitmq_config(ctx, **kwargs):
+def minio(ctx, **kwargs):
     ctx.meta['MinIO'].update(
         {
             'Endpoint': kwargs['Endpoint'],
             'AccessKey': kwargs['AccessKey'],
             'SecretKey': kwargs['SecretKey'],
             'Bucket': kwargs['Bucket'],
+        }
+    )
+
+
+@group.command('Callbacks')
+@click.option('--Mock', 'Mock', default=Defaults['Callbacks']['Mock'])
+@click.pass_context
+def callbacks(ctx, **kwargs):
+    ctx.meta['Callbacks'].update(
+        {
+            'Mock': kwargs['Mock'],
         }
     )
 

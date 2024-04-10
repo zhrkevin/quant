@@ -16,7 +16,7 @@ from cryptography.hazmat.primitives.serialization import load_pem_private_key, l
 from cryptography.hazmat.primitives.serialization import Encoding, PrivateFormat, PublicFormat, NoEncryption
 
 from project.configuration import Config
-from algorithms.middlewares import Logger
+from algorithms.middlewares.logger import Logger
 
 
 class Registration:
@@ -38,8 +38,8 @@ class Registration:
         }
         with open(Config['Paths']['DataPath'] / 'authentication.key', 'w') as file:
             json.dump(keys, file, indent=4, ensure_ascii=False)
-        message = Logger(code=200, taskid="SystemLogs", information=f"API 授权已注册成功，可申请签名或进行验证。")
-        return message
+
+        Logger(code=200, taskid='SystemLogs', information=f"API 授权已注册成功，可申请签名或进行验证。")
 
 
 class Authorization:
@@ -59,43 +59,43 @@ class Authorization:
     def sign(cls):
         try:
             cls.load()
-            if not Config['Information']['Security']:
-                message = Logger(code=200, taskid="SystemLogs", information=f"API 授权签名申请关闭。")
-            else:
+            if Config['Information']['Security']:
                 b64signature = cls.Private.sign(cls.Cipher, cls.SignatureAlgorithm)
                 signature = b64encode(b64signature).decode('utf-8')
-                message = Logger(code=200, taskid="SystemLogs", information=f"API 授权签名申请成功。", signature=signature)
+            else:
+                signature = True
+            Logger(code=200, taskid='SystemLogs', information=f"API 授权签名验证通过。")
+            return 200, signature
         except Exception as error:
-            print(f"{error}\n{traceback.format_exc()}")
-            message = Logger(code=400, taskid="SystemLogs", information=f"API 授权签名申请失败。", signature=None)
-        return message
+            Logger(code=400, taskid='SystemLogs', information=f"API 授权签名申请失败。\n{error}\n{traceback.format_exc()}")
+            return 400, None
 
     @classmethod
     def verify(cls, signature):
         try:
             cls.load()
-            if not Config['Information']['Security']:
-                message = Logger(code=200, taskid="SystemLogs", information=f"API 授权签名验证关闭。")
-            else:
+            if Config['Information']['Security']:
                 b64signature = b64decode(signature) if signature else 'null'.encode('utf-8')
                 cls.Public.verify(b64signature, cls.Cipher, cls.SignatureAlgorithm)
-                message = Logger(code=200, taskid="SystemLogs", information=f"API 授权签名验证通过。", verification=True)
+            else:
+                pass
+            Logger(code=200, taskid='SystemLogs', information=f"API 授权签名验证通过。")
+            return 200, True
         except Exception as error:
-            print(f"{error}\n{traceback.format_exc()}")
-            message = Logger(code=404, taskid="SystemLogs", information=f"API 授权签名验证失败。", verification=False)
-        return message
+            Logger(code=403, taskid='SystemLogs', information=f"API 授权签名验证失败。\n{error}\n{traceback.format_exc()}")
+            return 403, False
 
 
 def protect():
     def decorator(function):
         @wraps(function)
         async def wrapper(request, *args, **kwargs):
-            message, flag = Authorization.verify(request.token)
+            code, flag = Authorization.verify(request.token)
             if flag:
                 response = await function(request, *args, **kwargs)
                 return response
             else:
-                message = Logger(code=404, taskid="SystemLogs", information="抱歉，您未被授权使用 API 接口，请联系管理员。")
+                message = Logger(code=404, taskid='SystemLogs', information="抱歉，您未被授权使用 API 接口，请联系管理员。")
                 return sanic.response.json(message)
         return wrapper
     return decorator

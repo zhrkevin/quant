@@ -12,11 +12,11 @@ from project.applications import Algorithms, Schedulers
 
 if __name__ == '__main__':
     Algorithms.prepare(
-        host=Config['Information']['LocalHost'],
-        port=Config['Information']['AlgorithmsPort'],
+        host=Config['Information']['Host'],
+        port=Config['Information']['AlgorithmPort'],
     )
     Schedulers.prepare(
-        host=Config['Information']['LocalHost'],
-        port=Config['Information']['SchedulersPort'],
+        host=Config['Information']['Host'],
+        port=Config['Information']['SchedulerPort'],
     )
     Sanic.serve()

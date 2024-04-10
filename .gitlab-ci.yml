@@ -1,0 +1,74 @@
+# ---------------------------------------------------------------
+# Copyright 2024 Jingzhi A&I and Level D&T. All Rights Reserved.
+# ---------------------------------------------------------------
+
+
+variables:
+    IMAGE: "${REGISTRY}/algorithms/non-standard-aps-algorithms"
+    BRANCH: "${CI_COMMIT_BRANCH}"
+    COMMIT: "${CI_COMMIT_SHORT_SHA}"
+
+
+stages:
+    - prepare
+    - build
+    - publish
+    - release
+
+
+prepare-job:
+    stage: prepare
+    tags:
+        - algorithms
+    only:
+        - environment
+        - stable
+        - compile
+        - main
+    script:
+        - pwd
+        - ls -alhF --color=auto ./
+        - docker ps
+        - docker images
+        - docker rmi --force $(docker images "harbor.jingzhi-sh.com/algorithms/*" --all --quiet) || true
+
+
+build-job:
+    stage: build
+    tags:
+        - algorithms
+    only:
+        - environment
+        - stable
+        - compile
+    script:
+        - docker login ${REGISTRY} --username ${USERNAME} --password ${PASSWORD}
+        - docker build --no-cache --file "docker/dockerfile" --target=${BRANCH} --tag ${IMAGE}:${BRANCH}-${COMMIT} .
+
+
+publish-job:
+    stage: publish
+    tags:
+        - algorithms
+    only:
+        - environment
+        - stable
+        - compile
+    script:
+        - docker login ${REGISTRY} --username ${USERNAME} --password ${PASSWORD}
+        - docker tag ${IMAGE}:${BRANCH}-${COMMIT} ${IMAGE}:${BRANCH}-latest
+        - docker push ${IMAGE}:${BRANCH}-${COMMIT}
+        - docker push ${IMAGE}:${BRANCH}-latest
+
+
+release-job:
+    stage: release
+    tags:
+        - algorithms
+    only:
+        - main
+    script:
+        - docker login ${REGISTRY} --username ${USERNAME} --password ${PASSWORD}
+        - docker pull ${IMAGE}:stable-latest
+        - docker tag ${IMAGE}:stable-latest ${IMAGE}:main-latest
+        - docker push ${IMAGE}:main-latest

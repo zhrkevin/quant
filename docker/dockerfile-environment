@@ -1,15 +1,29 @@
-# environment docker image
+# stable version image
 
-FROM acr-uat-registry.cn-shanghai.cr.aliyuncs.com/fx-alliance/algorithms/python:latest
+
+FROM python:3.12 as environment
 ENV TZ=Asia/Shanghai
 WORKDIR /
 
-ADD docker/.bashrc /root/
-ADD docker/sources.list /etc/apt/
-RUN apt-get clean all && apt-get update -y && apt install -y curl vim
+ADD docker/.bashrc /root/.bashrc
+ADD docker/debian.sources /etc/apt/sources.list.d/debian.sources
+RUN apt-get update -y && apt-get install -y vim
 
 ADD requirements.txt /requirements.txt
-RUN pip install --no-cache-dir --index-url https://mirrors.aliyun.com/pypi/simple --upgrade pip
-RUN pip install --no-cache-dir --index-url https://mirrors.aliyun.com/pypi/simple --requirement requirements.txt
+RUN pip install --index-url https://mirrors.aliyun.com/pypi/simple --upgrade pip setuptools
+RUN pip install --index-url https://mirrors.aliyun.com/pypi/simple --requirement requirements.txt
 
-RUN printf "environment 环境镜像构建成功。\n"
+
+
+FROM quant:environment-latest as stable
+WORKDIR /application
+ADD . /application
+CMD ["bash", "run.sh"]
+
+
+
+FROM quant:environment-latest as compile
+WORKDIR /application
+ADD . /application
+RUN python project/setup.py build && python project/setup.py clean
+CMD ["bash", "run.sh"]

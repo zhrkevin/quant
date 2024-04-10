@@ -8,9 +8,9 @@ import copy
 import json
 import psutil
 import multiprocess
-from datetime import datetime
 
 from project.configuration import Config
+from algorithms.middlewares import Logger
 
 
 class Process:
@@ -27,12 +27,8 @@ class Process:
         pid = copy.deepcopy(process.pid)
         with open(Config['Paths']['DataPath'] / 'system' / f'pid-{self.taskid}.pid', 'w') as file:
             json.dump(pid, file)
-        message = {
-            'code': 200,
-            'taskid': self.taskid,
-            'information': f"任务 PID [{pid}] 已启动。",
-            'timestamp': datetime.now().strftime('%F %T.%f'),
-        }
+
+        message = Logger(code=200, taskid=self.taskid, information=f"任务 PID [{pid}] 已启动。")
         return message
 
     def stop(self):
@@ -41,10 +37,6 @@ class Process:
         process = psutil.Process(pid)
         process.kill() if process.status() == 'running' else None
         process.wait()
-        message = {
-            'code': 200,
-            'taskid': self.taskid,
-            'information': f"任务 PID [{pid}] 已暂停。",
-            'timestamp': datetime.now().strftime('%F %T.%f'),
-        }
+
+        message = Logger(code=200, taskid=self.taskid, information=f"任务 PID [{pid}] 已终止。")
         return message

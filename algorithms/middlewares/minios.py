@@ -4,6 +4,7 @@
 # Copyright 2023 for Fosun. All Rights Reserved.
 # -----------------------------------------------
 
+import os
 import json
 import traceback
 from minio import Minio
@@ -13,49 +14,42 @@ from project.configuration import Config
 
 class MinIO:
 
+    mode = Config['Information']['Mode']
     client = Minio(
         endpoint=Config['MinIO']['Endpoint'],
-        # endpoint="47.101.176.221:9089",
         access_key=Config['MinIO']['AccessKey'],
         secret_key=Config['MinIO']['SecretKey'],
-        secure=False
     )
     bucket = Config['MinIO']['Bucket']
-    mode = Config['Information']['Mode']
 
     def __new__(cls, *args, **kwargs):
-        cls.write(data="\t", filename=f"system/logs-SystemLogs.log", mode='w')
-        if cls.mode not in ['development']:
-            if not cls.client.bucket_exists(cls.bucket):
-                cls.client.make_bucket(cls.bucket)
+        if cls.mode not in ['development'] and not cls.client.bucket_exists(cls.bucket):
+            cls.client.make_bucket(cls.bucket)
 
     @classmethod
-    def write(cls, data, filename, mode='w'):
-        with open(Config['Paths']['DataPath'] / filename, mode=mode) as file:
-            if 'json' in filename:
-                json.dump(data, file, indent=4, ensure_ascii=False)
-            else:
-                file.write(data + '\n')
+    def write(cls, data, filename):
+        with open(Config['Paths']['DataPath'] / filename, mode='w') as file:
+            json.dump(data, file, indent=4, ensure_ascii=False)
 
     @classmethod
-    def read(cls, filename, mode='r'):
-        with open(Config['Paths']['DataPath'] / filename, mode=mode) as file:
-            if 'json' in filename:
-                data = json.load(file)
-            else:
-                data = file.read() + '\n'
+    def read(cls, filename):
+        with open(Config['Paths']['DataPath'] / filename, mode='r') as file:
+            data = json.load(file)
         return data
 
     @classmethod
     def upload(cls, filename):
         try:
-            if cls.mode not in ['development']:
+            if cls.mode in ['development']:
+                return os.path.exists(Config['Paths']['DataPath'] / filename)
+            else:
                 cls.client.fput_object(
                     bucket_name=cls.bucket,
                     object_name=filename,
                     file_path=Config['Paths']['DataPath'] / filename,
+                    content_type='text/plain',
                 )
-            return True
+                return True
         except Exception as error:
             print(f"{error}\n{traceback.format_exc()}\n")
             return False
@@ -63,7 +57,9 @@ class MinIO:
     @classmethod
     def download(cls, filename):
         try:
-            if cls.mode not in ['development']:
+            if cls.mode in ['development']:
+                return os.path.exists(Config['Paths']['DataPath'] / filename)
+            else:
                 cls.client.fget_object(
                     bucket_name=cls.bucket,
                     object_name=filename,
@@ -73,3 +69,11 @@ class MinIO:
         except Exception as error:
             print(f"{error}\n{traceback.format_exc()}\n")
             return False
+
+    @classmethod
+    def exist(cls, filename):
+        return os.path.exists(Config['Paths']['DataPath'] / filename)
+
+
+if __name__ == '__main__':
+    MinIO()

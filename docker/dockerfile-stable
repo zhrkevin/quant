@@ -4,5 +4,5 @@ FROM acr-uat-registry.cn-shanghai.cr.aliyuncs.com/fx-alliance/algorithms/chatgpt
 ARG Compile
 
 ADD ./ /application
-RUN if [ $Compile = true ]; then cd /application/axon/compile && python run.py compile; fi
+RUN if [ $Compile = true ]; then cd /application/axon/compile && python setup.py compile; fi
 RUN printf "stable 版本镜像构建成功。\n"
