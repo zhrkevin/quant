@@ -1,8 +1,0 @@
-# stable package docker image
-
-FROM acr-uat-registry.cn-shanghai.cr.aliyuncs.com/fx-alliance/algorithms/chatgpt-modeling:environment
-ARG Compile
-
-ADD ./ /application
-RUN if [ $Compile = true ]; then cd /application/axon/compile && python setup.py compile; fi
-RUN printf "stable 版本镜像构建成功。\n"

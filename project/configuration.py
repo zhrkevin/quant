@@ -26,14 +26,14 @@ Defaults = {
         'Password': 'HBbB4NUnQ8yTWhHh',
     },
     'Queues': {
-        'Data': 'non-standard-aps-data',
-        'Algorithm': 'non-standard-aps-algorithm',
+        'Data': 'quant-data',
+        'Algorithm': 'quant-algorithm',
     },
     'MinIO': {
         'Endpoint': 'minio-api.jingzhi-sh.com:3456',
         'AccessKey': 'algorithm-user',
         'SecretKey': '1cciUuToLVqi9tja',
-        'Bucket': 'non-standard-aps',
+        'Bucket': 'quant',
     },
     'Callbacks': {
         'Mock': 'http://0.0.0.0:10000/callback/mock',
