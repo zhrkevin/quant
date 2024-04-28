@@ -1,16 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# -----------------------------------------------
-# Copyright 2023 for Fosun. All Rights Reserved.
-# -----------------------------------------------
+# ---------------------------------------------------------
+# Copyright 2024 for Jingzhi & Level. All Rights Reserved.
+# ---------------------------------------------------------
 
 import httpx
 import traceback
-from datetime import datetime
 from kombu import Connection, Exchange, Queue
 
 from project.configuration import Config
-from algorithms.middlewares.logger import Logger
 
 
 class MessageQueue:
@@ -24,10 +22,7 @@ class MessageQueue:
     @classmethod
     def produce(cls, queue, body):
         try:
-            if cls.mode in ['development']:
-                pass
-            else:
-                # print('produce')
+            if cls.mode not in ['development']:
                 queues = Queue(
                     name=queue,
                     exchange=Exchange(name=queue, type="topic", durable=True)
@@ -37,16 +32,11 @@ class MessageQueue:
                         producer.publish(body=body, declare=[queues])
         except Exception as error:
             print(f"错误信息：{error}\n{traceback.format_exc()}")
-        message = Logger(code=200, taskid='SystemLogs', information=f"算法任务消息已发出。")
-        return message
 
     @classmethod
     def consume(cls, queue, acknowledge):
         try:
-            if cls.mode in ['development']:
-                pass
-            else:
-                # print('consume')
+            if cls.mode not in ['development']:
                 queues = Queue(
                     name=queue,
                     exchange=Exchange(name=queue, type="topic", durable=True)
@@ -61,13 +51,15 @@ class MessageQueue:
 
 class Callback:
 
-    def __init__(self, url, body):
+    # 本机 Development 模式调试时，注意关闭本机的代理 vpn
+
+    def __new__(cls, url, message):
         try:
-            response = httpx.post(url=url, json=body)
-            assert response.is_success, f"<{response.status_code}>: {response.text}"
-            print(f"后端服务请求成功。\n{datetime.now().strftime('%F %T.%f')} <{response.status_code}>: {response.json()}")
+            response = httpx.post(url=url, json=message, timeout=4)
+            assert response.is_success, f"<{response.status_code}>: {response.json()}"
+            print(f"回调后端服务请求成功。<{response.status_code}>: {response.json()}")
         except Exception as error:
-            print(f"后端服务请求失败。\n{datetime.now().strftime('%F %T.%f')} {error}\n{traceback.format_exc()}")
+            print(f"回调后端服务请求失败。<500>: {error}")
 
 
 if __name__ == '__main__':

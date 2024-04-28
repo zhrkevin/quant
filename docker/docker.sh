@@ -14,25 +14,25 @@ IMAGE='quant'
 CONTAINER='quant'
 
 
-if [[ ${Operation} = 'build' ]]; then
+if [[ ${OPERATION} = 'build' ]]; then
     docker build \
         --no-cache \
         --progress plain \
         --file 'docker/dockerfile' \
         --target=${BRANCH} \
         --tag ${IMAGE}:${BRANCH}-latest .
-elif [[ ${Operation} = 'up' ]]; then
+elif [[ ${OPERATION} = 'up' ]]; then
     docker run \
         --restart always \
         --name ${CONTAINER} \
         --hostname ${CONTAINER} \
         --publish 15001:10000 \
         --detach --interactive --tty ${IMAGE}:${BRANCH}-latest
-elif [[ ${Operation} = 'down' ]]; then
+elif [[ ${OPERATION} = 'down' ]]; then
     docker rm --force ${CONTAINER}
-elif [[ ${Operation} = 'remove' ]]; then
+elif [[ ${OPERATION} = 'remove' ]]; then
     docker rmi --force ${IMAGE}:${BRANCH}-latest
-elif [[ ${Operation} = 'check' ]]; then
+elif [[ ${OPERATION} = 'check' ]]; then
     pwd
     ls -alhF --color=auto ./
     docker ps

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# -----------------------------------------------
-# Copyright 2023 for Fosun. All Rights Reserved.
-# -----------------------------------------------
+# ---------------------------------------------------------
+# Copyright 2024 for Jingzhi & Level. All Rights Reserved.
+# ---------------------------------------------------------
 
 from json import JSONEncoder
 from datetime import datetime

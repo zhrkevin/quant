@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# -----------------------------------------------
-# Copyright 2023 for Fosun. All Rights Reserved.
-# -----------------------------------------------
+# ---------------------------------------------------------
+# Copyright 2024 for Jingzhi & Level. All Rights Reserved.
+# ---------------------------------------------------------
 
 import json
 import sanic
 import traceback
 from functools import wraps
+from sanic.log import logger
 from datetime import datetime
 from base64 import b64encode, b64decode
 from cryptography.hazmat.primitives import hashes
@@ -16,7 +17,6 @@ from cryptography.hazmat.primitives.serialization import load_pem_private_key, l
 from cryptography.hazmat.primitives.serialization import Encoding, PrivateFormat, PublicFormat, NoEncryption
 
 from project.configuration import Config
-from algorithms.middlewares.logger import Logger
 
 
 class Registration:
@@ -33,18 +33,18 @@ class Registration:
 
         keys = {
             'timestamp': datetime.now().strftime("%F %T.%f"),
-            'private': private.decode('utf-8'),
-            'public': public.decode('utf-8'),
+            'private': private.decode(),
+            'public': public.decode(),
         }
         with open(Config['Paths']['DataPath'] / 'authentication.key', 'w') as file:
             json.dump(keys, file, indent=4, ensure_ascii=False)
 
-        Logger(code=200, taskid='SystemLogs', information=f"API 授权已注册成功，可申请签名或进行验证。")
+        logger.info(f"算法 API Authorization 授权，注册成功，可申请签名或进行验证。")
 
 
 class Authorization:
 
-    Cipher = 'AKFkgnm6srb9PANEzvc99UdBXKAWHVPNr8FaSQfQp49T2C6MvpKpLEsHMpg2gNVb'.encode('utf-8')
+    Cipher = 'AKFkgnm6srb9PANEzvc99UdBXKAWHVPNr8FaSQfQp49T2C6MvpKpLEsHMpg2gNVb'.encode()
     SignatureAlgorithm = ec.ECDSA(hashes.SHA512())
     Keys, Private, Public = None, None, None
 
@@ -61,29 +61,29 @@ class Authorization:
             cls.load()
             if Config['Information']['Security']:
                 b64signature = cls.Private.sign(cls.Cipher, cls.SignatureAlgorithm)
-                signature = b64encode(b64signature).decode('utf-8')
+                signature = b64encode(b64signature).decode()
             else:
                 signature = True
-            Logger(code=200, taskid='SystemLogs', information=f"API 授权签名验证通过。")
-            return 200, signature
+            code, flag, message = 200, signature, f"算法 API Authorization 授权，签名通过。"
         except Exception as error:
-            Logger(code=400, taskid='SystemLogs', information=f"API 授权签名申请失败。\n{error}\n{traceback.format_exc()}")
-            return 400, None
+            code, flag, message = 400, None, f"算法 API Authorization 授权，签名失败。\n{error}\n{traceback.format_exc()}"
+        logger.info(message)
+        return code, flag
 
     @classmethod
     def verify(cls, signature):
         try:
             cls.load()
             if Config['Information']['Security']:
-                b64signature = b64decode(signature) if signature else 'null'.encode('utf-8')
+                b64signature = b64decode(signature) if signature else 'null'.encode()
                 cls.Public.verify(b64signature, cls.Cipher, cls.SignatureAlgorithm)
             else:
                 pass
-            Logger(code=200, taskid='SystemLogs', information=f"API 授权签名验证通过。")
-            return 200, True
+            code, flag, message = 200, True, f"算法 API Authorization 授权，验证通过。"
         except Exception as error:
-            Logger(code=403, taskid='SystemLogs', information=f"API 授权签名验证失败。\n{error}\n{traceback.format_exc()}")
-            return 403, False
+            code, flag, message = 200, False, f"算法 API Authorization 授权，验证失败。\n{error}\n{traceback.format_exc()}"
+        logger.info(message)
+        return code, flag
 
 
 def protect():
@@ -95,7 +95,8 @@ def protect():
                 response = await function(request, *args, **kwargs)
                 return response
             else:
-                message = Logger(code=404, taskid='SystemLogs', information="抱歉，您未被授权使用 API 接口，请联系管理员。")
+                message = f"抱歉，您未被授权使用算法 API Authorization 授权，请联系管理员。"
+                logger.error(message)
                 return sanic.response.json(message)
         return wrapper
     return decorator

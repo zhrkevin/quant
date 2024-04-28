@@ -14,7 +14,7 @@
       
       
       <link rel="icon" href="extra/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.4">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.19">
     
     
       
@@ -22,7 +22,7 @@
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.50c56a3b.min.css">
+      <link rel="stylesheet" href="assets/stylesheets/main.66ac8b77.min.css">
       
       
   
@@ -280,7 +280,7 @@
           <li class="md-nav__item">
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
-      前期准备
+      相关依赖服务
     </span>
   </a>
   
@@ -387,7 +387,7 @@
           <li class="md-nav__item">
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
-      前期准备
+      相关依赖服务
     </span>
   </a>
   
@@ -426,56 +426,33 @@
 
 
 <h1 id="_1"></h1>
-<h3 id="project-api"><strong><a href="/swagger/index.html">项目算法接口（Project API）</a></strong></h3>
-<h4 id="_2"><strong>前期准备</strong></h4>
+<h3 id="project-api"><strong><a href="/quant/swagger/index.html">项目算法接口（Project API）</a></strong></h3>
+<h4 id="_2"><strong>相关依赖服务</strong></h4>
 <details class="quote" open="open">
-<summary>相关依赖服务</summary>
+<summary>版本号</summary>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="l l-Scalar l-Scalar-Plain">RabbitMQ 版本 3.11.17</span>
-<span class="l l-Scalar l-Scalar-Plain">MinIO 版本 20230601</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">MinIO版本</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2024-03-30</span>
+<span class="nt">RabbitMQ版本</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3.13.0</span>
 </code></pre></div></td></tr></table></div>
 </details>
 <h4 id="_3"><strong>配置文件</strong></h4>
 <details class="info" open="open">
-<summary>docker 命令行</summary>
-<p><strong>可修改相关启动配置参数</strong>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span></pre></div></td><td class="code"><div><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span><span class="se">\</span>
+<summary>命令行</summary>
+<p><strong>kubernetes / docker 容器配置</strong>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--restart<span class="w"> </span>always<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--network<span class="w"> </span>algorithms<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--publish<span class="w"> </span><span class="si">${</span><span class="nv">宿主机算法服务端口</span><span class="si">}</span>:<span class="si">${</span><span class="nv">容器算法服务端口</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--name<span class="w"> </span><span class="si">${</span><span class="nv">容器名称</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--hostname<span class="w"> </span><span class="si">${</span><span class="nv">容器名称</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--detach<span class="w"> </span>--interactive<span class="w"> </span>--tty<span class="w"> </span><span class="si">${</span><span class="nv">镜像名称</span><span class="si">}</span>:<span class="si">${</span><span class="nv">版本号</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>python<span class="w"> </span>-B<span class="w"> </span>-u<span class="w"> </span>/application/project_main.py<span class="w"> </span><span class="se">\</span>
-<span class="w">        </span>Information<span class="w"> </span><span class="se">\</span>
-<span class="w">            </span>--PublicHost<span class="o">=</span><span class="si">${</span><span class="nv">宿主机对外</span><span class="p"> IP 地址</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
-<span class="w">        </span>Callbacks<span class="w"> </span><span class="se">\</span>
-<span class="w">            </span>--InputsCallback<span class="o">=</span><span class="si">${</span><span class="nv">输入数据回调</span><span class="p"> URL</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
-<span class="w">            </span>--OutputsCallback<span class="o">=</span><span class="si">${</span><span class="nv">输出结果回调</span><span class="p"> URL</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
-<span class="w">        </span>RabbitMQ<span class="w"> </span><span class="se">\</span>
-<span class="w">            </span>--Mode<span class="o">=</span>production<span class="w"> </span><span class="se">\</span>
-<span class="w">            </span>--URL<span class="o">=</span><span class="si">${</span><span class="nv">RabbitMQ</span><span class="p"> 通信 URL</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
-<span class="w">        </span>MinIO<span class="w"> </span><span class="se">\</span>
-<span class="w">            </span>--Mode<span class="o">=</span>production<span class="w"> </span><span class="se">\</span>
-<span class="w">            </span>--Endpoint<span class="o">=</span><span class="si">${</span><span class="nv">MinIO</span><span class="p"> 通信 Endpoint</span><span class="si">}</span>
+<span class="w">    </span>--publish<span class="w"> </span><span class="si">${</span><span class="nv">宿主机算法服务端口</span><span class="si">}</span>:<span class="si">${</span><span class="nv">容器算法服务端口</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--detach<span class="w"> </span>--interactive<span class="w"> </span>--tty<span class="w"> </span><span class="si">${</span><span class="nv">镜像名称</span><span class="si">}</span>:<span class="si">${</span><span class="nv">分支号</span><span class="si">}</span>-latest
+</code></pre></div></td></tr></table></div></p>
+<p><strong>算法引擎启动命令</strong>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>python<span class="w"> </span>-B<span class="w"> </span>-u<span class="w"> </span>/application/project_main.py<span class="w"> </span>Information<span class="w"> </span>--Mode<span class="o">=</span>production
 </code></pre></div></td></tr></table></div></p>
 </details>
 
@@ -534,10 +511,10 @@
     </div>
     
     
-    <script id="__config" type="application/json">{"base": ".", "features": ["content.code.copy", "navigation.top", "search.highlight", "search.suggest"], "search": "assets/javascripts/workers/search.c011b7c0.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}}</script>
+    <script id="__config" type="application/json">{"base": ".", "features": ["content.code.copy", "navigation.top", "search.highlight", "search.suggest"], "search": "assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}}</script>
     
     
-      <script src="assets/javascripts/bundle.7389ff0e.min.js"></script>
+      <script src="assets/javascripts/bundle.dd8806f2.min.js"></script>
       
     
   </body>

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# -----------------------------------------------
-# Copyright 2023 for Fosun. All Rights Reserved.
-# -----------------------------------------------
+# ---------------------------------------------------------
+# Copyright 2024 for Jingzhi & Level. All Rights Reserved.
+# ---------------------------------------------------------
 
 import copy
 import json
@@ -28,7 +28,7 @@ class Process:
         with open(Config['Paths']['DataPath'] / 'system' / f'pid-{self.taskid}.pid', 'w') as file:
             json.dump(pid, file)
 
-        message = Logger(code=200, taskid=self.taskid, information=f"任务 PID [{pid}] 已启动。")
+        message = Logger(code=100, taskid=self.taskid, information=f"任务 PID [{pid}] 已启动。")
         return message
 
     def stop(self):
@@ -38,5 +38,5 @@ class Process:
         process.kill() if process.status() == 'running' else None
         process.wait()
 
-        message = Logger(code=200, taskid=self.taskid, information=f"任务 PID [{pid}] 已终止。")
+        message = Logger(code=100, taskid=self.taskid, information=f"任务 PID [{pid}] 已终止。")
         return message

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# -----------------------------------------------
-# Copyright 2023 for Fosun. All Rights Reserved.
-# -----------------------------------------------
+# ---------------------------------------------------------
+# Copyright 2024 for Jingzhi & Level. All Rights Reserved.
+# ---------------------------------------------------------
 
 import os
 import json
@@ -22,9 +22,12 @@ class MinIO:
     )
     bucket = Config['MinIO']['Bucket']
 
-    def __new__(cls, *args, **kwargs):
-        if cls.mode not in ['development'] and not cls.client.bucket_exists(cls.bucket):
-            cls.client.make_bucket(cls.bucket)
+    if mode not in ['development'] and not client.bucket_exists(bucket):
+        client.make_bucket(bucket)
+
+    @classmethod
+    def exist(cls, filename):
+        return os.path.exists(Config['Paths']['DataPath'] / filename)
 
     @classmethod
     def write(cls, data, filename):
@@ -41,7 +44,7 @@ class MinIO:
     def upload(cls, filename):
         try:
             if cls.mode in ['development']:
-                return os.path.exists(Config['Paths']['DataPath'] / filename)
+                return cls.exist(filename)
             else:
                 cls.client.fput_object(
                     bucket_name=cls.bucket,
@@ -51,14 +54,14 @@ class MinIO:
                 )
                 return True
         except Exception as error:
-            print(f"{error}\n{traceback.format_exc()}\n")
+            print(f"错误信息：{error}\n{traceback.format_exc()}")
             return False
 
     @classmethod
     def download(cls, filename):
         try:
             if cls.mode in ['development']:
-                return os.path.exists(Config['Paths']['DataPath'] / filename)
+                return cls.exist(filename)
             else:
                 cls.client.fget_object(
                     bucket_name=cls.bucket,
@@ -67,12 +70,7 @@ class MinIO:
                 )
                 return True
         except Exception as error:
-            print(f"{error}\n{traceback.format_exc()}\n")
             return False
-
-    @classmethod
-    def exist(cls, filename):
-        return os.path.exists(Config['Paths']['DataPath'] / filename)
 
 
 if __name__ == '__main__':

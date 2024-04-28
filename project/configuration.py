@@ -24,10 +24,7 @@ Defaults = {
         'Endpoint': 'rabbitmq.jingzhi-sh.com:5678/algorithm',
         'Username': 'algorithm-user',
         'Password': 'HBbB4NUnQ8yTWhHh',
-    },
-    'Queues': {
-        'Data': 'quant-data',
-        'Algorithm': 'quant-algorithm',
+        'CallbackQueue': 'quant-callback',
     },
     'MinIO': {
         'Endpoint': 'minio-api.jingzhi-sh.com:3456',

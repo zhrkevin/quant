@@ -1,13 +1,13 @@
 {
     "info": {
-        "description": "Project API documents are on [document page](/).",
-        "title": "Project API",
-        "version": "20230701"
+        "description": "Project API documents are on [document page](/quant).",
+        "title": "Quant API",
+        "version": "2024-04-26 11:47:19"
     },
     "servers": [
         {
-            "url": "/",
-            "description": "Production Server"
+            "url": "/quant",
+            "description": "Production"
         }
     ],
     "paths": {

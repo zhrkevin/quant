@@ -18,7 +18,7 @@ RUN pip install --index-url https://mirrors.aliyun.com/pypi/simple --requirement
 FROM quant:environment-latest as stable
 WORKDIR /application
 ADD . /application
-CMD ["bash", "run.sh"]
+CMD bash run.sh
 
 
 
@@ -26,4 +26,4 @@ FROM quant:environment-latest as compile
 WORKDIR /application
 ADD . /application
 RUN python project/setup.py build && python project/setup.py clean
-CMD ["bash", "run.sh"]
+CMD bash run.sh

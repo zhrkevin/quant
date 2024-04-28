@@ -4,11 +4,9 @@
 # Copyright 2023 for Fosun. All Rights Reserved.
 # -----------------------------------------------
 
-from .sse import SSE
-from .platform import Platform
+from algorithms.openapi.run import OpenAPI
 
 
 __all__ = [
-    'SSE',
-    'Platform',
+    'OpenAPI',
 ]

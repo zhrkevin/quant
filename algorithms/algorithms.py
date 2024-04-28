@@ -41,7 +41,7 @@ class DataPreprocess:
         try:
             MinIO.write(data=cls.data, filename=f"{cls.schema}-{cls.taskid}.json")
             unavailable = [
-                f"{schema}-{cls.taskid}.json" for schema in Inputs[cls.algorithm] if not MinIO.check(filename=f"{schema}-{cls.taskid}.json")
+                f"{schema}-{cls.taskid}.json" for schema in Inputs[cls.algorithm] if not MinIO.download(filename=f"{schema}-{cls.taskid}.json")
             ]
             DataTask(taskid=cls.taskid, algorithm=cls.algorithm, unavailable=unavailable)
         except FileExistsError as warning:
