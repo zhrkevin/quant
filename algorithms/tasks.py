@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# -----------------------------------------------
-# Copyright 2023 for Fosun. All Rights Reserved.
-# -----------------------------------------------
+# ---------------------------------------------
+# Copyright 2015 for Zen. All Rights Reserved.
+# ---------------------------------------------
 
 from project.configuration import Config
 from algorithms.middlewares import Logger, MessageQueue

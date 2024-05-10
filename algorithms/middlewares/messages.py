@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# ---------------------------------------------------------
-# Copyright 2024 for Jingzhi & Level. All Rights Reserved.
-# ---------------------------------------------------------
+# ---------------------------------------------
+# Copyright 2015 for Zen. All Rights Reserved.
+# ---------------------------------------------
 
 import httpx
 import traceback

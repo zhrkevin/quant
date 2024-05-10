@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# -----------------------------------------------
-# Copyright 2023 for Fosun. All Rights Reserved.
-# -----------------------------------------------
+# ---------------------------------------------
+# Copyright 2015 for Zen. All Rights Reserved.
+# ---------------------------------------------
 
 import sanic
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -12,7 +12,7 @@ from algorithms.middlewares import Logger
 from algorithms.schedulers import AlgorithmScheduler, CallbackScheduler, CleanScheduler
 
 
-schedulers_blueprint = sanic.Blueprint(name='SchedulersBlueprint')
+schedulers_blueprint = sanic.Blueprint(name='SchedulersBlueprint', url_prefix='/quant')
 
 
 @schedulers_blueprint.after_server_start

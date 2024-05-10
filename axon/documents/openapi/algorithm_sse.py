@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# -----------------------------------------------
-# Copyright 2023 for Fosun. All Rights Reserved.
-# -----------------------------------------------
+# ---------------------------------------------
+# Copyright 2015 for Zen. All Rights Reserved.
+# ---------------------------------------------
 
 import json
 
@@ -11,19 +11,20 @@ from project.configuration import Config
 
 class SSE:
 
-    def __new__(cls, openapi):
-        with open(Config['Paths']['AxonPath'] / 'documents' / 'examples' / 'quant' / 'input-texts.json', 'r') as file:
+    def __init__(self, openapi):
+        with open(Config['Paths']['AxonPath'] / 'documents' / 'examples' / 'quant' / 'input-texts.json', encoding='utf-8') as file:
             input_texts = json.load(file)
 
         openapi.path(
             path='/api/quant/data-preprocess',
             operations={
                 'put': {
-                    'tags': ['Generate Content (内容生成)'],
-                    'security': [{'BearerAuthentication': []}],
+                    'summary': '数据处理',
+                    'tags': ['Quant'],
+                    'security': [{'Bearer': []}],
                     'parameters': [
                         {
-                            'name': 'taskid',
+                            'name': 'TaskID',
                             'required': 'true',
                             'in': 'query',
                             'schema': {'type': 'string', 'example': 'LeLe9hhWK6FGMbEFcmwjZXVX'}
@@ -50,17 +51,18 @@ class SSE:
             path='/api/quant/algorithm-startup',
             operations={
                 'post': {
-                    'tags': ['Generate Content (内容生成)'],
-                    'security': [{'BearerAuthentication': []}],
+                    'summary': '算法计算',
+                    'tags': ['Quant'],
+                    'security': [{'Bearer': []}],
                     'parameters': [
                         {
-                            'name': 'taskid',
+                            'name': 'TaskID',
                             'required': 'true',
                             'in': 'query',
                             'schema': {'type': 'string', 'example': 'LeLe9hhWK6FGMbEFcmwjZXVX'},
                         },
                         {
-                            'name': 'version',
+                            'name': 'Version',
                             'required': 'true',
                             'in': 'query',
                             'schema': {'type': 'string', 'enum': ['3.5', '3.5-16k', '4', '4-32k']},
@@ -75,17 +77,18 @@ class SSE:
             path='/api/quant/data-download',
             operations={
                 'get': {
-                    'tags': ['Generate Content (内容生成)'],
-                    'security': [{'BearerAuthentication': []}],
+                    'summary': '文件查询',
+                    'tags': ['Quant'],
+                    'security': [{'Bearer': []}],
                     'parameters': [
                         {
-                            'name': 'taskid',
+                            'name': 'TaskID',
                             'required': 'true',
                             'in': 'query',
                             'schema': {'type': 'string', 'example': 'LeLe9hhWK6FGMbEFcmwjZXVX'},
                         },
                         {
-                            'name': 'schema',
+                            'name': 'Schema',
                             'required': 'true',
                             'in': 'query',
                             'schema': {'type': 'string', 'enum': ['system/logs', 'input/texts', 'output/results']},

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# ---------------------------------------------------------
-# Copyright 2024 for Jingzhi & Level. All Rights Reserved.
-# ---------------------------------------------------------
+# ---------------------------------------------
+# Copyright 2015 for Zen. All Rights Reserved.
+# ---------------------------------------------
 
 from json import JSONEncoder
 from datetime import datetime

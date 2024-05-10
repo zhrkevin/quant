@@ -1,14 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# -----------------------------------------------
-# Copyright 2023 for Fosun. All Rights Reserved.
-# -----------------------------------------------
+# ---------------------------------------------
+# Copyright 2015 for Zen. All Rights Reserved.
+# ---------------------------------------------
 
+import json
 import click
-from pathlib import Path
+from datetime import datetime
+from pathlib import Path, PosixPath
 
 
-RootPath = Path(__file__).parent.parent
+ProjectPath = Path(__file__).parent.parent
+Version = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 
 Defaults = {
@@ -18,13 +21,8 @@ Defaults = {
         'AlgorithmPort': 10000,
         'SchedulerPort': 20000,
         'Security': False,
+        'Version': Version,
         'Mode': 'development',
-    },
-    'RabbitMQ': {
-        'Endpoint': 'rabbitmq.jingzhi-sh.com:5678/algorithm',
-        'Username': 'algorithm-user',
-        'Password': 'HBbB4NUnQ8yTWhHh',
-        'CallbackQueue': 'quant-callback',
     },
     'MinIO': {
         'Endpoint': 'minio-api.jingzhi-sh.com:3456',
@@ -32,15 +30,21 @@ Defaults = {
         'SecretKey': '1cciUuToLVqi9tja',
         'Bucket': 'quant',
     },
+    'RabbitMQ': {
+        'Endpoint': 'rabbitmq.jingzhi-sh.com:5678/algorithm',
+        'Username': 'algorithm-user',
+        'Password': 'HBbB4NUnQ8yTWhHh',
+        'CallbackQueue': 'quant-callback',
+    },
     'Callbacks': {
-        'Mock': 'http://0.0.0.0:10000/callback/mock',
+        'Mock': 'http://0.0.0.0:10000/quant/callback/mock',
     },
     'Paths': {
-        'ProjectPath': RootPath,
-        'AlgorithmsPath': RootPath / 'algorithms',
-        'ApiPath': RootPath / 'api',
-        'AxonPath': RootPath / 'axon',
-        'DataPath': RootPath / 'data',
+        'ProjectPath': ProjectPath,
+        'AlgorithmsPath': ProjectPath / 'algorithms',
+        'ApiPath': ProjectPath / 'api',
+        'AxonPath': ProjectPath / 'axon',
+        'DataPath': ProjectPath / 'data',
     },
 }
 
@@ -63,25 +67,26 @@ def callback(ctx, processors):
 @click.option('--AlgorithmPort', 'AlgorithmPort', default=Defaults['Information']['AlgorithmPort'])
 @click.option('--SchedulerPort', 'SchedulerPort', default=Defaults['Information']['SchedulerPort'])
 @click.option('--Security', 'Security', default=Defaults['Information']['Security'])
+@click.option('--Version', 'Version', default=Defaults['Information']['Version'])
 @click.option('--Mode', 'Mode', default=Defaults['Information']['Mode'])
 @click.pass_context
 def information(ctx, **kwargs):
-    ctx.meta['Information'].update(
-        {
-            'Project': kwargs['Project'],
-            'Host': kwargs['Host'],
-            'AlgorithmPort': kwargs['AlgorithmPort'],
-            'SchedulerPort': kwargs['SchedulerPort'],
-            'Security': kwargs['Security'],
-            'Mode': kwargs['Mode'],
-        }
-    )
+    ctx.meta['Information'] |= {
+        'Project': kwargs['Project'],
+        'Host': kwargs['Host'],
+        'AlgorithmPort': kwargs['AlgorithmPort'],
+        'SchedulerPort': kwargs['SchedulerPort'],
+        'Security': kwargs['Security'],
+        'Version': kwargs['Version'],
+        'Mode': kwargs['Mode'],
+    }
 
 
 @group.command('RabbitMQ')
 @click.option('--Endpoint', 'Endpoint', default=Defaults['RabbitMQ']['Endpoint'])
 @click.option('--Username', 'Username', default=Defaults['RabbitMQ']['Username'])
 @click.option('--Password', 'Password', default=Defaults['RabbitMQ']['Password'])
+@click.option('--CallbackQueue', 'CallbackQueue', default=Defaults['RabbitMQ']['CallbackQueue'])
 @click.pass_context
 def rabbitmq(ctx, **kwargs):
     ctx.meta['RabbitMQ'].update(
@@ -89,19 +94,7 @@ def rabbitmq(ctx, **kwargs):
             'Endpoint': kwargs['Endpoint'],
             'Username': kwargs['Username'],
             'Password': kwargs['Password'],
-        }
-    )
-
-
-@group.command('Queues')
-@click.option('--Data', 'Data', default=Defaults['Queues']['Data'])
-@click.option('--Algorithm', 'Algorithm', default=Defaults['Queues']['Algorithm'])
-@click.pass_context
-def queues(ctx, **kwargs):
-    ctx.meta['Queues'].update(
-        {
-            'Data': kwargs['Data'],
-            'Algorithm': kwargs['Algorithm'],
+            'CallbackQueue': kwargs['CallbackQueue'],
         }
     )
 
@@ -154,3 +147,13 @@ def paths_config(ctx, **kwargs):
 
 
 Config = group.main(standalone_mode=False)
+
+
+if __name__ == '__main__':
+    class Encoding(json.JSONEncoder):
+        def default(self, data):
+            if isinstance(data, PosixPath):
+                return str(data)
+
+    j = json.dumps(Config, cls=Encoding, indent=4, ensure_ascii=False)
+    print(j)

@@ -1,12 +1,12 @@
 #
 
 
-### **[内容生成（Generate Content）](/swagger/index.html)**
+### **[内容生成（Generate Content）](/quant/swagger/index.html)**
 
 
 #### 数据传输接口
 
-???+ put "&thinsp; ++"PUT"++ &ensp; [/api/generate-content/data-preprocess](/swagger/index.html)"
+???+ put "&thinsp; ++"PUT"++ &ensp; [/quant/api/generate-content/data-preprocess](/quant/swagger/index.html)"
 
     === "请求 (request)"
 
@@ -39,7 +39,7 @@
 
 #### 算法计算接口
 
-???+ post "&thinsp; ++"POST"++ &ensp; [/api/generate-content/algorithm-startup](/swagger/index.html)"
+???+ post "&thinsp; ++"POST"++ &ensp; [/quant/api/generate-content/algorithm-startup](/quant/swagger/index.html)"
 
     === "请求 (request)"
 
@@ -68,7 +68,7 @@
 
 #### 查询接口
 
-???+ get "&thinsp; ++"GET"++ &ensp; [/api/generate-content/data-download](/swagger/index.html)"
+???+ get "&thinsp; ++"GET"++ &ensp; [/quant/api/generate-content/data-download](/quant/swagger/index.html)"
 
     === "请求 (request)"
 

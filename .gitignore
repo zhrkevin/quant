@@ -1,4 +1,8 @@
-# git ignore list
+# ---------------------------------------------
+# Copyright 2015 for Zen. All Rights Reserved.
+# ---------------------------------------------
+
+# gitignore list
 
 *.git/
 *.idea/
@@ -7,15 +11,16 @@
 *backup/
 *build/
 *data/
-*venv/
-
+*homepage/
 *__pycache__/
 
 *.bin
+*.cache
 *.csv
 *.lock
 *.log
 *.out
+*.parquet
 *.pkl
 *.pyc
 *.pyd
@@ -26,8 +31,9 @@
 *.zip
 
 *.DS_store
-*.pdm-python
-*.pdm.lock
+*pdm.lock
+*project-api.json
+*version
 
 !.gitkeep
 !explanation.xlsx

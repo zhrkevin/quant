@@ -1,29 +1,23 @@
-# stable version image
+# ---------------------------------------------
+# Copyright 2015 for Zen. All Rights Reserved.
+# ---------------------------------------------
+
+# docker / kubernetes image
 
 
 FROM python:3.12 as environment
 ENV TZ=Asia/Shanghai
-WORKDIR /
+WORKDIR /application
 
 ADD docker/.bashrc /root/.bashrc
 ADD docker/debian.sources /etc/apt/sources.list.d/debian.sources
 RUN apt-get update -y && apt-get install -y vim
 
-ADD requirements.txt /requirements.txt
-RUN pip install --index-url https://mirrors.aliyun.com/pypi/simple --upgrade pip setuptools
-RUN pip install --index-url https://mirrors.aliyun.com/pypi/simple --requirement requirements.txt
+ADD requirements.txt requirements.txt
+RUN pip install --no-cache-dir --index-url https://mirrors.aliyun.com/pypi/simple --upgrade pip setuptools
+RUN pip install --no-cache-dir --index-url https://mirrors.aliyun.com/pypi/simple --requirement requirements.txt
 
 
-
-FROM quant:environment-latest as stable
-WORKDIR /application
+FROM quant:environment-latest as test
 ADD . /application
-CMD bash run.sh
-
-
-
-FROM quant:environment-latest as compile
-WORKDIR /application
-ADD . /application
-RUN python project/setup.py build && python project/setup.py clean
-CMD bash run.sh
+CMD bash run.sh test

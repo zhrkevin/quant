@@ -1,7 +1,7 @@
 #!/bin/bash
-# ---------------------------------------------------------------
-# Copyright 2024 Jingzhi A&I and Level D&T. All Rights Reserved.
-# ---------------------------------------------------------------
+# ---------------------------------------------
+# Copyright 2015 for Zen. All Rights Reserved.
+# ---------------------------------------------
 
 # statement: if you have MacOS, please replace 0.0.0.0 (or localhost) with docker.for.mac.host.internal
 # ${Operation} == build, up, down, remove, check
@@ -9,7 +9,7 @@
 
 
 OPERATION=${1-'check'}
-BRANCH=${2-'stable'}
+BRANCH=${2-'test'}
 IMAGE='quant'
 CONTAINER='quant'
 
@@ -26,12 +26,8 @@ elif [[ ${OPERATION} = 'up' ]]; then
         --restart always \
         --name ${CONTAINER} \
         --hostname ${CONTAINER} \
-        --publish 15001:10000 \
+        --publish 10000:10000 \
         --detach --interactive --tty ${IMAGE}:${BRANCH}-latest
-elif [[ ${OPERATION} = 'down' ]]; then
-    docker rm --force ${CONTAINER}
-elif [[ ${OPERATION} = 'remove' ]]; then
-    docker rmi --force ${IMAGE}:${BRANCH}-latest
 elif [[ ${OPERATION} = 'check' ]]; then
     pwd
     ls -alhF --color=auto ./

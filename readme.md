@@ -1,37 +1,45 @@
-### Docker Distribution, Starting and Debugging
 
+### 服务接口地址
+```text
+# 算法 API 地址
 
-##### docker image operation
-```shell script
-# build image
-docker build --no-cache --file docker/dockerfile-${version} --tag ${image} .
-
-# remove image
-docker rmi --force $(docker images --quiet)
+# Non Standard APS 系统地址
 ```
 
 
-##### docker container operation
-```shell script
-# check log 
-docker logs -f project-framework-main >> running.log
+### Docker / Kubernetes 镜像
+```text
+# 环境镜像 
+quant:environment-latest
 
-# debug container
-docker exec --interactive --tty project-framework-main /bin/bash
+# 测试服务镜像 
+quant:test-latest
 
-# clean all unused container
-docker rm --force $(docker ps --quiet --all)
+# 生产服务镜像 
+quant:production-latest    
 ```
 
 
-##### docker network operation
-```shell script
-# list all networks
-docker network ls
+### Python 启动命令
+```text
+python -B -u main.py Information --Mode=production    
+```
 
-# create network
-docker network create algorithms
 
-# inspect network
-docker network inspect algorithms
+### 项目目录结构
+
+```text
+./   
+├──  algorithms/         算法目录   
+├──  api/                网络通信 API 目录    
+├──  axon/               在线文档与 swagger 目录   
+├──  data/               数据存储目录    
+├──  docker/             镜像构建目录    
+├──  project/            项目与配置目录     
+├──  .gitignore          gitignore 忽略文件   
+├──  .gitlab-ci.yml      gitlab runner 自动集成配置文件   
+├──  main.py             主函数文件   
+├──  pyproject.toml      依赖包配置文件   
+├──  readme.md           说明文件    
+└──  requirements.txt    依赖包安装文件                     
 ```

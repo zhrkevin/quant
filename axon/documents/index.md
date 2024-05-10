@@ -1,35 +1,39 @@
 #
 
 
-### **[项目算法接口（Project API）](/quant/swagger/index.html)**
+#### **[项目算法接口（Project API）](/quant/swagger/index.html)**
 
 
 
-#### **相关依赖服务**
-
-???+ quote "版本号"
-
-    ``` yaml linenums="1"
-    MinIO版本: 2024-03-30
-    RabbitMQ版本: 3.13.0
+???+ quote "必要依赖服务"
+    ``` json
+    --8<-- "./version"
     ```
 
 
-#### **配置文件**
+???+ abstract "配置与执行命令"
 
-???+ info "命令行"
+    **Docker / Kubernetes 镜像构建命令**
+    ``` shell
+    docker build \
+        --no-cache \
+        --progress plain \
+        --file 'docker/dockerfile' \
+        --target ${分支} \
+        --tag ${镜像名称}:${分支}-latest .
+    ```
 
-    **kubernetes / docker 容器配置**
-    ``` shell linenums="1"
+    **Docker / Kubernetes 容器启动命令**
+    ``` shell
     docker run \
         --restart always \
         --name ${容器名称} \
         --hostname ${容器名称} \
         --publish ${宿主机算法服务端口}:${容器算法服务端口} \
-        --detach --interactive --tty ${镜像名称}:${分支号}-latest
+        --detach --interactive --tty ${镜像名称}:${分支}-latest
     ```
 
     **算法引擎启动命令**
-    ``` shell linenums="1"
+    ``` shell
     python -B -u /application/project_main.py Information --Mode=production
     ```
