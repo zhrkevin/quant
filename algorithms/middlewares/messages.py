@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# ---------------------------------------------
-# Copyright 2015 for Zen. All Rights Reserved.
-# ---------------------------------------------
+# ---------------------------------------------------------
+# Copyright 2024 for Jingzhi & Level. All Rights Reserved.
+# ---------------------------------------------------------
 
 import httpx
 import traceback
+from sanic.log import logger
 from kombu import Connection, Exchange, Queue
 
 from project.configuration import Config
@@ -31,7 +32,7 @@ class MessageQueue:
                     with connection.Producer(exchange=queues.exchange) as producer:
                         producer.publish(body=body, declare=[queues])
         except Exception as error:
-            print(f"错误信息：{error}\n{traceback.format_exc()}")
+            logger.error(f"错误信息: {error}\n{traceback.format_exc()}")
 
     @classmethod
     def consume(cls, queue, acknowledge):
@@ -46,20 +47,26 @@ class MessageQueue:
                         consumer.register_callback(acknowledge)
                         consumer.consume()
         except Exception as error:
-            print(f"错误信息：{error}\n{traceback.format_exc()}")
+            logger.error(f"错误信息: {error}\n{traceback.format_exc()}")
 
 
 class Callback:
 
     # 本机 Development 模式调试时，注意关闭本机的代理 vpn
 
-    def __new__(cls, url, message):
+    def __init__(self, url, message):
         try:
-            response = httpx.post(url=url, json=message, timeout=4)
-            assert response.is_success, f"<{response.status_code}>: {response.json()}"
-            print(f"回调后端服务请求成功。<{response.status_code}>: {response.json()}")
+            if Config['Information']['Mode'] in ['development']:
+                response = httpx.post(url=url, json=message, timeout=4)
+                assert response.is_success, response.json()
+                logger.info(f"回调后端服务，请求成功 <Response {response.status_code}>: {response.json()}")
+            else:
+                MessageQueue.produce(
+                    queue=Config['RabbitMQ']['CallbackQueue'],
+                    body={'url': url, 'message': message, 'connection': 1}
+                )
         except Exception as error:
-            print(f"回调后端服务请求失败。<500>: {error}")
+            logger.error(f"回调后端服务，请求失败 <Response 500>: {error}")
 
 
 if __name__ == '__main__':

@@ -6,8 +6,7 @@
 
 from sanic import Sanic
 
-from project.configuration import Config
-from project.applications import Algorithms, Schedulers
+from project import Config, Algorithms, Schedulers
 
 
 if __name__ == '__main__':

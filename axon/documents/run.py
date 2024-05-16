@@ -21,7 +21,7 @@ class OpenAPI:
         self.path = Config['Paths']['AxonPath'] / 'documents'
         self.apispec = APISpec(
             openapi_version='3.1.0',
-            title='Non Standard Advanced Planning and Scheduling API',
+            title='Quant',
             info={'description': 'Project API documents are on [document page](/quant).'},
             servers=[{'url': '/quant', 'description': 'Production'}],
             version=self.version,
@@ -32,7 +32,7 @@ class OpenAPI:
 
     def docs(self):
         with open(Config['Paths']['AxonPath'] / 'documents' / 'version', 'w') as file:
-            file.write(f"算法引擎版本: {self.version} \n")
+            file.write(f"算法版本 {self.version} \n")
             file.write(f"MinIO 版本: 2024-03-30 \n")
             file.write(f"RabbitMQ 版本: 3.13.0 \n")
 
@@ -45,7 +45,7 @@ class OpenAPI:
         with open(Config['Paths']['AxonPath'] / 'swagger' / 'project-api.json', 'w') as file:
             json.dump(self.apispec.to_dict(), file, indent=4, ensure_ascii=False)
 
-        logger.info(f"算法引擎版本: {self.version}")
+        logger.info(f"算法版本 {self.version}。")
 
 
 if __name__ == '__main__':

@@ -6,58 +6,61 @@
 
 import traceback
 
-from algorithms.middlewares import MinIO, Logger, Process
+from project.configuration import Config
+from algorithms.middlewares import MinIO, Logger, Process, Callback
 from algorithms.tasks import DataTask, AlgorithmsTask
 
 
 Inputs = {
-    "nl-sql": ["input/metadata", "input/question"],
     "quant": ["input/texts"],
 }
 
 Outputs = {
-    "nl-sql": ["output/results"],
     "quant": ["output/results"],
 }
 
 
-class DataPreprocess:
+class DataProcessing:
 
-    taskid, algorithm = None, None
-    schema, data = None, None
+    taskid, algorithm, schema, data, callback = None, None, None, None, None
 
     def __new__(cls, body):
-        cls.taskid = body['taskid']
         cls.algorithm = body['algorithm']
+        cls.taskid = body['taskid']
+        cls.callback = body['callback']
         cls.schema = body['schema']
-        cls.data = body
+        cls.data = body['data']
 
-        data_preprocess_process = Process(taskid=cls.taskid, function=cls.data_preprocess_function)
+        data_preprocess_process = Process(taskid=cls.taskid, function=cls.data_processing)
         message = data_preprocess_process.start()
         return message
 
     @classmethod
-    def data_preprocess_function(cls):
+    def data_processing(cls):
         try:
-            MinIO.write(data=cls.data, filename=f"{cls.schema}-{cls.taskid}.json")
-            unavailable = [
-                f"{schema}-{cls.taskid}.json" for schema in Inputs[cls.algorithm] if not MinIO.download(filename=f"{schema}-{cls.taskid}.json")
+            MinIO.write(filename=f"input/{cls.schema}-{cls.taskid}.json", data=cls.data)
+            MinIO.upload(filename=f"input/{cls.schema}-{cls.taskid}.json")
+            failure = [
+                f"{schema}.json" for schema in Inputs[cls.algorithm] if not MinIO.download(filename=f"input/{schema}-{cls.taskid}.json")
             ]
-            DataTask(taskid=cls.taskid, algorithm=cls.algorithm, unavailable=unavailable)
-        except FileExistsError as warning:
-            Logger(code=120, taskid=cls.taskid, information=f"数据任务提醒：{warning}。")
+            if failure:
+                message = Logger(code=200, taskid=cls.taskid, information=f"以下数据表 {failure} 中的数据未上传至 MinIO 算法暂未启动。")
+            else:
+                message = Logger(code=300, taskid=cls.taskid, information=f"算法任务 {cls.algorithm} 的所有数据准备完成。")
         except Exception as error:
-            Logger(code=150, taskid=cls.taskid, information=f"数据任务失败：{error}\n{traceback.format_exc()}。")
+            message = Logger(code=500, taskid=cls.taskid, information=f"错误信息: {error}\n{traceback.format_exc()}")
+
+        Callback(url=cls.callback, message=message)
 
 
 class AlgorithmStartup:
 
-    taskid, algorithm, version, models = None, None, None, None
+    taskid, algorithm, callback, models = None, None, None, None
 
     def __new__(cls, body, models=None):
         cls.taskid = body['taskid']
         cls.algorithm = body['algorithm']
-        cls.version = body['version']
+        cls.callback = body['callback']
         cls.models = models
 
         algorithm_process = Process(taskid=cls.taskid, function=cls.algorithm_function)
@@ -67,17 +70,19 @@ class AlgorithmStartup:
     @classmethod
     def algorithm_function(cls):
         try:
-            Logger(code=180, taskid=cls.taskid, information=f"算法任务 [{cls.algorithm}] 启动开始。")
+            message = Logger(code=180, taskid=cls.taskid, information=f"算法任务 [{cls.algorithm}] 启动开始。")
             inputs = {
                 schema: MinIO.read(filename=f"{schema}-{cls.taskid}.json") for schema in Inputs[cls.algorithm]
             }
-            outputs = AlgorithmsTask(taskid=cls.taskid, algorithm=cls.algorithm, version=cls.version, models=cls.models, **inputs)
+            outputs = AlgorithmsTask(taskid=cls.taskid, algorithm=cls.algorithm, models=cls.models, **inputs)
             results = {
                 schema: MinIO.write(data=outputs[schema], filename=f"{schema}-{cls.taskid}.json") for schema in Outputs[cls.algorithm]
             }
-            Logger(code=200, taskid=cls.taskid, information=f"算法任务 [{cls.algorithm}] 成功结束。")
+            message = Logger(code=200, taskid=cls.taskid, information=f"算法任务 [{cls.algorithm}] 成功结束。")
         except Exception as error:
-            Logger(code=250, taskid=cls.taskid, information=f"算法任务失败：{error}\n{traceback.format_exc()}。")
+            message = Logger(code=250, taskid=cls.taskid, information=f"算法任务失败：{error}\n{traceback.format_exc()}。")
+
+        Callback(url=cls.callback, message=message)
 
 
 class DataDownload:
@@ -89,11 +94,19 @@ class DataDownload:
         cls.taskid = body['taskid']
         cls.schema = body['schema']
 
+        file = cls.data_download()
+        return file
+
+    @classmethod
+    def data_download(cls):
         if cls.schema in ['system/logs']:
-            results = MinIO.read(filename=f'{cls.schema}-{cls.taskid}.log')
-            return results, 'text'
+            MinIO.download(filename=f'system/logs-{cls.taskid}.log')
+            Logger(code=200, taskid='Default', information=f'下载文件数据 system/logs-{cls.taskid}.log。', mode='w')
+            return Config['Paths']['DataPath'] / f'system/logs-{cls.taskid}.log'
         elif cls.schema in Inputs[cls.algorithm] + Outputs[cls.algorithm]:
-            results = MinIO.read(filename=f'{cls.schema}-{cls.taskid}.json')
-            return results, 'json'
+            MinIO.download(filename=f'{cls.schema}-{cls.taskid}.json')
+            return Config['Paths']['DataPath'] / f'{cls.schema}-{cls.taskid}.json'
         else:
-            return None, 'empty'
+            print(f'文件在服务器上不存在。')
+            Logger(code=500, taskid='Default', information=f'system/logs-{cls.taskid}.log 不在服务器上。', mode='w')
+            return Config['Paths']['DataPath'] / 'system/logs-Default.log'

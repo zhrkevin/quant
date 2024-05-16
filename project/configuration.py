@@ -11,17 +11,15 @@ from pathlib import Path, PosixPath
 
 
 ProjectPath = Path(__file__).parent.parent
-Version = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 
 Defaults = {
     'Information': {
-        'Project': 'quant',
         'Host': '0.0.0.0',
-        'AlgorithmPort': 10000,
-        'SchedulerPort': 20000,
+        'AlgorithmPort': 10001,
+        'SchedulerPort': 20001,
         'Security': False,
-        'Version': Version,
+        'Version': datetime.now().strftime('%F %T'),
         'Mode': 'development',
     },
     'MinIO': {
@@ -62,7 +60,6 @@ def callback(ctx, processors):
 
 
 @group.command('Information')
-@click.option('--Project', 'Project', default=Defaults['Information']['Project'])
 @click.option('--Host', 'Host', default=Defaults['Information']['Host'])
 @click.option('--AlgorithmPort', 'AlgorithmPort', default=Defaults['Information']['AlgorithmPort'])
 @click.option('--SchedulerPort', 'SchedulerPort', default=Defaults['Information']['SchedulerPort'])
@@ -72,7 +69,6 @@ def callback(ctx, processors):
 @click.pass_context
 def information(ctx, **kwargs):
     ctx.meta['Information'] |= {
-        'Project': kwargs['Project'],
         'Host': kwargs['Host'],
         'AlgorithmPort': kwargs['AlgorithmPort'],
         'SchedulerPort': kwargs['SchedulerPort'],
@@ -80,23 +76,6 @@ def information(ctx, **kwargs):
         'Version': kwargs['Version'],
         'Mode': kwargs['Mode'],
     }
-
-
-@group.command('RabbitMQ')
-@click.option('--Endpoint', 'Endpoint', default=Defaults['RabbitMQ']['Endpoint'])
-@click.option('--Username', 'Username', default=Defaults['RabbitMQ']['Username'])
-@click.option('--Password', 'Password', default=Defaults['RabbitMQ']['Password'])
-@click.option('--CallbackQueue', 'CallbackQueue', default=Defaults['RabbitMQ']['CallbackQueue'])
-@click.pass_context
-def rabbitmq(ctx, **kwargs):
-    ctx.meta['RabbitMQ'].update(
-        {
-            'Endpoint': kwargs['Endpoint'],
-            'Username': kwargs['Username'],
-            'Password': kwargs['Password'],
-            'CallbackQueue': kwargs['CallbackQueue'],
-        }
-    )
 
 
 @group.command('MinIO')
@@ -112,6 +91,23 @@ def minio(ctx, **kwargs):
             'AccessKey': kwargs['AccessKey'],
             'SecretKey': kwargs['SecretKey'],
             'Bucket': kwargs['Bucket'],
+        }
+    )
+
+
+@group.command('RabbitMQ')
+@click.option('--Endpoint', 'Endpoint', default=Defaults['RabbitMQ']['Endpoint'])
+@click.option('--Username', 'Username', default=Defaults['RabbitMQ']['Username'])
+@click.option('--Password', 'Password', default=Defaults['RabbitMQ']['Password'])
+@click.option('--CallbackQueue', 'CallbackQueue', default=Defaults['RabbitMQ']['CallbackQueue'])
+@click.pass_context
+def rabbitmq(ctx, **kwargs):
+    ctx.meta['RabbitMQ'].update(
+        {
+            'Endpoint': kwargs['Endpoint'],
+            'Username': kwargs['Username'],
+            'Password': kwargs['Password'],
+            'CallbackQueue': kwargs['CallbackQueue'],
         }
     )
 

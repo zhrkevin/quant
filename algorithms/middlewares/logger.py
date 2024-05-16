@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# ---------------------------------------------
-# Copyright 2015 for Zen. All Rights Reserved.
-# ---------------------------------------------
+# ---------------------------------------------------------
+# Copyright 2024 for Jingzhi & Level. All Rights Reserved.
+# ---------------------------------------------------------
 
 import json
 import traceback
 from minio import Minio
+from sanic.log import logger
 from datetime import datetime
 
 from project.configuration import Config
@@ -26,19 +27,17 @@ class Logger:
         client.make_bucket(bucket)
 
     def __new__(cls, code, taskid, information, mode='a+', **kwargs):
-        message = {
-            'timestamp': datetime.now().strftime('%F %T.%f'),
-            'code': code,
-            'taskid': taskid,
-            'information': information,
-            **kwargs,
-        }
-
-        logline = json.dumps(message, ensure_ascii=False)
-        with open(Config['Paths']['DataPath'] / 'system' / f'logs-{taskid}.log', mode=mode) as file:
-            file.write(logline + '\n')
-
         try:
+            message = {
+                'timestamp': datetime.now().strftime('%F %T.%f'),
+                'code': code,
+                'taskid': taskid,
+                'information': information,
+                **kwargs,
+            }
+            with open(Config['Paths']['DataPath'] / 'system' / f'logs-{taskid}.log', mode=mode) as file:
+                file.write(json.dumps(message, ensure_ascii=False) + '\n')
+
             if cls.mode not in ['development']:
                 cls.client.fput_object(
                     bucket_name=cls.bucket,
@@ -49,14 +48,13 @@ class Logger:
         except Exception as error:
             message = {
                 'timestamp': datetime.now().strftime('%F %T.%f'),
-                'code': code,
+                'code': 500,
                 'taskid': taskid,
-                'information': information,
-                'error': f"{error}\n{traceback.format_exc()}\n",
+                'information': f"错误信息: {error}\n{traceback.format_exc()}",
             }
-        print(message)
+        logger.info(message)
         return message
 
 
 if __name__ == '__main__':
-    Logger(code=200, taskid='System', information='Testing 测试。')
+    Logger(code=200, taskid='Test', information='Testing 测试。')

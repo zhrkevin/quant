@@ -20,4 +20,4 @@ window.onload = function() {
   //</editor-fold>
 };
 
-// swagger ui version 5.15.2
+// swagger ui version 5.17.9

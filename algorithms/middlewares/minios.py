@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# ---------------------------------------------
-# Copyright 2015 for Zen. All Rights Reserved.
-# ---------------------------------------------
+# ---------------------------------------------------------
+# Copyright 2024 for Jingzhi & Level. All Rights Reserved.
+# ---------------------------------------------------------
 
 import os
 import json
 import traceback
 from minio import Minio
+from sanic.log import logger
 
 from project.configuration import Config
 
@@ -54,7 +55,7 @@ class MinIO:
                 )
                 return True
         except Exception as error:
-            print(f"错误信息：{error}\n{traceback.format_exc()}")
+            logger.error(f"错误信息: {error}\n{traceback.format_exc()}")
             return False
 
     @classmethod

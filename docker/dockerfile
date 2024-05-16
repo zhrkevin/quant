@@ -6,8 +6,8 @@
 
 
 FROM python:3.12 as environment
-ENV TZ=Asia/Shanghai
 WORKDIR /application
+ENV TZ=Asia/Shanghai
 
 ADD docker/.bashrc /root/.bashrc
 ADD docker/debian.sources /etc/apt/sources.list.d/debian.sources

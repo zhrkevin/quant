@@ -11,17 +11,18 @@ MODE=${1-'development'}
 
 
 if [[ ${MODE} = 'development' ]]; then
-    printf '算法启动模式：development \n'
+    python -B -u main.py \
+        Information --Mode=development
 elif [[ ${MODE} = 'test' ]]; then
     python -B -u main.py \
         Information --Mode=test \
-        MinIO --Bucket=non-standard-aps \
-        RabbitMQ --CallbackQueue=non-standard-aps-callback
+        MinIO --Bucket=quant-test \
+        RabbitMQ --CallbackQueue=quant-callback-test
 elif [[ ${MODE} = 'production' ]]; then
     python -B -u main.py \
         Information --Mode=production \
-        MinIO --Bucket=non-standard-aps-prod \
-        RabbitMQ --CallbackQueue=non-standard-aps-callback-prod
+        MinIO --Bucket=quant-production \
+        RabbitMQ --CallbackQueue=quant-callback-production
 else
-    printf '请检查命令行输入。\n'
+    echo -e "算法服务未启动，请检查命令行: bash docker.sh ${MODE}"
 fi
