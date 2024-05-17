@@ -4,11 +4,9 @@
 # Copyright 2015 for Zen. All Rights Reserved.
 # ---------------------------------------------
 
-from algorithms.core.stocks.sse import SSE
-from algorithms.core.nl_sql.online_function import NLSQL
+from algorithms.core.stocks.sse import ShanghaiStockExchange
 
 
 __all__ = [
-    'SSE',
-    'NLSQL',
+    'ShanghaiStockExchange',
 ]

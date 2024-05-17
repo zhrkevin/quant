@@ -8,7 +8,7 @@ import traceback
 
 from project.configuration import Config
 from algorithms.middlewares import MinIO, Logger, Process, Callback
-from algorithms.tasks import DataTask, AlgorithmsTask
+from algorithms.tasks import AlgorithmsTask
 
 
 Inputs = {
@@ -71,13 +71,8 @@ class AlgorithmStartup:
     def algorithm_function(cls):
         try:
             message = Logger(code=180, taskid=cls.taskid, information=f"算法任务 [{cls.algorithm}] 启动开始。")
-            inputs = {
-                schema: MinIO.read(filename=f"{schema}-{cls.taskid}.json") for schema in Inputs[cls.algorithm]
-            }
-            outputs = AlgorithmsTask(taskid=cls.taskid, algorithm=cls.algorithm, models=cls.models, **inputs)
-            results = {
-                schema: MinIO.write(data=outputs[schema], filename=f"{schema}-{cls.taskid}.json") for schema in Outputs[cls.algorithm]
-            }
+            outputs = AlgorithmsTask(taskid=cls.taskid, algorithm=cls.algorithm, models=cls.models)
+            print(outputs)
             message = Logger(code=200, taskid=cls.taskid, information=f"算法任务 [{cls.algorithm}] 成功结束。")
         except Exception as error:
             message = Logger(code=250, taskid=cls.taskid, information=f"算法任务失败：{error}\n{traceback.format_exc()}。")
