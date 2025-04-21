@@ -10,7 +10,6 @@ import psutil
 import traceback
 import numpy as np
 from sanic.log import logger
-from datetime import datetime
 
 from project.configuration import Config
 from algorithms.middlewares import MessageQueue
@@ -58,7 +57,6 @@ class CallbackScheduler:
                     body['connection'] += 1
                     MessageQueue.produce(queue=self.queue, body=body)
                 logger.error(f"回调后端服务，请求失败 <Response 500>: {error}")
-
 
 
 class CleanScheduler:

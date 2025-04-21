@@ -31,7 +31,6 @@
 *.zip
 
 *.DS_store
-*pdm.lock
 *project-api.json
 *version
 
