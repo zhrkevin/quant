@@ -8,55 +8,57 @@ import json
 import click
 from datetime import datetime
 from pathlib import Path, PosixPath
+from box import Box
 
 
 ProjectPath = Path(__file__).parent.parent
 
 
-Defaults = {
-    'Information': {
-        'Host': '0.0.0.0',
-        'AlgorithmPort': 10001,
-        'SchedulerPort': 20001,
-        'Security': False,
-        'Version': datetime.now().strftime('%F %T'),
-        'Mode': 'development',
-    },
-    'MinIO': {
-        'Endpoint': 'minio-api.jingzhi-sh.com:3456',
-        'AccessKey': 'algorithm-user',
-        'SecretKey': '1cciUuToLVqi9tja',
-        'Bucket': 'quant',
-    },
-    'RabbitMQ': {
-        'Endpoint': 'rabbitmq.jingzhi-sh.com:5678/algorithm',
-        'Username': 'algorithm-user',
-        'Password': 'HBbB4NUnQ8yTWhHh',
-        'CallbackQueue': 'quant-callback',
-    },
-    'Callbacks': {
-        'Mock': 'http://0.0.0.0:10000/quant/callback/mock',
-    },
-    'Paths': {
-        'ProjectPath': ProjectPath,
-        'AlgorithmsPath': ProjectPath / 'algorithms',
-        'ApiPath': ProjectPath / 'api',
-        'AxonPath': ProjectPath / 'axon',
-        'DataPath': ProjectPath / 'data',
-    },
-}
-
+Defaults = Box(
+    {
+        'Information': {
+            'Host': '0.0.0.0',
+            'AlgorithmPort': 10001,
+            'SchedulerPort': 20001,
+            'Security': False,
+            'Version': datetime.now().strftime('%F %T'),
+            'Mode': 'development',
+        },
+        'MinIO': {
+            'Endpoint': 'minio-api.jingzhi-sh.com:3456',
+            'AccessKey': 'algorithm-user',
+            'SecretKey': '1cciUuToLVqi9tja',
+            'Bucket': 'quant',
+        },
+        'RabbitMQ': {
+            'Endpoint': 'rabbitmq.jingzhi-sh.com:5678/algorithm',
+            'Username': 'algorithm-user',
+            'Password': 'HBbB4NUnQ8yTWhHh',
+            'CallbackQueue': 'quant-callback',
+        },
+        'Callbacks': {
+            'Mock': 'http://0.0.0.0:10000/quant/callback/mock',
+        },
+        'Paths': {
+            'ProjectPath': ProjectPath,
+            'AlgorithmsPath': ProjectPath / 'algorithms',
+            'ApiPath': ProjectPath / 'api',
+            'AxonPath': ProjectPath / 'axon',
+            'DataPath': ProjectPath / 'data',
+        },
+    }
+)
 
 @click.group(chain=True, invoke_without_command=True)
 @click.pass_context
 def group(ctx):
-    ctx.meta.update(Defaults)
+    ctx.obj = Defaults
 
 
 @group.result_callback()
 @click.pass_context
 def callback(ctx, processors):
-    return ctx.meta
+    return ctx.obj
 
 
 @group.command('Information')
@@ -68,7 +70,7 @@ def callback(ctx, processors):
 @click.option('--Mode', 'Mode', default=Defaults['Information']['Mode'])
 @click.pass_context
 def information(ctx, **kwargs):
-    ctx.meta['Information'] |= {
+    ctx.obj['Information'] |= {
         'Host': kwargs['Host'],
         'AlgorithmPort': kwargs['AlgorithmPort'],
         'SchedulerPort': kwargs['SchedulerPort'],
@@ -85,7 +87,7 @@ def information(ctx, **kwargs):
 @click.option('--Bucket', 'Bucket', default=Defaults['MinIO']['Bucket'])
 @click.pass_context
 def minio(ctx, **kwargs):
-    ctx.meta['MinIO'].update(
+    ctx.obj['MinIO'].update(
         {
             'Endpoint': kwargs['Endpoint'],
             'AccessKey': kwargs['AccessKey'],
@@ -102,7 +104,7 @@ def minio(ctx, **kwargs):
 @click.option('--CallbackQueue', 'CallbackQueue', default=Defaults['RabbitMQ']['CallbackQueue'])
 @click.pass_context
 def rabbitmq(ctx, **kwargs):
-    ctx.meta['RabbitMQ'].update(
+    ctx.obj['RabbitMQ'].update(
         {
             'Endpoint': kwargs['Endpoint'],
             'Username': kwargs['Username'],
@@ -116,7 +118,7 @@ def rabbitmq(ctx, **kwargs):
 @click.option('--Mock', 'Mock', default=Defaults['Callbacks']['Mock'])
 @click.pass_context
 def callbacks(ctx, **kwargs):
-    ctx.meta['Callbacks'].update(
+    ctx.obj['Callbacks'].update(
         {
             'Mock': kwargs['Mock'],
         }
@@ -131,7 +133,7 @@ def callbacks(ctx, **kwargs):
 @click.option('--DataPath', 'DataPath', default=Defaults['Paths']['DataPath'])
 @click.pass_context
 def paths_config(ctx, **kwargs):
-    ctx.meta['Paths'].update(
+    ctx.obj['Paths'].update(
         {
             'ProjectPath': kwargs['ProjectPath'],
             'AlgorithmsPath': kwargs['AlgorithmsPath'],
@@ -146,10 +148,12 @@ Config = group.main(standalone_mode=False)
 
 
 if __name__ == '__main__':
-    class Encoding(json.JSONEncoder):
-        def default(self, data):
-            if isinstance(data, PosixPath):
-                return str(data)
+    print(Config.Paths.DataPath)
 
-    j = json.dumps(Config, cls=Encoding, indent=4, ensure_ascii=False)
-    print(j)
+    # class Encoding(json.JSONEncoder):
+    #     def default(self, data):
+    #         if isinstance(data, PosixPath):
+    #             return str(data)
+    #
+    # j = json.dumps(Config, cls=Encoding, indent=4, ensure_ascii=False)
+    # print(j)

@@ -21,10 +21,15 @@ quant:production-latest
 
 
 ### Python 启动命令
-```text
+```commandline
 python -B -u main.py Information --Mode=production    
 ```
 
+###
+```text
+# pdm 更新
+pdm update --no-self --update-all --unconstrained --verbose
+```
 
 ### 项目目录结构
 

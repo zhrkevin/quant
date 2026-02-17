@@ -1,22 +1,16 @@
-# ---------------------------------------------
-# Copyright 2015 for Zen. All Rights Reserved.
-# ---------------------------------------------
-
-[[tool.pdm.source]]
-name = "aliyun"
-url = "https://mirrors.aliyun.com/pypi/simple"
+[[tool.uv.index]]
+url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
+default = true
 
 [project]
 name = "quant"
 version = "0.1.0"
-description = ""
-authors = [{name = "", email = ""}]
-dependencies = []
-requires-python = ">=3.12"
+description = "Add your description here"
 readme = "readme.md"
-license = {text = "Apache-2.0"}
+requires-python = ">=3.13"
+dependencies = []
 
-[project.optional-dependencies]
+[dependency-groups]
 docs = [
     "mkdocs>=1.6.1",
     "mkdocs-autolinks-plugin>=0.7.1",
@@ -35,15 +29,11 @@ main = [
     "highcharts-core>=1.10.3",
     "highcharts-stock>=1.7.0",
     "httpx>=0.28.1",
-    "kombu>=5.4.2",
-    "lightweight-charts>=2.1",
-    "minio>=7.2.9",
     "multiprocess>=0.70.18",
     "numpy>=2.3.4",
     "pandas>=2.3.3",
     "pathspec>=0.12.1",
     "psutil>=7.1.0",
-    "plotly>=5.24.1",
     "python-calamine>=0.5.3",
     "python-highcharts>=0.4.2",
     "sanic>=25.3.0",
