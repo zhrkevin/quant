@@ -6,8 +6,7 @@
 
 import polars as pl
 import akshare as ak
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
+from algorithms.basic.plot import Plotting
 
 from project.configuration import Config
 
@@ -15,7 +14,7 @@ from project.configuration import Config
 pl.Config(tbl_rows=12, tbl_cols=-1)
 
 
-class WriteStockExchange:
+class WriteStocks:
 
     def __init__(self, symbol: str):
         """初始化 WriteStockExchange 类
@@ -65,16 +64,15 @@ class WriteStockExchange:
         self.raw_data.write_parquet(Config.Paths.DataPath / 'input' / symbol / 'raw.parquet')
 
 
-class ReadStockExchange:
+class SplitStocks:
     """上海证券交易所周股票数据管理类"""
 
-    def __init__(self, symbol: str, period: str = 'day'):
+    def __init__(self, symbol: str):
         self.daily_data = None
         self.weekly_data = None
         self.monthly_data = None
         
         self.read(symbol)
-        self.plot(period)
 
     def read(self, symbol: str):
         """从 parquet 文件读取合并的股票数据
@@ -82,22 +80,27 @@ class ReadStockExchange:
             symbol: 股票代码
         """
 
-        # 按周统计数据
-        self.daily_data = pl.read_parquet(Config.Paths.DataPath / 'input' / symbol / 'raw.parquet')
-        self.daily_data = self.daily_data.with_columns(
+        # 读入原始数据
+        self.raw_data = pl.read_parquet(Config.Paths.DataPath / 'input' / symbol / 'raw.parquet')
+
+        # 按日天统计数据
+        self.day_data = self.raw_data.with_columns(
             pl.col('date').dt.year().alias('year'),
             pl.col('date').dt.ordinal_day().alias('day'),
             pl.when(pl.col('raw_close') >= pl.col('raw_open')).then(pl.lit('green')).otherwise(pl.lit('red')).alias('color')
+        ).select(
+            'year', 'day', pl.exclude('year', 'day')
         )
-        self.daily_data.write_parquet(Config.Paths.DataPath / 'input' / symbol / 'stock_day.parquet')
+        self.day_data.write_parquet(Config.Paths.DataPath / 'input' / symbol / 'stock_day.parquet')
+        print(self.day_data)
 
-        # 按周统计数据
-        self.weekly_data = self.daily_data.group_by(
+        # 按周度统计数据
+        self.week_data = self.raw_data.group_by(
             pl.col('date').dt.year().alias('year'),
             pl.col('date').dt.week().alias('week')
         ).agg(
             [
-                pl.col('date').first(),
+                pl.col('date').last(),
                 pl.col('raw_open').first(), pl.col('raw_high').max(), pl.col('raw_low').min(), pl.col('raw_close').last(),
                 pl.col('qfq_open').first(), pl.col('qfq_high').max(), pl.col('qfq_low').min(), pl.col('qfq_close').last(),
                 pl.col('hfq_open').first(), pl.col('hfq_high').max(), pl.col('hfq_low').min(), pl.col('hfq_close').last(),
@@ -106,16 +109,19 @@ class ReadStockExchange:
                 pl.col('turnover').sum().alias('turnover'),
                 pl.when(pl.col('raw_close').last() >= pl.col('raw_open').first()).then(pl.lit('green')).otherwise(pl.lit('red')).alias('color'),
             ]
-        ).sort('date')
-        self.weekly_data.write_parquet(Config.Paths.DataPath / 'input' / symbol / 'stock_week.parquet')
-        
-        # 按月统计数据
-        self.monthly_data = self.daily_data.group_by(
+        ).sort('date').with_columns(
+            pl.col('week').cast(pl.Int16)
+        )
+        self.week_data.write_parquet(Config.Paths.DataPath / 'input' / symbol / 'stock_week.parquet')
+        print(self.week_data)
+
+        # 按月度统计数据
+        self.month_data = self.raw_data.group_by(
             pl.col('date').dt.year().alias('year'),
             pl.col('date').dt.month().alias('month'),
         ).agg(
             [
-                pl.col('date').first(),
+                pl.col('date').last(),
                 pl.col('raw_open').first(), pl.col('raw_high').max(), pl.col('raw_low').min(), pl.col('raw_close').last(),
                 pl.col('qfq_open').first(), pl.col('qfq_high').max(), pl.col('qfq_low').min(), pl.col('qfq_close').last(),
                 pl.col('hfq_open').first(), pl.col('hfq_high').max(), pl.col('hfq_low').min(), pl.col('hfq_close').last(),
@@ -124,69 +130,35 @@ class ReadStockExchange:
                 pl.col('turnover').sum().alias('turnover'),
                 pl.when(pl.col('raw_close').last() >= pl.col('raw_open').first()).then(pl.lit('green')).otherwise(pl.lit('red')).alias('color'),
             ]
-        ).sort('date')
-        self.monthly_data.write_parquet(Config.Paths.DataPath / 'input' / symbol / 'stock_month.parquet')
-
-        print(self.daily_data)
-        print(self.weekly_data)
-        print(self.monthly_data)
-
-    def plot(self, period: str = 'day'):
-        """绘制股票 K 线图和成交量图"""
-        if period == 'day':
-            stock_data = self.daily_data[-100:]
-            name = '日线'
-        elif period == 'week':
-            stock_data = self.weekly_data[-100:]
-            name = '周线'
-        elif period == 'month':
-            stock_data = self.monthly_data[-100:]
-            name = '月线'
-        else:
-            raise ValueError(f'Invalid period: {period}')
-
-        fig = make_subplots(
-            rows=2,
-            cols=1,
-            shared_xaxes=True,
-            subplot_titles=('交易', '成交量'),
-            row_heights=[0.7, 0.3],
-            vertical_spacing=0.1,
+        ).sort('date').with_columns(
+            pl.col('month').cast(pl.Int16)
         )
-
-        # 使用不复权数据绘制 K 线图
-        fig.add_trace(
-            go.Candlestick(x=stock_data['date'], open=stock_data['raw_open'], high=stock_data['raw_high'], low=stock_data['raw_low'], close=stock_data['raw_close'], name=name),
-            row=1, col=1
-        )
-        fig.add_trace(
-            go.Bar(x=stock_data['date'], y=stock_data['volume'], marker_color=stock_data['color'], showlegend=False),
-            row=2, col=1
-        )
-
-        # 只在某些位置显示日期标签，避免过于密集
-        tickvals = []
-        ticktext = []
-        step = max(1, len(stock_data) // 10)  # 最多显示 10 个标签
-        for i in range(0, len(stock_data), step):
-            tickvals.append(stock_data['date'][i])
-            ticktext.append(stock_data['date'][i].strftime("%Y-%m-%d"))
+        self.month_data.write_parquet(Config.Paths.DataPath / 'input' / symbol / 'stock_month.parquet')
+        print(self.month_data)
         
-        # 去除休市的日期，保持x轴连续
-        dt_all = pl.select(pl.date_range(start=stock_data['date'][0], end=stock_data['date'][-1], interval='1d')).to_series().to_list()
-        dt_all = [d.strftime("%Y-%m-%d") for d in dt_all]
-        trading_dates = [d.strftime("%Y-%m-%d") for d in stock_data['date'].to_list()]
-        dt_breaks = list(set(dt_all) - set(trading_dates))
-
-        # 设置 x 轴标签，只显示部分日期  # Do not show OHLC's rangeslider plot
-        fig.update_xaxes(tickvals=tickvals, ticktext=ticktext, row=1, col=1)
-        fig.update_xaxes(tickvals=tickvals, ticktext=ticktext, row=2, col=1)
-        fig.update_xaxes(rangebreaks=[dict(values=dt_breaks)]) if period in ['day'] else None
-        fig.update(layout_xaxis_rangeslider_visible=False)
-
-        fig.show()
+        # 按季度统计数据
+        self.quarter_data = self.raw_data.group_by(
+            pl.col('date').dt.year().alias('year'),
+            pl.col('date').dt.quarter().alias('quarter'),
+        ).agg(
+            [
+                pl.col('date').last(),
+                pl.col('raw_open').first(), pl.col('raw_high').max(), pl.col('raw_low').min(), pl.col('raw_close').last(),
+                pl.col('qfq_open').first(), pl.col('qfq_high').max(), pl.col('qfq_low').min(), pl.col('qfq_close').last(),
+                pl.col('hfq_open').first(), pl.col('hfq_high').max(), pl.col('hfq_low').min(), pl.col('hfq_close').last(),
+                pl.col('volume').sum().alias('volume'),
+                pl.col('amount').sum().alias('amount'),
+                pl.col('turnover').sum().alias('turnover'),
+                pl.when(pl.col('raw_close').last() >= pl.col('raw_open').first()).then(pl.lit('green')).otherwise(pl.lit('red')).alias('color'),
+            ]
+        ).sort('date').with_columns(
+            pl.col('quarter').cast(pl.Int16)
+        )
+        self.quarter_data.write_parquet(Config.Paths.DataPath / 'input' / symbol / 'stock_quarter.parquet')
+        print(self.quarter_data)
 
 
 if __name__ == '__main__':
-    # WriteStockExchange('sh600036')
-    ReadStockExchange('sh600036', period='week')
+    # WriteStocks('sh600036')
+    SplitStocks('sh600036')
+    Plotting('sh600036', period='day')

@@ -5,7 +5,7 @@
 # ---------------------------------------------
 
 import polars as pl
-from algorithms.core.plot import Plotting
+from algorithms.basic.plot import Plotting
 
 from project.configuration import Config
 
@@ -15,9 +15,10 @@ pl.Config(tbl_rows=20, tbl_cols=-1)
 
 class MovingAverage:
 
-    def __init__(self, symbol: str, period: str = 'day'):
+    def __init__(self, symbol: str, period: str = 'day', adjust: str = 'raw'):
         self.symbol = symbol
         self.period = period
+        self.adjust = adjust
 
         self.stock_data = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'stock_{self.period}.parquet')
         self.data = None
@@ -28,12 +29,12 @@ class MovingAverage:
         self.data = self.stock_data.select(
             [
                 pl.col('date'),
-                pl.col('raw_close').rolling_mean(5).alias('ma_5'),      # 005 trading period
-                pl.col('raw_close').rolling_mean(10).alias('ma_10'),    # 010 trading period
-                pl.col('raw_close').rolling_mean(20).alias('ma_20'),    # 020 trading period
-                pl.col('raw_close').rolling_mean(30).alias('ma_30'),    # 030 trading period
-                pl.col('raw_close').rolling_mean(60).alias('ma_60'),    # 060 trading period
-                pl.col('raw_close').rolling_mean(250).alias('ma_250'),  # 250 trading period
+                pl.col(f'{self.adjust}_close').rolling_mean(5).alias('ma_5'),      # 5 trading period
+                pl.col(f'{self.adjust}_close').rolling_mean(10).alias('ma_10'),    # 10 trading period
+                pl.col(f'{self.adjust}_close').rolling_mean(20).alias('ma_20'),    # 20 trading period
+                pl.col(f'{self.adjust}_close').rolling_mean(30).alias('ma_30'),    # 30 trading period
+                pl.col(f'{self.adjust}_close').rolling_mean(60).alias('ma_60'),    # 60 trading period
+                pl.col(f'{self.adjust}_close').rolling_mean(250).alias('ma_250'),  # 250 trading period
             ]
         )
         print(self.data)
@@ -42,9 +43,10 @@ class MovingAverage:
 
 class MovingAverageConvergenceDivergence:
 
-    def __init__(self, symbol: str, period: str = 'day'):
+    def __init__(self, symbol: str, period: str = 'day', adjust: str = 'raw'):
         self.symbol = symbol
         self.period = period
+        self.adjust = adjust
         self.data = None
         self.stock_data = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'stock_{self.period}.parquet')
         
@@ -56,10 +58,10 @@ class MovingAverageConvergenceDivergence:
             {
                 'date': self.stock_data['date'],
                 'ema_fast': self.stock_data.select(
-                    [pl.col('raw_close').ewm_mean(span=fast, adjust=False)]
+                    [pl.col(f'{self.adjust}_close').ewm_mean(span=fast, adjust=False)]
                 ),
                 'ema_slow': self.stock_data.select(
-                    [pl.col('raw_close').ewm_mean(span=slow, adjust=False)]
+                    [pl.col(f'{self.adjust}_close').ewm_mean(span=slow, adjust=False)]
                 ),
             }
         )
@@ -83,9 +85,10 @@ class MovingAverageConvergenceDivergence:
 
 class BollingerBands:
 
-    def __init__(self, symbol: str, period: str = 'day'):
+    def __init__(self, symbol: str, period: str = 'day', adjust: str = 'raw'):
         self.symbol = symbol
         self.period = period
+        self.adjust = adjust
         self.data = None
         self.stock_data = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'stock_{self.period}.parquet')
 
@@ -96,9 +99,9 @@ class BollingerBands:
         self.data = self.stock_data.select(
             [
                 pl.col('date'),
-                pl.col('raw_close').rolling_mean(20).alias('boll_mid'),
-                (pl.col('raw_close').rolling_mean(20) + pl.col('raw_close').rolling_std(20) * std_dev).alias('boll_upper'),
-                (pl.col('raw_close').rolling_mean(20) - pl.col('raw_close').rolling_std(20) * std_dev).alias('boll_lower'),
+                pl.col(f'{self.adjust}_close').rolling_mean(20).alias('boll_mid'),
+                (pl.col(f'{self.adjust}_close').rolling_mean(20) + pl.col(f'{self.adjust}_close').rolling_std(20) * std_dev).alias('boll_upper'),
+                (pl.col(f'{self.adjust}_close').rolling_mean(20) - pl.col(f'{self.adjust}_close').rolling_std(20) * std_dev).alias('boll_lower'),
             ]
         )
         print(self.data)
@@ -106,7 +109,7 @@ class BollingerBands:
 
 
 if __name__ == '__main__':
-    for period in ['day', 'week', 'month']:
+    for period in ['day', 'week', 'month', 'quarter']:
         MovingAverage('sh600036', period=period)
         MovingAverageConvergenceDivergence('sh600036', period=period)
         BollingerBands('sh600036', period=period)
