@@ -8,16 +8,7 @@ import traceback
 
 from project.configuration import Config
 from algorithms.middlewares import MinIO, Logger, Process, Callback
-from algorithms.tasks import AlgorithmsTask
-
-
-Inputs = {
-    "quant": ["input/texts"],
-}
-
-Outputs = {
-    "quant": ["output/results"],
-}
+from algorithms.basic.fetch import WriteStocks, SplitStocks
 
 
 class DataProcessing:
@@ -25,11 +16,9 @@ class DataProcessing:
     taskid, algorithm, schema, data, callback = None, None, None, None, None
 
     def __new__(cls, body):
-        cls.algorithm = body['algorithm']
         cls.taskid = body['taskid']
+        cls.algorithm = body['algorithm']
         cls.callback = body['callback']
-        cls.schema = body['schema']
-        cls.data = body['data']
 
         data_preprocess_process = Process(taskid=cls.taskid, function=cls.data_processing)
         message = data_preprocess_process.start()
@@ -38,22 +27,16 @@ class DataProcessing:
     @classmethod
     def data_processing(cls):
         try:
-            MinIO.write(filename=f"input/{cls.schema}-{cls.taskid}.json", data=cls.data)
-            MinIO.upload(filename=f"input/{cls.schema}-{cls.taskid}.json")
-            failure = [
-                f"{schema}.json" for schema in Inputs[cls.algorithm] if not MinIO.download(filename=f"input/{schema}-{cls.taskid}.json")
-            ]
-            if failure:
-                message = Logger(code=200, taskid=cls.taskid, information=f"以下数据表 {failure} 中的数据未上传至 MinIO 算法暂未启动。")
-            else:
-                message = Logger(code=300, taskid=cls.taskid, information=f"算法任务 {cls.algorithm} 的所有数据准备完成。")
+            WriteStocks()
+            SplitStocks()
+            message = Logger(code=200, taskid=cls.taskid, information=f"数据处理任务 [{cls.algorithm}] 成功结束。")
         except Exception as error:
             message = Logger(code=500, taskid=cls.taskid, information=f"错误信息: {error}\n{traceback.format_exc()}")
 
         Callback(url=cls.callback, message=message)
 
 
-class AlgorithmStartup:
+class AlgorithmRunning:
 
     taskid, algorithm, callback, models = None, None, None, None
 
@@ -61,7 +44,6 @@ class AlgorithmStartup:
         cls.taskid = body['taskid']
         cls.algorithm = body['algorithm']
         cls.callback = body['callback']
-        cls.models = models
 
         algorithm_process = Process(taskid=cls.taskid, function=cls.algorithm_function)
         message = algorithm_process.start()
@@ -70,9 +52,8 @@ class AlgorithmStartup:
     @classmethod
     def algorithm_function(cls):
         try:
-            message = Logger(code=180, taskid=cls.taskid, information=f"算法任务 [{cls.algorithm}] 启动开始。")
-            outputs = AlgorithmsTask(taskid=cls.taskid, algorithm=cls.algorithm, models=cls.models)
-            print(outputs)
+            message = Logger(code=200, taskid=cls.taskid, information=f"算法任务 [{cls.algorithm}] 启动开始。")
+            AlgorithmsTask(taskid=cls.taskid, algorithm=cls.algorithm, models=cls.models)
             message = Logger(code=200, taskid=cls.taskid, information=f"算法任务 [{cls.algorithm}] 成功结束。")
         except Exception as error:
             message = Logger(code=250, taskid=cls.taskid, information=f"算法任务失败：{error}\n{traceback.format_exc()}。")

@@ -4,10 +4,10 @@
 # Copyright 2015 for Zen. All Rights Reserved.
 # ---------------------------------------------
 
+import copy
+import datetime
 import polars as pl
-from copy import deepcopy
-from datetime import date, timedelta
-from algorithms.basic.plot import Plotting
+# from algorithms.basic.plot import Plotting
 from algorithms.basic.stocks import Stocks
 
 from project.configuration import Config
@@ -17,7 +17,7 @@ print(f'\n趋势判断:')
 
 class AscendTrend:
 
-    def __init__(self, symbol: str, selected_date: date = None, window: int = 2, adjust: str = 'raw'):
+    def __init__(self, symbol: str, selected_date: datetime.date = None, window: int = 2, adjust: str = 'raw'):
         self.symbol = symbol
         self.selected_date = selected_date
         self.window = window
@@ -30,8 +30,8 @@ class AscendTrend:
 
     def condition1(self):
         print(f'\n(1) 周 20 价格突破周 60 价格 (首突)，同步判断是否站上 30 月线。')
-        selected_date = date(2026, 1, 3) if self.selected_date is None else deepcopy(self.selected_date)
-        limited_date = selected_date - timedelta(days=365*self.window + 7)
+        selected_date = datetime.date(2026, 1, 3) if self.selected_date is None else copy.deepcopy(self.selected_date)
+        limited_date = selected_date - datetime.timedelta(days=365*self.window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
         selected_stock_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'stock_month.parquet').filter(date_filter)
@@ -54,8 +54,8 @@ class AscendTrend:
 
     def condition2(self):
         print(f'\n(2) 周 30 价格突破周 60 价格 (再次确认首突)，同步判断是否站上 30 月线。')
-        selected_date = date(2026, 1, 3) if self.selected_date is None else deepcopy(self.selected_date)
-        limited_date = selected_date - timedelta(days=365*self.window + 7)
+        selected_date = datetime.date(2026, 1, 3) if self.selected_date is None else copy.deepcopy(self.selected_date)
+        limited_date = selected_date - datetime.timedelta(days=365*self.window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
         selected_stock_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'stock_month.parquet').filter(date_filter)
@@ -78,8 +78,8 @@ class AscendTrend:
 
     def condition3(self):
         print(f'\n(3) MACD 突破0轴后回踩均线，缠绕，变成多头趋势 (短线看日线，长线看周、月、季线)。')
-        selected_date = date(2026, 1, 3) if self.selected_date is None else deepcopy(self.selected_date)
-        limited_date = selected_date - timedelta(days=365*self.window + 7)
+        selected_date = datetime.date(2026, 1, 3) if self.selected_date is None else copy.deepcopy(self.selected_date)
+        limited_date = selected_date - datetime.timedelta(days=365*self.window + 7)
 
         for period in ['week', 'month', 'quarter']:
             date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
@@ -112,7 +112,7 @@ class AscendTrend:
 
 class DescendTrend:
 
-    def __init__(self, symbol: str, selected_date: date = None, window: int = 2, adjust: str = 'raw'):
+    def __init__(self, symbol: str, selected_date: datetime.date = None, window: int = 2, adjust: str = 'raw'):
         self.symbol = symbol
         self.selected_date = selected_date
         self.window = window
@@ -126,8 +126,8 @@ class DescendTrend:
 
     def condition1(self):
         print(f'\n(1) 日 60 跌破日 250。')
-        selected_date = date(2026, 1, 3) if self.selected_date is None else deepcopy(self.selected_date)
-        limited_date = selected_date - timedelta(days=365*self.window + 7)
+        selected_date = datetime.date(2026, 1, 3) if self.selected_date is None else copy.deepcopy(self.selected_date)
+        limited_date = selected_date - datetime.timedelta(days=365*self.window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
         selected_ma_day = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'ma_day.parquet').filter(date_filter)
@@ -140,8 +140,8 @@ class DescendTrend:
 
     def condition2(self):
         print(f'\n(2) 周 20 跌破周 60。')
-        selected_date = date(2026, 1, 3) if self.selected_date is None else deepcopy(self.selected_date)
-        limited_date = selected_date - timedelta(days=365*self.window + 7)
+        selected_date = datetime.date(2026, 1, 3) if self.selected_date is None else copy.deepcopy(self.selected_date)
+        limited_date = selected_date - datetime.timedelta(days=365*self.window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
         selected_ma_week = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'ma_week.parquet').filter(date_filter)
@@ -154,8 +154,8 @@ class DescendTrend:
 
     def condition3(self):
         print(f'\n(3) 周 30 跌破周 60。')
-        selected_date = date(2026, 1, 3) if self.selected_date is None else deepcopy(self.selected_date)
-        limited_date = selected_date - timedelta(days=365*self.window + 7)
+        selected_date = datetime.date(2026, 1, 3) if self.selected_date is None else copy.deepcopy(self.selected_date)
+        limited_date = selected_date - datetime.timedelta(days=365*self.window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
         selected_ma_week = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'ma_week.parquet').filter(date_filter)
@@ -168,8 +168,8 @@ class DescendTrend:
         
     def condition4(self):
         print(f'\n(4) 跌破月 30。')
-        selected_date = date(2026, 1, 3) if self.selected_date is None else deepcopy(self.selected_date)
-        limited_date = selected_date - timedelta(days=365*self.window + 7)
+        selected_date = datetime.date(2026, 1, 3) if self.selected_date is None else copy.deepcopy(self.selected_date)
+        limited_date = selected_date - datetime.timedelta(days=365*self.window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
         selected_stock_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'stock_month.parquet').filter(date_filter)
@@ -186,7 +186,7 @@ class DescendTrend:
 
 class SmallFluctuations:
 
-    def __init__(self, symbol: str, selected_date: date = None, window: int = 2, adjust: str = 'raw'):
+    def __init__(self, symbol: str, selected_date: datetime.date = None, window: int = 2, adjust: str = 'raw'):
         self.symbol = symbol
         self.selected_date = selected_date
         self.window = window
@@ -198,8 +198,8 @@ class SmallFluctuations:
 
     def condition1(self):
         print(f'(1) 月小坑，参考月 30 价格。')
-        selected_date = date(2026, 1, 3) if self.selected_date is None else deepcopy(self.selected_date)
-        limited_date = selected_date - timedelta(days=365*self.window + 7)
+        selected_date = datetime.date(2026, 1, 3) if self.selected_date is None else copy.deepcopy(self.selected_date)
+        limited_date = selected_date - datetime.timedelta(days=365*self.window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
         selected_macd_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'macd_month.parquet').filter(date_filter)
@@ -242,21 +242,21 @@ class SmallFluctuations:
 
     def condition2(self):
         print(f'\n(2) 坑内出来以后，Boll 周下是买点。')
-        selected_date = date(2026, 1, 3) if self.selected_date is None else deepcopy(self.selected_date)
-        limited_date = selected_date - timedelta(days=365*self.window + 7)
+        selected_date = datetime.date(2026, 1, 3) if self.selected_date is None else copy.deepcopy(self.selected_date)
+        limited_date = selected_date - datetime.timedelta(days=365*self.window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
         selected_macd_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'macd_month.parquet').filter(date_filter)
-        selected_boll_week = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'boll_week.parquet').filter(date_filter)
+        # selected_boll_week = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'boll_week.parquet').filter(date_filter)
 
-        outtingmonthhole = selected_macd_month.filter(
+        climbupmonthhole = selected_macd_month.filter(
             (pl.col('dif') > 0) & 
             (pl.col('dif').shift(1) < 0) & 
             (pl.col('dea') < 0) & 
             (pl.col('dea').shift(1) < 0) & 
             (pl.col('dif') > pl.col('dea'))
         ).drop_nulls()['date']
-        print(f'@ 触发 MACD-Month 坑内出：{[d.strftime("%Y-%m-%d") for d in outtingmonthhole]}') if not outtingmonthhole.is_empty() else None
+        print(f'@ 触发 MACD-Month 坑内出：{[d.strftime("%Y-%m-%d") for d in climbupmonthhole]}') if not climbupmonthhole.is_empty() else None
 
         # latest_stock_low < latest_boll_week
 
