@@ -5,8 +5,8 @@
 # ---------------------------------------------
 
 import polars as pl
-from algorithms.basic.plot import Plotting
 
+from algorithms.basic.fetch import Stocks
 from project.configuration import Config
 
 
@@ -109,9 +109,10 @@ class BollingerBands:
 
 
 if __name__ == '__main__':
-    for period in ['day', 'week', 'month', 'quarter']:
-        MovingAverage('sh600036', period=period)
-        MovingAverageConvergenceDivergence('sh600036', period=period)
-        BollingerBands('sh600036', period=period)
+    for stock in Stocks:
+        for period in ['day', 'week', 'month', 'quarter']:
+            MovingAverage(stock, period=period)
+            MovingAverageConvergenceDivergence(stock, period=period)
+            BollingerBands(stock, period=period)
 
-    Plotting('sh600036', period='day')
+    # Plotting('sh600036', period='day')

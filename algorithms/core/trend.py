@@ -8,6 +8,7 @@ import polars as pl
 from copy import deepcopy
 from datetime import date, timedelta
 from algorithms.basic.plot import Plotting
+from algorithms.basic.stocks import Stocks
 
 from project.configuration import Config
 
@@ -261,9 +262,10 @@ class SmallFluctuations:
 
 
 if __name__ == '__main__':
-    AscendTrend('sh600036')
-    DescendTrend('sh600036')
-    SmallFluctuations('sh600036')
+    for stock in Stocks:
+        AscendTrend(stock)
+        DescendTrend(stock)
+        SmallFluctuations(stock)
     
     # Plotting('sh600036', period='week', window=200)
-    Plotting('sh600036', period='month')
+    # Plotting('sh600036', period='month')

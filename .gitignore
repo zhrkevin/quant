@@ -31,8 +31,10 @@
 *.zip
 
 *.DS_store
+*.pdm-python
 *project-api.json
 *version
 
 !.gitkeep
+!raw.parquet
 !explanation.xlsx
