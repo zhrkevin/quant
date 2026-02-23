@@ -6,245 +6,264 @@
 
 import polars as pl
 from copy import deepcopy
-from datetime import date
+from datetime import date, timedelta
 from algorithms.basic.plot import Plotting
 
 from project.configuration import Config
 
 
+print(f'\n趋势判断:')
+
 class AscendTrend:
 
-    def __init__(self, symbol: str, selected_date: date = None):
+    def __init__(self, symbol: str, selected_date: date = None, window: int = 2, adjust: str = 'raw'):
         self.symbol = symbol
         self.selected_date = selected_date
+        self.window = window
+        self.adjust = adjust
 
-        print(f'\n趋势判断:')
         print(f'\n1、上升趋势')
         self.condition1()
         self.condition2()
-        for period in ['day', 'week', 'month']:
-            self.condition3(period)
+        self.condition3()
 
     def condition1(self):
-        print(f'(1) 周 20 价格突破周 60 价格 (首突), 同步判断是否站上 30 月线。')
-        selected_date = date(2020, 9, 10) if self.selected_date is None else deepcopy(self.selected_date)
-        
-        stock_day = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'stock_day.parquet')
-        selected_stock_day = stock_day.filter(pl.col('date') <= selected_date)
-        stock_low = selected_stock_day['raw_low'][-1]
+        print(f'\n(1) 周 20 价格突破周 60 价格 (首突)，同步判断是否站上 30 月线。')
+        selected_date = date(2026, 1, 3) if self.selected_date is None else deepcopy(self.selected_date)
+        limited_date = selected_date - timedelta(days=365*self.window + 7)
 
-        ma_week = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'ma_week.parquet')
-        selected_week_data = ma_week.filter(pl.col('date') <= selected_date)
-        latest_ma_week_20, latest_ma_week_60 = selected_week_data['ma_20'][-1], selected_week_data['ma_60'][-1]
-        previous_ma_week_20, previous_ma_week_60 = selected_week_data['ma_20'][-2], selected_week_data['ma_60'][-2]
-        
-        ma_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'ma_month.parquet')
-        selected_ma_month = ma_month.filter(pl.col('date') <= selected_date)
-        latest_ma_month_30 = selected_ma_month['ma_30'][-1]
-   
-        if latest_ma_week_20 > latest_ma_week_60 and previous_ma_week_20 < previous_ma_week_60 and stock_low > latest_ma_month_30:
-            print(f'\n今日 ({selected_date}) 触发 MA-Week-20 上穿突破 MA-Week-60 并站上 MA-Month-30 线')
-            print(f"本周 MA-Week-20 ({latest_ma_week_20:.4f}) MA-Week-60 ({latest_ma_week_60:.4f})")
-            print(f"上周 MA-Week-20 ({previous_ma_week_20:.4f}) MA-Week-60 ({previous_ma_week_60:.4f})")
-            print(f"本月 MA-Month-30 ({latest_ma_month_30:.4f}) 今日最低点 Stock Low ({stock_low:.4f})")
+        date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
+        selected_stock_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'stock_month.parquet').filter(date_filter)
+        selected_ma_week = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'ma_week.parquet').filter(date_filter)
+        selected_ma_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'ma_month.parquet').filter(date_filter)
+
+        breakthrough = selected_ma_week.filter(
+            (pl.col('ma_20').shift(1) < pl.col('ma_60').shift(1)) & 
+            (pl.col('ma_20') > pl.col('ma_60'))
+        ).drop_nulls()['date']
+        print(f'@ 触发 MA-Week-20 首次突破 MA-Week-60：\n{[d.strftime("%Y-%m-%d") for d in breakthrough]}') if not breakthrough.is_empty() else None
+
+        standup = selected_stock_month.join(
+            selected_ma_month.select('date', 'ma_30'), on='date'
+        ).filter(
+            (pl.col(f'{self.adjust}_low').shift(1) < pl.col('ma_30').shift(1)) & 
+            (pl.col(f'{self.adjust}_low') > pl.col('ma_30'))
+        ).drop_nulls()['date']
+        print(f'@ 触发 Stock-Low 站上 MA-Month-30 线：\n{[d.strftime("%Y-%m-%d") for d in standup]}') if not standup.is_empty() else None
 
     def condition2(self):
-        selected_date = date(2020, 10, 27) if self.selected_date is None else deepcopy(self.selected_date)
+        print(f'\n(2) 周 30 价格突破周 60 价格 (再次确认首突)，同步判断是否站上 30 月线。')
+        selected_date = date(2026, 1, 3) if self.selected_date is None else deepcopy(self.selected_date)
+        limited_date = selected_date - timedelta(days=365*self.window + 7)
 
-        stock_day = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'stock_day.parquet')
-        selected_stock_day = stock_day.filter(pl.col('date') <= selected_date)
-        stock_low = selected_stock_day['raw_low'][-1]
+        date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
+        selected_stock_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'stock_month.parquet').filter(date_filter)
+        selected_ma_week = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'ma_week.parquet').filter(date_filter)
+        selected_ma_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'ma_month.parquet').filter(date_filter)
 
-        ma_week = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'ma_week.parquet')
-        selected_week_data = ma_week.filter(pl.col('date') <= selected_date)
-        latest_ma_week_30, latest_ma_week_60 = selected_week_data['ma_30'][-1], selected_week_data['ma_60'][-1]
-        previous_ma_week_30, previous_ma_week_60 = selected_week_data['ma_30'][-2], selected_week_data['ma_60'][-2]
+        breakthrough = selected_ma_week.filter(
+            (pl.col('ma_30').shift(1) < pl.col('ma_60').shift(1)) & 
+            (pl.col('ma_30') > pl.col('ma_60'))
+        ).drop_nulls()['date']
+        print(f'@ 触发 MA-Week-30 首次突破 MA-Week-60：\n{[d.strftime("%Y-%m-%d") for d in breakthrough]}') if not breakthrough.is_empty() else None
 
-        ma_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'ma_month.parquet')
-        selected_ma_month = ma_month.filter(pl.col('date') <= selected_date)
-        latest_ma_month_30 = selected_ma_month['ma_30'][-1]
+        standup = selected_stock_month.join(
+            selected_ma_month.select('date', 'ma_30'), on='date'
+        ).filter(
+            (pl.col(f'{self.adjust}_low').shift(1) < pl.col('ma_30').shift(1)) & 
+            (pl.col(f'{self.adjust}_low') > pl.col('ma_30'))
+        ).drop_nulls()['date']
+        print(f'@ 触发 Stock-Low 站上 MA-Month-30 线：\n{[d.strftime("%Y-%m-%d") for d in standup]}') if not standup.is_empty() else None
 
-        if latest_ma_week_30 > latest_ma_week_60 and previous_ma_week_30 < previous_ma_week_60 and stock_low > latest_ma_month_30:
-            print(f'\n今日 ({selected_date}) 触发 MA-Week-30 上穿突破 MA-Week-60 并站上 MA-Month-30 线')
-            print(f"本周 MA-Week-30 ({latest_ma_week_30:.4f}) MA-Week-60 ({latest_ma_week_60:.4f})")
-            print(f"上周 MA-Week-30 ({previous_ma_week_30:.4f}) MA-Week-60 ({previous_ma_week_60:.4f})")
-            print(f"本月 MA-Month-30 ({latest_ma_month_30:.4f}) 今日最低点 Stock Low ({stock_low:.4f})")
+    def condition3(self):
+        print(f'\n(3) MACD 突破0轴后回踩均线，缠绕，变成多头趋势 (短线看日线，长线看周、月、季线)。')
+        selected_date = date(2026, 1, 3) if self.selected_date is None else deepcopy(self.selected_date)
+        limited_date = selected_date - timedelta(days=365*self.window + 7)
 
-    def condition3(self, period: str = 'day'):
-        selected_date = date(2024, 10, 14) if self.selected_date is None else deepcopy(self.selected_date)
+        for period in ['week', 'month', 'quarter']:
+            date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
+            selected_macd = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'macd_{period}.parquet').filter(date_filter)
+            selected_ma = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'ma_{period}.parquet').filter(date_filter)
 
-        macd_data = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'macd_{period}.parquet')
-        selected_macd_data = macd_data.filter(pl.col('date') <= selected_date)
-        latest_dif = selected_macd_data['dif'][-1]
-        latest_dea = selected_macd_data['dea'][-1]
+            breakthrough = selected_macd.filter(
+                (pl.col('dif').shift(1) < 0) & 
+                (pl.col('dif') >= 0) & 
+                (pl.col('dif') > pl.col('dea'))
+            ).drop_nulls()['date']
+            print(f'@ 触发 MACD-{period.title()} 突破 0 轴：\n{[d.strftime("%Y-%m-%d") for d in breakthrough]}') if not breakthrough.is_empty() else None
 
-        ma = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'ma_{period}.parquet')
-        selected_ma = ma.filter(pl.col('date') <= selected_date)
-        latest_ma_10 = selected_ma['ma_10'][-1]
-        latest_ma_20 = selected_ma['ma_20'][-1]
-        latest_ma_30 = selected_ma['ma_30'][-1]
-        latest_ma_60 = selected_ma['ma_60'][-1]
+            longposition = selected_ma.filter(
+                (pl.col('ma_10') > pl.col('ma_20')) & 
+                (pl.col('ma_20') > pl.col('ma_30')) & 
+                (pl.col('ma_30') > pl.col('ma_60'))
+            )['date']
+            print(f'@ 触发 MA-{period.title()} 多头排列：') if not longposition.is_empty() else None 
 
-        if latest_dif > 0 and latest_dif > latest_dea and latest_ma_10 > latest_ma_20 > latest_ma_30 > latest_ma_60:
-            print(f'\n今日 ({selected_date}) {period.title()} 趋势触发 MACD 线突破 0 轴且呈现多头排列')
-            print(f"当前 MACD 线 DIF ({latest_dif:.4f}), DEA ({latest_dea:.4f})")
-            print(f"当前 MA-10 ({latest_ma_10:.4f}) MA-20 ({latest_ma_20:.4f}) MA-30 ({latest_ma_30:.4f}) MA-60 ({latest_ma_60:.4f})")
+            groups, date_indices = [], {date: idx for idx, date in enumerate(selected_ma['date'])}
+            for i, d in enumerate(longposition):
+                if i == 0 or date_indices[d] != date_indices[longposition[i-1]] + 1:
+                    groups.append([d])
+                else:
+                    groups[-1].append(d)
+            for i, group in enumerate(groups):
+                print(f'时间区间 {i+1}：[{group[0] if len(group) == 1 else f"{group[0]} ~ {group[-1]}"}]')
 
 
-class DescendSignal:
+class DescendTrend:
 
-    def __init__(self, symbol: str, selected_date: date = None):
+    def __init__(self, symbol: str, selected_date: date = None, window: int = 2, adjust: str = 'raw'):
         self.symbol = symbol
         self.selected_date = selected_date
+        self.window = window
+        self.adjust = adjust
 
+        print(f'\n3、下跌趋势')
         self.condition1()
         self.condition2()
         self.condition3()
         self.condition4()
 
     def condition1(self):
-        selected_date = date(2025, 11, 15) if self.selected_date is None else deepcopy(self.selected_date)
+        print(f'\n(1) 日 60 跌破日 250。')
+        selected_date = date(2026, 1, 3) if self.selected_date is None else deepcopy(self.selected_date)
+        limited_date = selected_date - timedelta(days=365*self.window + 7)
 
-        ma_day = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'ma_day.parquet')
-        selected_ma_day = ma_day.filter(pl.col('date') <= selected_date)
-        latest_ma_day_60, latest_ma_day_250 = selected_ma_day['ma_60'][-1], selected_ma_day['ma_250'][-1]
-        previous_ma_day_60, previous_ma_day_250 = selected_ma_day['ma_60'][-2], selected_ma_day['ma_250'][-2]
+        date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
+        selected_ma_day = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'ma_day.parquet').filter(date_filter)
 
-        if latest_ma_day_60 < latest_ma_day_250 and previous_ma_day_60 > previous_ma_day_250:
-            print(f'\n今日 ({selected_date}) 触发 MA-Day-60 下穿跌破 MA-250-Day 线')
-            print(f"本日 MA-Day-60 ({latest_ma_day_60:.4f}) MA-250-Day ({latest_ma_day_250:.4f})")
-            print(f"前日 MA-Day-60 ({previous_ma_day_60:.4f}) MA-250-Day ({previous_ma_day_250:.4f})")
+        fallbelow = selected_ma_day.filter(
+            (pl.col('ma_60').shift(1) > pl.col('ma_250').shift(1)) & 
+            (pl.col('ma_60') < pl.col('ma_250'))
+        ).drop_nulls()['date']
+        print(f'@ 触发 MA-Day-60 跌破 MA-Day-250：\n{[d.strftime("%Y-%m-%d") for d in fallbelow]}') if not fallbelow.is_empty() else None
 
     def condition2(self):
-        selected_date = date(2022, 1, 25) if self.selected_date is None else deepcopy(self.selected_date)
+        print(f'\n(2) 周 20 跌破周 60。')
+        selected_date = date(2026, 1, 3) if self.selected_date is None else deepcopy(self.selected_date)
+        limited_date = selected_date - timedelta(days=365*self.window + 7)
 
-        ma_week = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'ma_week.parquet')
-        selected_ma_week = ma_week.filter(pl.col('date') <= selected_date)
-        latest_ma_week_20, latest_ma_week_60 = selected_ma_week['ma_20'][-1], selected_ma_week['ma_60'][-1]
-        previous_ma_week_20, previous_ma_week_60 = selected_ma_week['ma_20'][-2], selected_ma_week['ma_60'][-2]
+        date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
+        selected_ma_week = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'ma_week.parquet').filter(date_filter)
 
-        if latest_ma_week_20 < latest_ma_week_60 and previous_ma_week_20 > previous_ma_week_60:
-            print(f'\n今日 ({selected_date}) 触发 MA-Week-20 下穿跌破 MA-Week-60 线')
-            print(f"本周 MA-Week-20 ({latest_ma_week_20:.4f}) MA-Week-60 ({latest_ma_week_60:.4f})")
-            print(f"前周 MA-Week-20 ({previous_ma_week_20:.4f}) MA-Week-60 ({previous_ma_week_60:.4f})")
+        fallbelow = selected_ma_week.filter(
+            (pl.col('ma_20').shift(1) > pl.col('ma_60').shift(1)) & 
+            (pl.col('ma_20') < pl.col('ma_60'))
+        ).drop_nulls()['date']
+        print(f'@ 触发 MA-Week-20 跌破 MA-Week-60：\n{[d.strftime("%Y-%m-%d") for d in fallbelow]}') if not fallbelow.is_empty() else None
 
     def condition3(self):
-        selected_date = date(2022, 1, 11) if self.selected_date is None else deepcopy(self.selected_date)
-                
-        ma_week = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'ma_week.parquet')
-        selected_ma_week = ma_week.filter(pl.col('date') <= selected_date)
-        latest_ma_week_30, previous_ma_week_30 = selected_ma_week['ma_30'][-1], selected_ma_week['ma_30'][-2]
-        latest_ma_week_60, previous_ma_week_60 = selected_ma_week['ma_60'][-1], selected_ma_week['ma_60'][-2]
+        print(f'\n(3) 周 30 跌破周 60。')
+        selected_date = date(2026, 1, 3) if self.selected_date is None else deepcopy(self.selected_date)
+        limited_date = selected_date - timedelta(days=365*self.window + 7)
 
-        if latest_ma_week_30 < latest_ma_week_60 and previous_ma_week_30 > previous_ma_week_60:
-            print(f'\n今日 ({selected_date}) 触发 MA-Week-30 下穿跌破 MA-Week-60 线')
-            print(f"本周 MA-Week-30 ({latest_ma_week_30:.4f}) MA-Week-60 ({latest_ma_week_60:.4f})")
-            print(f"前周 MA-Week-30 ({previous_ma_week_30:.4f}) MA-Week-60 ({previous_ma_week_60:.4f})")
+        date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
+        selected_ma_week = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'ma_week.parquet').filter(date_filter)
+
+        fallbelow = selected_ma_week.filter(
+            (pl.col('ma_30').shift(1) > pl.col('ma_60').shift(1)) & 
+            (pl.col('ma_30') < pl.col('ma_60'))
+        ).drop_nulls()['date']
+        print(f'@ 触发 MA-Week-30 跌破 MA-Week-60：\n{[d.strftime("%Y-%m-%d") for d in fallbelow]}') if not fallbelow.is_empty() else None
         
     def condition4(self):
-        selected_date = date(2022, 3, 9) if self.selected_date is None else deepcopy(self.selected_date)
-                
-        ma_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'ma_month.parquet')
-        selected_ma_month = ma_month.filter(pl.col('date') <= selected_date)
-        latest_ma_month_30, previous_ma_month_30 = selected_ma_month['ma_30'][-1], selected_ma_month['ma_30'][-2]
+        print(f'\n(4) 跌破月 30。')
+        selected_date = date(2026, 1, 3) if self.selected_date is None else deepcopy(self.selected_date)
+        limited_date = selected_date - timedelta(days=365*self.window + 7)
 
-        stock_data = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'stock_day.parquet')
-        selected_stock_data = stock_data.filter(pl.col('date') <= selected_date)
-        latest_stock_low, previous_stock_low = selected_stock_data['raw_low'][-1], selected_stock_data['raw_low'][-2]
-        
-        if latest_stock_low < latest_ma_month_30 and previous_stock_low > previous_ma_month_30:
-            print(f'\n今日 ({selected_date}) 触发下穿跌破 MA-Month-30 线')
-            print(f"本月 MA-Month-30 ({latest_ma_month_30:.4f})")
-            print(f"今日最低点 Stock Low ({latest_stock_low:.4f})")
-            print(f"昨日最低点 Stock Low ({previous_stock_low:.4f})")
-        
-        Plotting('sh600036', period='week', window=500)
+        date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
+        selected_stock_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'stock_month.parquet').filter(date_filter)
+        selected_ma_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'ma_month.parquet').filter(date_filter)
+
+        fallbelow = selected_stock_month.join(
+            selected_ma_month.select('date', 'ma_30'), on='date'
+        ).filter(
+            (pl.col(f'{self.adjust}_low').shift(1) > pl.col('ma_30').shift(1)) & 
+            (pl.col(f'{self.adjust}_low') < pl.col('ma_30'))
+        ).drop_nulls()['date']
+        print(f'@ 触发 Stock-Low 下穿跌破 MA-Month-30 线：\n{[d.strftime("%Y-%m-%d") for d in fallbelow]}') if not fallbelow.is_empty() else None
 
 
-class ConsolidationSignal:
+class SmallFluctuations:
 
-    def __init__(self, symbol: str, selected_date: date = None, adjust: str = 'raw'):
+    def __init__(self, symbol: str, selected_date: date = None, window: int = 2, adjust: str = 'raw'):
         self.symbol = symbol
         self.selected_date = selected_date
+        self.window = window
         self.adjust = adjust
 
+        print(f'\n4、小调整')
         self.condition1()
         self.condition2()
-        self.condition3()
 
     def condition1(self):
-        selected_date = date(2021, 11, 1) if self.selected_date is None else deepcopy(self.selected_date)
+        print(f'(1) 月小坑，参考月 30 价格。')
+        selected_date = date(2026, 1, 3) if self.selected_date is None else deepcopy(self.selected_date)
+        limited_date = selected_date - timedelta(days=365*self.window + 7)
 
-        macd_data = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'macd_month.parquet')
-        selected_macd_data = macd_data.filter(pl.col('date') <= selected_date)
-        latest_dif = selected_macd_data['dif'][-1]
-        latest_dea = selected_macd_data['dea'][-1]
-        latest_macd = selected_macd_data['macd'][-1]
+        date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
+        selected_macd_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'macd_month.parquet').filter(date_filter)
+        selected_ma_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'ma_month.parquet').filter(date_filter)
+        selected_stock_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'stock_month.parquet').filter(date_filter)
 
-        ma_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'ma_month.parquet')
-        selected_ma_month = ma_month.filter(pl.col('date') <= selected_date)
-        latest_ma_month_30 = selected_ma_month['ma_30'][-1]
+        smallmonthhole = selected_macd_month.filter(
+            (pl.col('macd') < 0) & 
+            (pl.col('dif') > 0) & 
+            (pl.col('dif') < pl.col('dea'))
+        ).drop_nulls()['date']
+        print(f'@ 触发 MACD-Month 月小坑：') if not smallmonthhole.is_empty() else None
+        if not smallmonthhole.is_empty():         
+            groups, date_indices = [], {date: idx for idx, date in enumerate(selected_macd_month['date'])}
+            for i, d in enumerate(smallmonthhole):
+                if i == 0 or date_indices[d] != date_indices[smallmonthhole[i-1]] + 1:
+                    groups.append([d])
+                else:
+                    groups[-1].append(d)
+            for i, group in enumerate(groups):
+                print(f'时间区间 {i+1}: [{group[0] if len(group) == 1 else f"{group[0]} ~ {group[-1]}"}]')
 
-        stock_data = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'stock_day.parquet')
-        selected_stock_data = stock_data.filter(pl.col('date') <= selected_date)
-        latest_stock_low = selected_stock_data[f'{self.adjust}_low'][-1]
+        fallbelow = selected_stock_month.join(
+            selected_ma_month.select('date', 'ma_30'), on='date'
+        ).filter(
+            (pl.col(f'{self.adjust}_low') >= pl.col('ma_30'))
+        ).drop_nulls()['date']
+        intersection = smallmonthhole.filter(smallmonthhole.is_in(fallbelow.implode()))
+        print(f'@ 始终站上 MA-Month-30 线：') if not intersection.is_empty() else None
 
-        if latest_dif > 0 and latest_dif <= latest_dea and latest_macd < 0:
-            print(f'\n今日 ({selected_date}) 触发 MACD 月小坑')
-            print(f"今日 DIF ({latest_dif:.4f}) DEA ({latest_dea:.4f}) MACD ({latest_macd:.4f})")
-            if latest_stock_low < latest_ma_month_30:
-                print(f"蜡烛 Stock Low ({latest_stock_low:.4f}) < MA-Month-30 ({latest_ma_month_30:.4f})")
-            elif latest_stock_low > latest_ma_month_30:
-                print(f"蜡烛 Stock Low ({latest_stock_low:.4f}) > MA-Month-30 ({latest_ma_month_30:.4f})")
-            else:
-                print(f"蜡烛 Stock Low ({latest_stock_low:.4f}) = MA-Month-30 ({latest_ma_month_30:.4f})")
+        if not intersection.is_empty():
+            groups, date_indices = [], {date: idx for idx, date in enumerate(selected_macd_month['date'])}
+            for i, d in enumerate(intersection):
+                if i == 0 or date_indices[d] != date_indices[intersection[i-1]] + 1:    
+                    groups.append([d])
+                else:
+                    groups[-1].append(d)
+            for i, group in enumerate(groups):
+                print(f'时间区间 {i+1}: [{group[0] if len(group) == 1 else f"{group[0]} ~ {group[-1]}"}]')
 
     def condition2(self):
-        selected_date = date(2025, 1, 2) if self.selected_date is None else deepcopy(self.selected_date)
+        print(f'\n(2) 坑内出来以后，Boll 周下是买点。')
+        selected_date = date(2026, 1, 3) if self.selected_date is None else deepcopy(self.selected_date)
+        limited_date = selected_date - timedelta(days=365*self.window + 7)
 
-        macd_data = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'macd_month.parquet')
-        selected_macd_data = macd_data.filter(pl.col('date') <= selected_date)
-        latest_dif = selected_macd_data['dif'][-1]
-        latest_dea = selected_macd_data['dea'][-1]
-        latest_macd = selected_macd_data['macd'][-1]
-        previous_dif = selected_macd_data['dif'][-2]
-        previous_dea = selected_macd_data['dea'][-2]
-        previous_macd = selected_macd_data['macd'][-2]
+        date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
+        selected_macd_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'macd_month.parquet').filter(date_filter)
+        selected_boll_week = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'boll_week.parquet').filter(date_filter)
 
-        boll_week = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'boll_week.parquet')
-        selected_boll_week = boll_week.filter(pl.col('date') <= selected_date)
-        latest_boll_week = selected_boll_week['boll_lower'][-1]
+        outtingmonthhole = selected_macd_month.filter(
+            (pl.col('dif') > 0) & 
+            (pl.col('dif').shift(1) < 0) & 
+            (pl.col('dea') < 0) & 
+            (pl.col('dea').shift(1) < 0) & 
+            (pl.col('dif') > pl.col('dea'))
+        ).drop_nulls()['date']
+        print(f'@ 触发 MACD-Month 坑内出：{[d.strftime("%Y-%m-%d") for d in outtingmonthhole]}') if not outtingmonthhole.is_empty() else None
 
-        stock_data = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'stock_day.parquet')
-        selected_stock_data = stock_data.filter(pl.col('date') <= selected_date)
-        latest_stock_low = selected_stock_data[f'{self.adjust}_low'][-1]
-        
-        # sh.600036 无数据点回测，待其他票用例测试
-        if latest_dif > 0 and previous_dif < 0 and latest_dea < 0 and previous_dea < 0 and latest_stock_low < latest_boll_week:
-            print(f'\n今日 ({selected_date}) 触发坑内出且蜡烛 Stock Low ({latest_stock_low:.4f}) 碰 Boll 周下轨 ({latest_boll_week:.4f})')
-            print(f"今日 DIF ({latest_dif:.4f}) DEA ({latest_dea:.4f}) MACD ({latest_macd:.4f})")
-            print(f"前日 DIF ({previous_dif:.4f}) DEA ({previous_dea:.4f}) MACD ({previous_macd:.4f})")
-
-    def condition3(self):
-        selected_date = date(2024, 3, 1) if self.selected_date is None else deepcopy(self.selected_date)
-
-        macd_data = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'macd_month.parquet')
-        selected_macd_data = macd_data.filter(pl.col('date') <= selected_date)
-        latest_dif = selected_macd_data['dif'][-1]
-        latest_dea = selected_macd_data['dea'][-1]
-        latest_macd = selected_macd_data['macd'][-1]
-        previous_dif = selected_macd_data['dif'][-2]
-        previous_dea = selected_macd_data['dea'][-2]
-        previous_macd = selected_macd_data['macd'][-2]
-
-        if 0 >= latest_dif >= latest_dea and 0 >= previous_dea >= previous_dif:
-            print(f"\n今日 ({selected_date}) 触发水下金叉")
-            print(f"今日 DIF ({latest_dif:.4f}) DEA ({latest_dea:.4f}) MACD ({latest_macd:.4f})")
-            print(f"前日 DIF ({previous_dif:.4f}) DEA ({previous_dea:.4f}) MACD ({previous_macd:.4f})")
+        # latest_stock_low < latest_boll_week
 
 
 if __name__ == '__main__':
-    AscendSignal('sh600036')
-    DescendSignal('sh600036')
-    ConsolidationSignal('sh600036')
-    Plotting('sh600036', period='week', window=100)
+    AscendTrend('sh600036')
+    DescendTrend('sh600036')
+    SmallFluctuations('sh600036')
+    
+    # Plotting('sh600036', period='week', window=200)
+    Plotting('sh600036', period='month')
