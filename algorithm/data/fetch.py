@@ -12,7 +12,7 @@ from datetime import date
 
 from project.configuration import Config
 from algorithm.data.stocks import Stocks
-from algorithm.data.etf import ETFs, ShanghaiETF, ShenzhenETF
+from algorithm.data.etfs import ETFs, ShanghaiETF, ShenzhenETF
 
 
 akshare_proxy_patch.install_patch("101.201.173.125", "", 30)
@@ -27,14 +27,13 @@ class WriteStocks:
         # self.download_all_stocks_data(symbol='sh600025')
         # self.download_incremental_stocks_data(symbol='sh600025')
 
-
     def save(self):
         for symbol in self.stocks:
             os.makedirs(Config.Paths.DataPath / 'stocks' / symbol) if not os.path.exists(Config.Paths.DataPath / 'stocks' / symbol) else None
             self.download_all_stocks_data(symbol)
             self.download_incremental_stocks_data(symbol)
 
-    def download_all_stocks_data(self, symbol: str = 'sh600036', start_date: str = '20150101', end_date: str = '20251231'):
+    def download_all_stocks_data(self, symbol='sh600025', start_date='20150101', end_date='20251231'):
         all_raw_data = pl.read_parquet(Config.Paths.DataPath / 'stocks' / symbol / 'raw.parquet')
         print('读取全量数据')
 
@@ -63,7 +62,7 @@ class WriteStocks:
             print(f'三种复权类型全量数据合并完成 \n{new_raw_data}')
             new_raw_data.write_parquet(Config.Paths.DataPath / 'stocks' / symbol / 'raw.parquet')
 
-    def download_incremental_stocks_data(self, symbol: str = 'sh600036'):
+    def download_incremental_stocks_data(self, symbol='sh600025'):
         all_raw_data = pl.read_parquet(Config.Paths.DataPath / 'stocks' / symbol / 'raw.parquet')
         print(f'读取全量数据 \n{all_raw_data}')
 
@@ -109,7 +108,7 @@ class SplitStocks:
         for symbol in self.stocks:
             self.read(symbol)
 
-    def read(self, symbol: str):
+    def read(self, symbol):
         # 读入原始数据
         self.raw_data = pl.read_parquet(Config.Paths.DataPath / 'stocks' / symbol / 'raw.parquet')
 
@@ -192,7 +191,7 @@ class SplitStocks:
 class WriteETFs:
 
     def __init__(self):
-        self.etfs = ShanghaiETF
+        self.etfs = ETFs
         self.save()
         # self.download_all_etfs_data()
         # self.download_incremental_etfs_data()
@@ -222,7 +221,7 @@ class WriteETFs:
             print(f'全量数据下载完成 \n{all_raw_data}')
             all_raw_data.write_parquet(Config.Paths.DataPath / 'etfs' / symbol / 'raw.parquet')
 
-    def download_incremental_etfs_data(self, symbol: str = 'sh000016'):
+    def download_incremental_etfs_data(self, symbol='sh000016'):
         all_raw_data = pl.read_parquet(Config.Paths.DataPath / 'etfs' / symbol / 'raw.parquet')
         update_date = all_raw_data['date'].max()
         print(f'读取全量数据')

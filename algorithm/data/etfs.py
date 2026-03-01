@@ -12,6 +12,8 @@ ShanghaiETF = {
     'sh000852': '中证1000',
     'sh000688': '科创50',
     'sh000092': '中证红利',
+    'sh000985': '中证全指',
+    'sh000510': '中证A500',
 }
 
 
@@ -26,15 +28,12 @@ ShenzhenETF = {
 }
 
 OtherETF = {
-    'csi000985': '中证全指',
-    'csi000510': '中证A500',
-    '930940': '红利低波动',
-    '931464': '中证红利质量',
+    'csiH30269': '红利低波动',
+    'csi931468': '中证红利质量',
 }
 
 
-
-ETFs = ShanghaiETF | ShenzhenETF
+ETFs = ShanghaiETF | ShenzhenETF | OtherETF
 
 
 if __name__ == '__main__':
