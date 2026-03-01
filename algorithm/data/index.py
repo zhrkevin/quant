@@ -6,8 +6,8 @@
 
 import polars as pl
 
-from algorithm.basic.fetch import Stocks
 from project.configuration import Config
+from algorithm.data.stocks import Stocks
 
 
 pl.Config(tbl_rows=20, tbl_cols=-1)

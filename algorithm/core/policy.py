@@ -7,7 +7,7 @@
 import copy
 import datetime
 import polars as pl
-from algorithms.basic.plot import Plotting
+from algorithm.basic.plot import Plotting
 
 from project.configuration import Config
 

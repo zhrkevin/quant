@@ -4,11 +4,11 @@
 # Copyright 2015 for Zen. All Rights Reserved.
 # ---------------------------------------------
 
-from algorithms.middlewares.messages import Callback, MessageQueue
-from algorithms.middlewares.minios import MinIO
-from algorithms.middlewares.logger import Logger
-from algorithms.middlewares.process import Process
-from algorithms.middlewares.authentication import Authorization, Registration, protect
+from algorithm.middlewares.messages import Callback, MessageQueue
+from algorithm.middlewares.minios import MinIO
+from algorithm.middlewares.logger import Logger
+from algorithm.middlewares.process import Process
+from algorithm.middlewares.authentication import Authorization, Registration, protect
 
 
 __all__ = [

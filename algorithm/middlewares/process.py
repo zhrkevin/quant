@@ -10,7 +10,7 @@ import psutil
 import multiprocess
 
 from project.configuration import Config
-from algorithms.middlewares import Logger
+from algorithm.middlewares import Logger
 
 
 class Process:

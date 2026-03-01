@@ -7,8 +7,8 @@
 import traceback
 
 from project.configuration import Config
-from algorithms.middlewares import MinIO, Logger, Process, Callback
-from algorithms.basic.fetch import WriteStocks, SplitStocks
+from algorithm.middlewares import MinIO, Logger, Process, Callback
+from algorithm.basic.fetch import WriteStocks, SplitStocks
 
 
 class DataProcessing:

@@ -12,8 +12,8 @@ import numpy as np
 from sanic.log import logger
 
 from project.configuration import Config
-from algorithms.middlewares import MessageQueue
-from algorithms.algorithms import AlgorithmStartup
+from algorithm.middlewares import MessageQueue
+from algorithm.algorithms import AlgorithmStartup
 
 
 class AlgorithmScheduler:

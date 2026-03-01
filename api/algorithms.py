@@ -7,8 +7,8 @@
 import sanic
 
 from axon.documents import OpenAPI
-from algorithms.middlewares import Logger, Registration, Authorization, protect
-from algorithms.algorithms import DataProcessing, AlgorithmStartup, DataDownload
+from algorithm.middlewares import Logger, Registration, Authorization, protect
+from algorithm.algorithms import DataProcessing, AlgorithmStartup, DataDownload
 
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------

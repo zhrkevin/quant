@@ -9,7 +9,7 @@ from sanic.log import logger
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from project.configuration import Config
-from algorithms.schedulers import CallbackScheduler, CleanScheduler
+from algorithm.schedulers import CallbackScheduler, CleanScheduler
 
 
 schedulers_blueprint = sanic.Blueprint(name='SchedulersBlueprint', url_prefix='/quant')

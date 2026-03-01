@@ -7,12 +7,15 @@
 import os
 import polars as pl
 import akshare as ak
+import akshare_proxy_patch
 from datetime import date
 
-from algorithm.basic.stocks import Stocks
 from project.configuration import Config
+from algorithm.data.stocks import Stocks
+from algorithm.data.etf import ETFs, ShanghaiETF, ShenzhenETF
 
 
+akshare_proxy_patch.install_patch("101.201.173.125", "", 30)
 pl.Config(tbl_rows=12, tbl_cols=-1)
 
 
@@ -185,7 +188,62 @@ class SplitStocks:
         print(self.quarter_data)
 
 
+
+class WriteETFs:
+
+    def __init__(self):
+        self.etfs = ShanghaiETF
+        # self.save()
+        self.download_all_etfs_data()
+        self.download_incremental_etfs_data()
+
+    def save(self):
+        for symbol in self.etfs:
+            os.makedirs(Config.Paths.DataPath / 'etfs' / symbol) if not os.path.exists(Config.Paths.DataPath / 'etfs' / symbol) else None
+            self.download_all_etfs_data(symbol)
+            self.download_incremental_etfs_data(symbol)
+
+    def download_all_etfs_data(self, symbol='sh000016', start_date='20150101', end_date= '20251231'):
+        all_raw_data = pl.read_parquet(Config.Paths.DataPath / 'etfs' / symbol / 'raw.parquet')
+        print('读取全量数据')
+
+        if all_raw_data['date'].max() >= date(2025, 12, 31):
+            print(f'{symbol} 全量数据已存在')
+        else:
+            print(f'{symbol} 全量数据开始下载')
+            all_raw_data = pl.from_pandas(ak.stock_zh_index_daily_em(symbol=symbol, start_date=start_date, end_date=end_date))
+            all_raw_data = all_raw_data.with_columns(
+                pl.col('date').str.strptime(pl.Date, '%Y-%m-%d')
+            )
+            print(f'全量数据下载完成 \n{all_raw_data}')
+            all_raw_data.write_parquet(Config.Paths.DataPath / 'etfs' / symbol / 'raw.parquet')
+
+    def download_incremental_etfs_data(self, symbol: str = 'sh000016'):
+        all_raw_data = pl.read_parquet(Config.Paths.DataPath / 'etfs' / symbol / 'raw.parquet')
+        print(f'读取全量数据 \n{all_raw_data}')
+
+        if all_raw_data['date'].max() >= date.today():
+            print(f'{symbol} 增量数据已更新')
+        else:
+            print(f'最新日期：{all_raw_data["date"].max()} 今天日期：{date.today()}')
+
+            print(f'{symbol} 增量数据开始下载')
+            incremental_raw_data = pl.from_pandas(ak.stock_zh_index_daily_em(symbol=symbol, start_date=all_raw_data["date"].max().strftime('%Y%m%d'), end_date=date.today().strftime('%Y%m%d')))
+            print(f'增量数据下载完成 \n{incremental_raw_data}')
+
+            incremental_raw_data = incremental_raw_data.with_columns(
+                pl.col('date').str.strptime(pl.Date, '%Y-%m-%d')
+            )
+
+            new_raw_data = pl.concat([all_raw_data, incremental_raw_data]).unique(subset=['date'], keep='last').sort('date')
+            print(f'全量增量量数据合并完成 \n{new_raw_data}')
+            new_raw_data.write_parquet(Config.Paths.DataPath / 'etfs' / symbol / 'raw.parquet')
+
+
+
 if __name__ == '__main__':
-    WriteStocks()
-    SplitStocks()
+    # WriteStocks()
+    # SplitStocks()
+
+    WriteETFs()
     # Plotting('sh600036', period='day')
