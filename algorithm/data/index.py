@@ -20,7 +20,7 @@ class MovingAverage:
         self.period = period
         self.adjust = adjust
 
-        self.stock_data = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'stock_{self.period}.parquet')
+        self.stock_data = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / f'stock_{self.period}.parquet')
         self.data = None
         
         self.moving_average()
@@ -38,7 +38,7 @@ class MovingAverage:
             ]
         )
         print(self.data)
-        self.data.write_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'ma_{self.period}.parquet')
+        self.data.write_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / f'ma_{self.period}.parquet')
 
 
 class MovingAverageConvergenceDivergence:
@@ -48,7 +48,7 @@ class MovingAverageConvergenceDivergence:
         self.period = period
         self.adjust = adjust
         self.data = None
-        self.stock_data = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'stock_{self.period}.parquet')
+        self.stock_data = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / f'stock_{self.period}.parquet')
         
         self.macd()
 
@@ -80,7 +80,7 @@ class MovingAverageConvergenceDivergence:
             pl.when(pl.col('dif') - pl.col('dea') >= 0).then(pl.lit('red')).otherwise(pl.lit('green')).alias('color')
         )
         print(self.data)
-        self.data.write_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'macd_{self.period}.parquet')
+        self.data.write_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / f'macd_{self.period}.parquet')
 
 
 class BollingerBands:
@@ -90,7 +90,7 @@ class BollingerBands:
         self.period = period
         self.adjust = adjust
         self.data = None
-        self.stock_data = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'stock_{self.period}.parquet')
+        self.stock_data = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / f'stock_{self.period}.parquet')
 
         self.bollinger_bands()
 
@@ -105,7 +105,7 @@ class BollingerBands:
             ]
         )
         print(self.data)
-        self.data.write_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'boll_{self.period}.parquet')
+        self.data.write_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / f'boll_{self.period}.parquet')
 
 
 if __name__ == '__main__':

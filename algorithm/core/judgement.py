@@ -24,13 +24,13 @@ class ValuationSignal:
     def condition(self):
         selected_date = date(2026, 1, 1) if self.selected_date is None else copy.deepcopy(self.selected_date)
         
-        selected_stock_dividend = pl.read_csv(Config.Paths.DataPath / 'input' / 'dividends.csv')
+        selected_stock_dividend = pl.read_csv(Config.Paths.DataPath / 'stocks' / 'dividends.csv')
         selected_stock_dividend = selected_stock_dividend.filter(
             (pl.col('股票编号') == self.symbol) & 
             (pl.col('年份') <= selected_date.year)
         )
         
-        stock_data = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'stock_day.parquet')
+        stock_data = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / 'stock_day.parquet')
         latest_stock_close = stock_data.filter(pl.col('date') <= selected_date)['qfq_close'][-1]
 
         latest_dividend_ratio = selected_stock_dividend['分红'][-1] / latest_stock_close
@@ -81,7 +81,7 @@ class BottomSignal:
         
         begin_date = selected_date.replace(year=selected_date.year - 6)
 
-        stock_data = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'stock_day.parquet')
+        stock_data = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / 'stock_day.parquet')
         selected_stock_data = stock_data.filter((pl.col('date') >= begin_date) & (pl.col('date') <= selected_date))
         
         toppest_stock_price = selected_stock_data[f'{self.adjust}_high'].max()
@@ -107,15 +107,15 @@ class BottomSignal:
     def condition2(self):
         selected_date = date(2022, 11, 2) if self.selected_date is None else copy.deepcopy(self.selected_date)
         
-        stock_data = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'stock_day.parquet')
+        stock_data = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / 'stock_day.parquet')
         selected_stock_data = stock_data.filter(pl.col('date') <= selected_date)
         latest_stock_high = selected_stock_data[f'{self.adjust}_high'][-1]
         latest_stock_low = selected_stock_data[f'{self.adjust}_low'][-1]
 
-        boll_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'boll_month.parquet')
+        boll_month = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / 'boll_month.parquet')
         latest_boll_month_lower = boll_month.filter(pl.col('date') <= selected_date)['boll_lower'][-1]
 
-        boll_quarter = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'boll_quarter.parquet')
+        boll_quarter = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / 'boll_quarter.parquet')
         selected_boll_quarter = boll_quarter.filter(pl.col('date') <= selected_date)
         latest_boll_quarter_mid = selected_boll_quarter['boll_mid'][-1] or 0
         latest_boll_quarter_lower = selected_boll_quarter['boll_lower'][-1] or 0

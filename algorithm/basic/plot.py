@@ -18,10 +18,10 @@ class Plotting:
 
     def __init__(self, symbol: str, period: str = 'day', window: int = 10000):
         self.period = period
-        self.stock_data = pl.read_parquet(Config.Paths.DataPath / 'input' / symbol / f'stock_{self.period}.parquet')[-window:]
-        self.ma_data = pl.read_parquet(Config.Paths.DataPath / 'input' / symbol / f'ma_{self.period}.parquet')[-window:]
-        self.boll_data = pl.read_parquet(Config.Paths.DataPath / 'input' / symbol / f'boll_{self.period}.parquet')[-window:]
-        self.macd_data = pl.read_parquet(Config.Paths.DataPath / 'input' / symbol / f'macd_{self.period}.parquet')[-window:]
+        self.stock_data = pl.read_parquet(Config.Paths.DataPath / 'stocks' / symbol / f'stock_{self.period}.parquet')[-window:]
+        self.ma_data = pl.read_parquet(Config.Paths.DataPath / 'stocks' / symbol / f'ma_{self.period}.parquet')[-window:]
+        self.boll_data = pl.read_parquet(Config.Paths.DataPath / 'stocks' / symbol / f'boll_{self.period}.parquet')[-window:]
+        self.macd_data = pl.read_parquet(Config.Paths.DataPath / 'stocks' / symbol / f'macd_{self.period}.parquet')[-window:]
         
         self.plot()
 
@@ -139,8 +139,8 @@ class Plotting:
 class PlottingSpecific:
 
     def __init__(self, symbol: str):
-        self.stock_data = pl.read_parquet(Config.Paths.DataPath / 'input' / symbol / f'stock_day.parquet')
-        self.ma_data_month = pl.read_parquet(Config.Paths.DataPath / 'input' / symbol / f'ma_month.parquet')
+        self.stock_data = pl.read_parquet(Config.Paths.DataPath / 'stocks' / symbol / f'stock_day.parquet')
+        self.ma_data_month = pl.read_parquet(Config.Paths.DataPath / 'stocks' / symbol / f'ma_month.parquet')
         self.plot()
 
     def plot(self):

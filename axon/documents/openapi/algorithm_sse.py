@@ -12,7 +12,7 @@ from project.configuration import Config
 class SSE:
 
     def __init__(self, openapi):
-        with open(Config['Paths']['AxonPath'] / 'documents' / 'examples' / 'quant' / 'input-texts.json', encoding='utf-8') as file:
+        with open(Config['Paths']['AxonPath'] / 'documents' / 'examples' / 'quant' / 'stocks-texts.json', encoding='utf-8') as file:
             input_texts = json.load(file)
 
         openapi.path(
@@ -35,7 +35,7 @@ class SSE:
                         'content': {
                             'application/json': {
                                 'schema': {'type': 'Any'},
-                                'examples': {'input/texts': {'value': input_texts}}
+                                'examples': {'stocks/texts': {'value': input_texts}}
                             },
                             'application/octet-stream': {
                                 'schema': {'type': 'string', 'format': 'binary'}
@@ -91,7 +91,7 @@ class SSE:
                             'name': 'Schema',
                             'required': 'true',
                             'in': 'query',
-                            'schema': {'type': 'string', 'enum': ['system/logs', 'input/texts', 'output/results']},
+                            'schema': {'type': 'string', 'enum': ['system/logs', 'stocks/texts', 'output/results']},
                         },
                     ],
                     'responses': {'200': {'description': 'Success'}}

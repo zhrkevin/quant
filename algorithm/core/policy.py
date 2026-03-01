@@ -29,7 +29,7 @@ class AscendSignalWeekRotation:
         selected_date = datetime.date(2026, 1, 2) if self.selected_date is None else copy.deepcopy(self.selected_date)
         limited_date = selected_date - datetime.timedelta(days=365*self.period)
 
-        macd_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'macd_month.parquet')
+        macd_month = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / f'macd_month.parquet')
         selected_macd_month = macd_month.filter((pl.col('date') <= selected_date) & (pl.col('date') >= limited_date))
         
         for i_date in selected_macd_month['date']:
@@ -47,13 +47,13 @@ class AscendSignalWeekRotation:
             # print(f'未触发 MACD 月线坑内出')
 
         if climbup_date:
-            stock_day = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'stock_day.parquet')
-            stock_week = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'stock_week.parquet')
-            stock_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'stock_month.parquet')
+            stock_day = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / 'stock_day.parquet')
+            stock_week = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / 'stock_week.parquet')
+            stock_month = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / 'stock_month.parquet')
 
-            boll_day = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'boll_day.parquet')
-            boll_week = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'boll_week.parquet')
-            boll_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'boll_month.parquet')
+            boll_day = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / 'boll_day.parquet')
+            boll_week = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / 'boll_week.parquet')
+            boll_month = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / 'boll_month.parquet')
 
             range_date = stock_day.filter(pl.col('date') >= climbup_date)['date']
             for i_date in range_date:
@@ -112,7 +112,7 @@ class FirstBreakthroughSignal:
         selected_date = datetime.date(2026, 1, 2) if self.selected_date is None else copy.deepcopy(self.selected_date)
         limited_date = selected_date - datetime.timedelta(days=365*self.period + 7)
 
-        ma_week = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'ma_week.parquet')
+        ma_week = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / f'ma_week.parquet')
         selected_ma_week = ma_week.filter((pl.col('date') <= selected_date) & (pl.col('date') >= limited_date))
 
         for i_date in selected_ma_week['date'][::-1]:
@@ -131,8 +131,8 @@ class FirstBreakthroughSignal:
 
         print(f'(2) 首突回踩：首突后回踩月线中轨（最佳买点）')
         if breakthrough_date:
-            stock_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'stock_month.parquet')
-            boll_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'boll_month.parquet')
+            stock_month = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / 'stock_month.parquet')
+            boll_month = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / 'boll_month.parquet')
 
             range_date = stock_month.filter(pl.col('date') >= breakthrough_date)['date']
             for i_date in range_date:
@@ -166,9 +166,9 @@ class BottomAdjustmentSignal:
         selected_date = datetime.date(2026, 1, 2) if self.selected_date is None else copy.deepcopy(self.selected_date)
         limited_date = selected_date - datetime.timedelta(days=365*self.period + 7)
 
-        boll_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'boll_month.parquet')
+        boll_month = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / f'boll_month.parquet')
         selected_boll_month = boll_month.filter((pl.col('date') <= selected_date) & (pl.col('date') >= limited_date))
-        stock_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'stock_month.parquet')
+        stock_month = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / 'stock_month.parquet')
         selected_stock_month = stock_month.filter((pl.col('date') <= selected_date) & (pl.col('date') >= limited_date))
 
         for i_date in selected_boll_month['date'][::-1]:
@@ -183,7 +183,7 @@ class BottomAdjustmentSignal:
             pass
             # print(f'未触发 Boll 月下轨')
 
-        macd_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'macd_month.parquet')
+        macd_month = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / f'macd_month.parquet')
         selected_macd_month = macd_month.filter((pl.col('date') <= selected_date) & (pl.col('date') >= limited_date))
 
         for i_date in selected_macd_month['date'][::-1]:
@@ -204,7 +204,7 @@ class BottomAdjustmentSignal:
         selected_date = datetime.date(2026, 1, 1) if self.selected_date is None else copy.deepcopy(self.selected_date)
         limited_date = selected_date - datetime.timedelta(days=365*self.period + 7)
 
-        macd_quarter = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'macd_quarter.parquet')
+        macd_quarter = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / f'macd_quarter.parquet')
         selected_macd_quarter = macd_quarter.filter((pl.col('date') <= selected_date) & (pl.col('date') >= limited_date))
 
         for i_date in selected_macd_quarter['date'][::-1]:
@@ -225,10 +225,10 @@ class BottomAdjustmentSignal:
         selected_date = datetime.date(2026, 1, 1) if self.selected_date is None else copy.deepcopy(self.selected_date)
         limited_date = selected_date - datetime.timedelta(days=365*self.period + 7)
 
-        stock_week = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'stock_week.parquet')
+        stock_week = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / 'stock_week.parquet')
         selected_stock_week = stock_week.filter((pl.col('date') <= selected_date) & (pl.col('date') >= limited_date))
 
-        ma_week = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'ma_week.parquet')
+        ma_week = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / f'ma_week.parquet')
         selected_ma_week = ma_week.filter((pl.col('date') <= selected_date) & (pl.col('date') >= limited_date))
 
         for i_date in selected_ma_week['date'][::-1]:
@@ -244,10 +244,10 @@ class BottomAdjustmentSignal:
             pass
             # print(f'未触发 站上 MA-Week-250')
 
-        stock_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / 'stock_month.parquet')
+        stock_month = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / 'stock_month.parquet')
         selected_stock_month = stock_month.filter((pl.col('date') <= selected_date) & (pl.col('date') >= limited_date))
 
-        ma_month = pl.read_parquet(Config.Paths.DataPath / 'input' / self.symbol / f'ma_month.parquet')
+        ma_month = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / f'ma_month.parquet')
         selected_ma_month = ma_month.filter((pl.col('date') <= selected_date) & (pl.col('date') >= limited_date))
 
         for i_date in selected_ma_month['date'][::-1]:
