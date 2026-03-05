@@ -14,7 +14,7 @@ from project.configuration import Config
 
 class AscendSignalWeekRotation:
 
-    def __init__(self, symbol: str, selected_date: datetime.date = None, period: int = 2, adjust: str = 'raw'):
+    def __init__(self, symbol, selected_date=None, period=2, adjust='raw'):
         self.symbol = symbol
         self.selected_date = selected_date
         self.period = period
@@ -26,7 +26,7 @@ class AscendSignalWeekRotation:
 
     def condition(self):
         print(f'(1) 出月线macd坑内, 每年除权后, 日下周下月中买（底仓）, 日下周下买、周上卖该部分仓位做滚动。')
-        selected_date = datetime.date(2026, 1, 2) if self.selected_date is None else copy.deepcopy(self.selected_date)
+        selected_date = datetime.date(2026, 1, 2) if not self.selected_date else copy.deepcopy(self.selected_date)
         limited_date = selected_date - datetime.timedelta(days=365*self.period)
 
         macd_month = pl.read_parquet(Config.Paths.DataPath / 'stock' / self.symbol / f'macd_month.parquet')
@@ -98,7 +98,7 @@ class AscendSignalWeekRotation:
 
 class FirstBreakthroughSignal:
 
-    def __init__(self, symbol: str, selected_date: datetime.date = None, period: int = 2, adjust: str = 'raw'):
+    def __init__(self, symbol, selected_date=None, period=2, adjust='raw'):
         self.symbol = symbol
         self.selected_date = selected_date
         self.period = period
@@ -109,7 +109,7 @@ class FirstBreakthroughSignal:
 
     def condition(self):
         print(f'(1) 首突: 周 20 突破周 60')
-        selected_date = datetime.date(2026, 1, 2) if self.selected_date is None else copy.deepcopy(self.selected_date)
+        selected_date = datetime.date(2026, 1, 2) if not self.selected_date else copy.deepcopy(self.selected_date)
         limited_date = selected_date - datetime.timedelta(days=365*self.period + 7)
 
         ma_week = pl.read_parquet(Config.Paths.DataPath / 'stock' / self.symbol / f'ma_week.parquet')
@@ -150,7 +150,7 @@ class FirstBreakthroughSignal:
 
 class BottomAdjustmentSignal:
 
-    def __init__(self, symbol: str, selected_date: datetime.date = None, period: int = 2, adjust: str = 'raw'):
+    def __init__(self, symbol, selected_date=None, period=2, adjust='raw'):
         self.symbol = symbol
         self.selected_date = selected_date
         self.period = period
@@ -163,7 +163,7 @@ class BottomAdjustmentSignal:
 
     def condition1(self):
         print(f'(1) 月线下轨+macd水下金叉 (同步看估值等)')
-        selected_date = datetime.date(2026, 1, 2) if self.selected_date is None else copy.deepcopy(self.selected_date)
+        selected_date = datetime.date(2026, 1, 2) if not self.selected_date else copy.deepcopy(self.selected_date)
         limited_date = selected_date - datetime.timedelta(days=365*self.period + 7)
 
         boll_month = pl.read_parquet(Config.Paths.DataPath / 'stock' / self.symbol / f'boll_month.parquet')
@@ -201,7 +201,7 @@ class BottomAdjustmentSignal:
     
     def condition2(self):
         print(f'(2) 季线水下金叉 (稀缺)')
-        selected_date = datetime.date(2026, 1, 1) if self.selected_date is None else copy.deepcopy(self.selected_date)
+        selected_date = datetime.date(2026, 1, 1) if not self.selected_date else copy.deepcopy(self.selected_date)
         limited_date = selected_date - datetime.timedelta(days=365*self.period + 7)
 
         macd_quarter = pl.read_parquet(Config.Paths.DataPath / 'stock' / self.symbol / f'macd_quarter.parquet')
@@ -222,7 +222,7 @@ class BottomAdjustmentSignal:
 
     def condition3(self):
         print(f'(3) 站上周250、月60 (分两次确认)')
-        selected_date = datetime.date(2026, 1, 1) if self.selected_date is None else copy.deepcopy(self.selected_date)
+        selected_date = datetime.date(2026, 1, 1) if not self.selected_date else copy.deepcopy(self.selected_date)
         limited_date = selected_date - datetime.timedelta(days=365*self.period + 7)
 
         stock_week = pl.read_parquet(Config.Paths.DataPath / 'stock' / self.symbol / 'stock_week.parquet')

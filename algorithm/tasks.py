@@ -4,17 +4,14 @@
 # Copyright 2015 for Zen. All Rights Reserved.
 # ---------------------------------------------
 
-import shortuuid
+import xlsxwriter
 import polars as pl
 from datetime import date
 
-import xlsxwriter
-
 from project.configuration import Config
 from algorithm.data.market import Stocks, ETFs
-from algorithm.data.fetch import WriteETFs, SplitETFs, WriteStocks, SplitStocks
+from algorithm.data.fetch import WriteData, SplitData
 from algorithm.data.index import MovingAverage, MovingAverageConvergenceDivergence, BollingerBands
-
 from algorithm.basic.printf import Printf
 from algorithm.core.trend import AscendTrend, DescendTrend, SmallFluctuations
 from algorithm.core.judgement import ValuationSignal, BottomSignal
@@ -40,15 +37,8 @@ class MergeTask:
 class DataTask:
 
     def __init__(self):
-        self.stocks_renew = False
-        self.etfs_renew = False
-    
-    def run(self):
-        WriteStocks(renew=self.stocks_renew)
-        SplitStocks()
-        
-        WriteETFs(renew=self.etfs_renew)
-        SplitETFs()
+        WriteData()
+        SplitData()
 
         for period in ['day', 'week', 'month', 'quarter']:
             for stock in Stocks:
@@ -66,17 +56,18 @@ class StockAlgorithmTask:
 
     def __init__(self, today=None):
         self.today = today or date.today()
-        self.input = 'stock.xlsx'
         self.output = f'stock-{self.today.strftime("%Y%m%d")}.xlsx'
 
+        self.run()
+
     def run(self):
-        report = pl.read_excel(Config.Paths.DataPath / 'output' / self.input)
+        report = pl.read_excel(Config.Paths.DataPath / 'output' / 'stock.xlsx')
         report.write_excel(Config.Paths.DataPath / 'output' / self.output)
 
         for stock, name in Stocks.items():
-            self.debug(stock, name)
+            self.stocks(stock, name)
     
-    def debug(self, stock: str = 'sh600025', name: str = '华能水电'):
+    def stocks(self, stock: str = 'sh600025', name: str = '华能水电'):
         Printf.set(stock)
         Printf.info(f'\n{'='*16} {stock} {name} {'='*16}')
 
@@ -91,8 +82,8 @@ class StockAlgorithmTask:
 
 
 if __name__ == '__main__':
-    DataTask().run()
-    StockAlgorithmTask().run()
+    DataTask()
+    StockAlgorithmTask()
 
     # MergeTask(
     #     taskid=shortuuid.random(24),

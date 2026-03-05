@@ -21,10 +21,14 @@ class MovingAverage:
         self.adjust = adjust
         self.types = types
 
-        self.raw_data = pl.read_parquet(Config.Paths.DataPath / self.types / self.symbol / f'{self.types}_{self.period}.parquet')
+        self.moving_average()
 
     def moving_average(self):
-        data = self.raw_data.select(
+        raw_data = pl.read_parquet(
+            Config.Paths.DataPath / self.types / self.symbol / f'{self.types}_{self.period}.parquet'
+        )
+
+        new_data = raw_data.select(
             [
                 pl.col('date'),
                 pl.col(f'{self.adjust}_close').rolling_mean(5).alias('ma_5'),      # 5 trading period
@@ -35,41 +39,40 @@ class MovingAverage:
                 pl.col(f'{self.adjust}_close').rolling_mean(250).alias('ma_250'),  # 250 trading period
             ]
         )
-        print(data)
-        data.write_parquet(Config.Paths.DataPath / self.types / self.symbol / f'ma_{self.period}.parquet')
+        print(new_data)
+        new_data.write_parquet(Config.Paths.DataPath / self.types / self.symbol / f'ma_{self.period}.parquet')
 
 
 class MovingAverageConvergenceDivergence:
 
-    def __init__(self, symbol, period='day', adjust='raw', types='stocks'):
+    def __init__(self, symbol, period='day', adjust='raw', types='stock'):
         self.symbol = symbol
         self.period = period
         self.adjust = adjust
         self.types = types
 
-        self.raw_data = pl.read_parquet(Config.Paths.DataPath / self.types / self.symbol / f'{self.types}_{self.period}.parquet')
+        self.macd()
 
-    def stock_macd(self, fast: int = 12, slow: int = 26, span: int = 9):
+    def macd(self, fast=12, slow=26, span=9):
+        raw_data = pl.read_parquet(
+            Config.Paths.DataPath / self.types / self.symbol / f'{self.types}_{self.period}.parquet'
+        )
         # 计算指数移动平均线（EMA）
-        ema = pl.DataFrame(
-            {
-                'date': self.raw_data['date'],
-                'ema_fast': self.raw_data.select(
-                    [pl.col(f'{self.adjust}_close').ewm_mean(span=fast, adjust=False)]
-                ),
-                'ema_slow': self.raw_data.select(
-                    [pl.col(f'{self.adjust}_close').ewm_mean(span=slow, adjust=False)]
-                ),
-            }
-        )
+        ema = pl.DataFrame({
+            'date': raw_data['date'],
+            'ema_fast': raw_data.select(
+                [pl.col(f'{self.adjust}_close').ewm_mean(span=fast, adjust=False)]
+            ),
+            'ema_slow': raw_data.select(
+                [pl.col(f'{self.adjust}_close').ewm_mean(span=slow, adjust=False)]
+            ),
+        })
         # 计算 DIF 快线, DEA 慢线
-        data = pl.DataFrame(
-            {
-                'date': ema['date'],
-                'dif': ema['ema_fast'] - ema['ema_slow'],
-                'dea': (ema['ema_fast'] - ema['ema_slow']).ewm_mean(span=span, adjust=False),
-            }
-        )
+        data = pl.DataFrame({
+            'date': ema['date'],
+            'dif': ema['ema_fast'] - ema['ema_slow'],
+            'dea': (ema['ema_fast'] - ema['ema_slow']).ewm_mean(span=span, adjust=False),
+        })
         # 计算 MACD 柱状图
         data = data.with_columns(
             pl.col('date'),
@@ -82,19 +85,20 @@ class MovingAverageConvergenceDivergence:
 
 class BollingerBands:
 
-    def __init__(self, symbol: str, period: str = 'day', adjust: str = 'raw', types: str = 'stocks'):
+    def __init__(self, symbol, period='day', adjust='raw', types='stock'):
         self.symbol = symbol
         self.period = period
         self.adjust = adjust
         self.types = types
 
-        self.raw_data = pl.read_parquet(Config.Paths.DataPath / self.types / self.symbol / f'{self.types}_{self.period}.parquet')
-
         self.bollinger_bands()
 
     def bollinger_bands(self, std_dev: int = 2):
         # 计算布林线（20 周期，2 倍标准差）
-        data = self.raw_data.select(
+        raw_data = pl.read_parquet(
+            Config.Paths.DataPath / self.types / self.symbol / f'{self.types}_{self.period}.parquet'
+        )
+        data = raw_data.select(
             [
                 pl.col('date'),
                 pl.col(f'{self.adjust}_close').rolling_mean(20).alias('boll_mid'),
@@ -107,10 +111,12 @@ class BollingerBands:
 
 
 if __name__ == '__main__':
-    for stock in Stocks:
-        for period in ['day', 'week', 'month', 'quarter']:
-            MovingAverage(stock, period=period)
-            MovingAverageConvergenceDivergence(stock, period=period)
-            BollingerBands(stock, period=period)
+    # for stock in Stocks:
+    #     for period in ['day', 'week', 'month', 'quarter']:
+    #         MovingAverage(stock, period=period)
+    #         MovingAverageConvergenceDivergence(stock, period=period)
+    #         BollingerBands(stock, period=period)
+
+    MovingAverageConvergenceDivergence('sh600036', period='month', types='stock')
 
     # Plotting('sh600036', period='day')

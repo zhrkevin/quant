@@ -18,34 +18,30 @@ akshare_proxy_patch.install_patch("101.201.173.125", "", 30)
 pl.Config(tbl_rows=12, tbl_cols=-1)
 
 
-class WriteStocks:
+class WriteData:
 
     def __init__(self, renew=False):
-        self.stocks = Stocks
         self.renew = renew
         self.save()
         # self.download_all_stocks_data(symbol='sh600025')
         # self.download_incremental_stocks_data(symbol='sh600025')
 
     def save(self):
-        for symbol in self.stocks:
+        for symbol in Stocks:
             os.makedirs(Config.Paths.DataPath / 'stock' / symbol) if not os.path.exists(Config.Paths.DataPath / 'stock' / symbol) else None
             self.download_all_stocks_data(symbol)
             self.download_incremental_stocks_data(symbol)
 
+        for symbol in ETFs:
+            os.makedirs(Config.Paths.DataPath / 'etf' / symbol) if not os.path.exists(Config.Paths.DataPath / 'etf' / symbol) else None
+            self.download_all_etfs_data(symbol)
+            self.download_incremental_etfs_data(symbol)
+
     def download_all_stocks_data(self, symbol='sh600025', start_date='20150101', end_date='20251231'):
         if not self.renew and os.path.exists(Config.Paths.DataPath / 'stock' / symbol / 'raw.parquet'):
-            all_raw_data = pl.read_parquet(Config.Paths.DataPath / 'stock' / symbol / 'raw.parquet')
-            update_date = all_raw_data['date'].max()
-            print('读取全量数据')
-        else:
-            update_date = date(2015, 1, 1)
-            print('重新下载全量数据')
-
-        if update_date >= date(2025, 12, 31):
             print(f'{symbol} 全量数据已存在')
         else:
-            print(f'{symbol} 全量数据开始下载')
+            print(f'{symbol} 全量数据重新下载')
             raw_data = pl.from_pandas(
                 ak.stock_zh_a_daily(symbol=symbol, start_date=start_date, end_date=end_date, adjust='')
             )
@@ -59,35 +55,54 @@ class WriteStocks:
             )
             print('全量后复权数据下载完成')
 
-            new_raw_data = pl.DataFrame(
-                {
-                    'date': raw_data['date'],
-                    'raw_open': raw_data['open'], 'raw_high': raw_data['high'], 'raw_low': raw_data['low'], 'raw_close': raw_data['close'],
-                    'qfq_open': qfq_data['open'], 'qfq_high': qfq_data['high'], 'qfq_low': qfq_data['low'], 'qfq_close': qfq_data['close'],
-                    'hfq_open': hfq_data['open'], 'hfq_high': hfq_data['high'], 'hfq_low': hfq_data['low'], 'hfq_close': hfq_data['close'],
-                    'volume': raw_data['volume'],
-                    'amount': raw_data['amount'],
-                    'turnover': raw_data['turnover'],
-                }
-            )
+            new_raw_data = pl.DataFrame({
+                'date': raw_data['date'],
+                'raw_open': raw_data['open'], 'raw_high': raw_data['high'], 'raw_low': raw_data['low'], 'raw_close': raw_data['close'],
+                'qfq_open': qfq_data['open'], 'qfq_high': qfq_data['high'], 'qfq_low': qfq_data['low'], 'qfq_close': qfq_data['close'],
+                'hfq_open': hfq_data['open'], 'hfq_high': hfq_data['high'], 'hfq_low': hfq_data['low'], 'hfq_close': hfq_data['close'],
+                'volume': raw_data['volume'],
+                'amount': raw_data['amount'],
+                'turnover': raw_data['turnover'],
+            })
             print(f'三种复权类型全量数据合并完成 \n{new_raw_data}')
             new_raw_data.write_parquet(Config.Paths.DataPath / 'stock' / symbol / 'raw.parquet')
 
     def download_incremental_stocks_data(self, symbol='sh600025'):
         all_raw_data = pl.read_parquet(Config.Paths.DataPath / 'stock' / symbol / 'raw.parquet')
-        print(f'读取全量数据 \n{all_raw_data}')
+        print(f'读取全量数据')
 
         if all_raw_data['date'].max() >= date.today():
-            print(f'{symbol} 增量数据已更新')
+            print(f'{symbol} \n增量数据已更新')
         else:
             print(f'最新日期： {all_raw_data["date"].max()} 今天日期：{date.today()}')
 
-            print(f'{symbol} 增量数据开始下载')
-            incremental_raw_data = pl.from_pandas(ak.stock_zh_a_daily(symbol=symbol, start_date=all_raw_data['date'].max(), end_date=date.today().strftime('%Y%m%d'), adjust=''))
+            print(f'{symbol} \n增量数据开始下载')
+            incremental_raw_data = pl.from_pandas(
+                ak.stock_zh_a_daily(
+                    symbol=symbol,
+                    start_date=all_raw_data['date'].max(),
+                    end_date=date.today().strftime('%Y%m%d'),
+                    adjust=''
+                )
+            )
             print('增量除权数据下载完成')
-            incremental_qfq_data = pl.from_pandas(ak.stock_zh_a_daily(symbol=symbol, start_date=all_raw_data['date'].max(), end_date=date.today().strftime('%Y%m%d'), adjust='qfq'))
+            incremental_qfq_data = pl.from_pandas(
+                ak.stock_zh_a_daily(
+                    symbol=symbol,
+                    start_date=all_raw_data['date'].max(),
+                    end_date=date.today().strftime('%Y%m%d'),
+                    adjust='qfq'
+                )
+            )
             print('增量前复权数据下载完成')
-            incremental_hfq_data = pl.from_pandas(ak.stock_zh_a_daily(symbol=symbol, start_date=all_raw_data['date'].max(), end_date=date.today().strftime('%Y%m%d'), adjust='hfq'))
+            incremental_hfq_data = pl.from_pandas(
+                ak.stock_zh_a_daily(
+                    symbol=symbol,
+                    start_date=all_raw_data['date'].max(),
+                    end_date=date.today().strftime('%Y%m%d'),
+                    adjust='hfq'
+                )
+            )
             print('增量后复权数据下载完成')
 
             incremental_data = pl.DataFrame({
@@ -103,23 +118,77 @@ class WriteStocks:
             print(f'全量增量量数据合并完成 \n{new_raw_data}')
             new_raw_data.write_parquet(Config.Paths.DataPath / 'stock' / symbol / 'raw.parquet')
 
+    def download_all_etfs_data(self, symbol='sh000016'):
+        if not self.renew and os.path.exists(Config.Paths.DataPath / 'etf' / symbol / 'raw.parquet'):
+            print(f'{symbol} 全量数据已存在')
+        else:
+            print(f'{symbol} 全量数据开始下载')
+            all_raw_data = pl.from_pandas(
+                ak.stock_zh_index_daily_em(symbol=symbol, start_date='20150101', end_date='20251231')
+            )
+            all_raw_data = all_raw_data.with_columns(
+                pl.col('date').str.strptime(pl.Date, '%Y-%m-%d'),
+            ).rename({
+                'open': 'raw_open',
+                'high': 'raw_high',
+                'low': 'raw_low',
+                'close': 'raw_close',
+            })
+            print(f'全量数据下载完成 \n{all_raw_data}')
+            all_raw_data.write_parquet(Config.Paths.DataPath / 'etf' / symbol / 'raw.parquet')
 
-class SplitStocks:
+    def download_incremental_etfs_data(self, symbol='sh000016'):
+        all_raw_data = pl.read_parquet(Config.Paths.DataPath / 'etf' / symbol / 'raw.parquet')
+        update_date = all_raw_data['date'].max()
+        print(f'读取全量数据')
+
+        if update_date >= date.today():
+            print(f'{symbol} 增量数据已更新')
+        else:
+            print(f'最新日期：{update_date} 今天日期：{date.today()}')
+
+            print(f'{symbol} 增量数据开始下载')
+            incremental_raw_data = pl.from_pandas(
+                ak.stock_zh_index_daily_em(symbol=symbol, start_date=update_date.strftime('%Y%m%d'),
+                                           end_date=date.today().strftime('%Y%m%d'))
+            )
+            incremental_raw_data = incremental_raw_data.with_columns(
+                pl.col('date').str.strptime(pl.Date, '%Y-%m-%d'),
+            ).rename({
+                'open': 'raw_open',
+                'high': 'raw_high',
+                'low': 'raw_low',
+                'close': 'raw_close',
+            })
+            print(f'增量数据下载完成')
+
+            new_raw_data = pl.concat([all_raw_data, incremental_raw_data]).unique(subset=['date'], keep='last').sort(
+                'date')
+            print(f'全量增量量数据合并完成 \n{new_raw_data}')
+            new_raw_data.write_parquet(Config.Paths.DataPath / 'etf' / symbol / 'raw.parquet')
+
+
+
+class SplitData:
     """上海证券交易所周股票数据管理类"""
 
     def __init__(self):
-        self.stocks = Stocks
-        self.daily_data = None
-        self.weekly_data = None
-        self.monthly_data = None
+        self.raw_data = None
+        self.day_data = None
+        self.week_data = None
+        self.month_data = None
+        self.quarter_data = None
 
         self.run()
 
     def run(self):
-        for symbol in self.stocks:
-            self.read(symbol)
+        for symbol in Stocks:
+            self.read_stocks(symbol)
 
-    def read(self, symbol):
+        for symbol in ETFs:
+            self.read_etfs(symbol)
+
+    def read_stocks(self, symbol):
         # 读入原始数据
         self.raw_data = pl.read_parquet(Config.Paths.DataPath / 'stock' / symbol / 'raw.parquet')
 
@@ -162,9 +231,7 @@ class SplitStocks:
         ).agg(
             [
                 pl.col('date').last(),
-                pl.col('raw_open').first(), 
-                pl.col('raw_high').max(), 
-                pl.col('raw_low').min(), pl.col('raw_close').last(),
+                pl.col('raw_open').first(), pl.col('raw_high').max(), pl.col('raw_low').min(), pl.col('raw_close').last(),
                 pl.col('qfq_open').first(), pl.col('qfq_high').max(), pl.col('qfq_low').min(), pl.col('qfq_close').last(),
                 pl.col('hfq_open').first(), pl.col('hfq_high').max(), pl.col('hfq_low').min(), pl.col('hfq_close').last(),
                 pl.col('volume').sum().alias('volume'),
@@ -185,18 +252,9 @@ class SplitStocks:
         ).agg(
             [
                 pl.col('date').last(),
-                pl.col('raw_open').first(), 
-                pl.col('raw_high').max(), 
-                pl.col('raw_low').min(), 
-                pl.col('raw_close').last(),
-                pl.col('qfq_open').first(), 
-                pl.col('qfq_high').max(), 
-                pl.col('qfq_low').min(), 
-                pl.col('qfq_close').last(),
-                pl.col('hfq_open').first(), 
-                pl.col('hfq_high').max(), 
-                pl.col('hfq_low').min(), 
-                pl.col('hfq_close').last(),
+                pl.col('raw_open').first(), pl.col('raw_high').max(), pl.col('raw_low').min(), pl.col('raw_close').last(),
+                pl.col('qfq_open').first(), pl.col('qfq_high').max(), pl.col('qfq_low').min(), pl.col('qfq_close').last(),
+                pl.col('hfq_open').first(), pl.col('hfq_high').max(), pl.col('hfq_low').min(), pl.col('hfq_close').last(),
                 pl.col('volume').sum().alias('volume'),
                 pl.col('amount').sum().alias('amount'),
                 pl.col('turnover').sum().alias('turnover'),
@@ -208,90 +266,7 @@ class SplitStocks:
         self.quarter_data.write_parquet(Config.Paths.DataPath / 'stock' / symbol / 'stock_quarter.parquet')
         print(self.quarter_data)
 
-
-
-class WriteETFs:
-
-    def __init__(self, renew=False):
-        self.etfs = ETFs
-        self.renew = renew
-        self.save()
-
-    def save(self):
-        for symbol in self.etfs:
-            os.makedirs(Config.Paths.DataPath / 'etfs' / symbol) if not os.path.exists(Config.Paths.DataPath / 'etfs' / symbol) else None
-            self.download_all_etfs_data(symbol)
-            self.download_incremental_etfs_data(symbol)
-
-    def download_all_etfs_data(self, symbol='sh000016'):
-        if not self.renew and os.path.exists(Config.Paths.DataPath / 'etf' / symbol / 'raw.parquet'):
-            all_raw_data = pl.read_parquet(Config.Paths.DataPath / 'etf' / symbol / 'raw.parquet')
-            update_date = all_raw_data['date'].max()
-            print('读取全量数据')
-        else:
-            update_date = date(2015, 1, 1)
-            print('重新下载全量数据')
-
-        if update_date >= date(2025, 12, 31):
-            print(f'{symbol} 全量数据已存在')
-        else:
-            print(f'{symbol} 全量数据开始下载')
-            all_raw_data = pl.from_pandas(
-                ak.stock_zh_index_daily_em(symbol=symbol, start_date='20150101', end_date='20251231')
-            )
-            all_raw_data = all_raw_data.with_columns(
-                pl.col('date').str.strptime(pl.Date, '%Y-%m-%d'),
-            ).rename({
-                'open': 'raw_open',
-                'high': 'raw_high', 
-                'low': 'raw_low',
-                'close': 'raw_close',
-            })
-            print(f'全量数据下载完成 \n{all_raw_data}')
-            all_raw_data.write_parquet(Config.Paths.DataPath / 'etf' / symbol / 'raw.parquet')
-
-    def download_incremental_etfs_data(self, symbol='sh000016'):
-        all_raw_data = pl.read_parquet(Config.Paths.DataPath / 'etf' / symbol / 'raw.parquet')
-        update_date = all_raw_data['date'].max()
-        print(f'读取全量数据')
-
-        if update_date >= date.today():
-            print(f'{symbol} 增量数据已更新')
-        else:
-            print(f'最新日期：{update_date} 今天日期：{date.today()}')
-
-            print(f'{symbol} 增量数据开始下载')
-            incremental_raw_data = pl.from_pandas(ak.stock_zh_index_daily_em(symbol=symbol, start_date=update_date.strftime('%Y%m%d'), end_date=date.today().strftime('%Y%m%d')))
-            incremental_raw_data = incremental_raw_data.with_columns(
-                pl.col('date').str.strptime(pl.Date, '%Y-%m-%d'),
-            ).rename({
-                'open': 'raw_open',
-                'high': 'raw_high', 
-                'low': 'raw_low',
-                'close': 'raw_close',
-            })
-            print(f'增量数据下载完成')
-            
-            new_raw_data = pl.concat([all_raw_data, incremental_raw_data]).unique(subset=['date'], keep='last').sort('date')
-            print(f'全量增量量数据合并完成 \n{new_raw_data}')
-            new_raw_data.write_parquet(Config.Paths.DataPath / 'etf' / symbol / 'raw.parquet')
-
-
-class SplitETFs:
-
-    def __init__(self):
-        self.etfs = ETFs
-        self.daily_data = None
-        self.weekly_data = None
-        self.monthly_data = None
-
-        self.run()
-
-    def run(self):
-        for symbol in self.etfs:
-            self.read(symbol)
-
-    def read(self, symbol):
+    def read_etfs(self, symbol):
         # 读入原始数据
         self.raw_data = pl.read_parquet(Config.Paths.DataPath / 'etf' / symbol / 'raw.parquet')
         print(self.raw_data)
@@ -372,9 +347,7 @@ class SplitETFs:
 
 
 if __name__ == '__main__':
-    # WriteStocks()
-    # SplitStocks()
+    WriteData()
+    SplitData()
 
-    WriteETFs(renew=False)
-    # SplitETFs()
     # Plotting('sh600036', period='day')
