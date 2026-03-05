@@ -7,7 +7,7 @@
 import polars as pl
 
 from project.configuration import Config
-from algorithm.data.stocks import Stocks
+from algorithm.data.market import Stocks
 
 
 pl.Config(tbl_rows=20, tbl_cols=-1)
@@ -15,18 +15,16 @@ pl.Config(tbl_rows=20, tbl_cols=-1)
 
 class MovingAverage:
 
-    def __init__(self, symbol: str, period: str = 'day', adjust: str = 'raw'):
+    def __init__(self, symbol, period='day', adjust='raw', types='stock'):
         self.symbol = symbol
         self.period = period
         self.adjust = adjust
+        self.types = types
 
-        self.stock_data = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / f'stock_{self.period}.parquet')
-        self.data = None
-        
-        self.moving_average()
+        self.raw_data = pl.read_parquet(Config.Paths.DataPath / self.types / self.symbol / f'{self.types}_{self.period}.parquet')
 
     def moving_average(self):
-        self.data = self.stock_data.select(
+        data = self.raw_data.select(
             [
                 pl.col('date'),
                 pl.col(f'{self.adjust}_close').rolling_mean(5).alias('ma_5'),      # 5 trading period
@@ -37,36 +35,35 @@ class MovingAverage:
                 pl.col(f'{self.adjust}_close').rolling_mean(250).alias('ma_250'),  # 250 trading period
             ]
         )
-        print(self.data)
-        self.data.write_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / f'ma_{self.period}.parquet')
+        print(data)
+        data.write_parquet(Config.Paths.DataPath / self.types / self.symbol / f'ma_{self.period}.parquet')
 
 
 class MovingAverageConvergenceDivergence:
 
-    def __init__(self, symbol: str, period: str = 'day', adjust: str = 'raw'):
+    def __init__(self, symbol, period='day', adjust='raw', types='stocks'):
         self.symbol = symbol
         self.period = period
         self.adjust = adjust
-        self.data = None
-        self.stock_data = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / f'stock_{self.period}.parquet')
-        
-        self.macd()
+        self.types = types
 
-    def macd(self, fast: int = 12, slow: int = 26, span: int = 9):
+        self.raw_data = pl.read_parquet(Config.Paths.DataPath / self.types / self.symbol / f'{self.types}_{self.period}.parquet')
+
+    def stock_macd(self, fast: int = 12, slow: int = 26, span: int = 9):
         # 计算指数移动平均线（EMA）
         ema = pl.DataFrame(
             {
-                'date': self.stock_data['date'],
-                'ema_fast': self.stock_data.select(
+                'date': self.raw_data['date'],
+                'ema_fast': self.raw_data.select(
                     [pl.col(f'{self.adjust}_close').ewm_mean(span=fast, adjust=False)]
                 ),
-                'ema_slow': self.stock_data.select(
+                'ema_slow': self.raw_data.select(
                     [pl.col(f'{self.adjust}_close').ewm_mean(span=slow, adjust=False)]
                 ),
             }
         )
         # 计算 DIF 快线, DEA 慢线
-        self.data = pl.DataFrame(
+        data = pl.DataFrame(
             {
                 'date': ema['date'],
                 'dif': ema['ema_fast'] - ema['ema_slow'],
@@ -74,29 +71,30 @@ class MovingAverageConvergenceDivergence:
             }
         )
         # 计算 MACD 柱状图
-        self.data = self.data.with_columns(
+        data = data.with_columns(
             pl.col('date'),
             (pl.col('dif') - pl.col('dea')).alias('macd'),
             pl.when(pl.col('dif') - pl.col('dea') >= 0).then(pl.lit('red')).otherwise(pl.lit('green')).alias('color')
         )
-        print(self.data)
-        self.data.write_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / f'macd_{self.period}.parquet')
+        print(data)
+        data.write_parquet(Config.Paths.DataPath / self.types / self.symbol / f'macd_{self.period}.parquet')
 
 
 class BollingerBands:
 
-    def __init__(self, symbol: str, period: str = 'day', adjust: str = 'raw'):
+    def __init__(self, symbol: str, period: str = 'day', adjust: str = 'raw', types: str = 'stocks'):
         self.symbol = symbol
         self.period = period
         self.adjust = adjust
-        self.data = None
-        self.stock_data = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / f'stock_{self.period}.parquet')
+        self.types = types
+
+        self.raw_data = pl.read_parquet(Config.Paths.DataPath / self.types / self.symbol / f'{self.types}_{self.period}.parquet')
 
         self.bollinger_bands()
 
     def bollinger_bands(self, std_dev: int = 2):
         # 计算布林线（20 周期，2 倍标准差）
-        self.data = self.stock_data.select(
+        data = self.raw_data.select(
             [
                 pl.col('date'),
                 pl.col(f'{self.adjust}_close').rolling_mean(20).alias('boll_mid'),
@@ -104,8 +102,8 @@ class BollingerBands:
                 (pl.col(f'{self.adjust}_close').rolling_mean(20) - pl.col(f'{self.adjust}_close').rolling_std(20) * std_dev).alias('boll_lower'),
             ]
         )
-        print(self.data)
-        self.data.write_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / f'boll_{self.period}.parquet')
+        print(data)
+        data.write_parquet(Config.Paths.DataPath / self.types / self.symbol / f'boll_{self.period}.parquet')
 
 
 if __name__ == '__main__':

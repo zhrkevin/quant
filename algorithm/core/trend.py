@@ -32,9 +32,9 @@ class AscendTrend:
         limited_date = selected_date - timedelta(days=self.window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
-        selected_stock_month = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / 'stock_month.parquet').filter(date_filter)
-        selected_ma_week = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / f'ma_week.parquet').filter(date_filter)
-        selected_ma_month = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / 'ma_month.parquet').filter(date_filter)
+        selected_stock_month = pl.read_parquet(Config.Paths.DataPath / 'stock' / self.symbol / 'stock_month.parquet').filter(date_filter)
+        selected_ma_week = pl.read_parquet(Config.Paths.DataPath / 'stock' / self.symbol / f'ma_week.parquet').filter(date_filter)
+        selected_ma_month = pl.read_parquet(Config.Paths.DataPath / 'stock' / self.symbol / 'ma_month.parquet').filter(date_filter)
 
         breakthrough = selected_ma_week.filter(
             (pl.col('ma_20').shift(1) < pl.col('ma_60').shift(1)) & 
@@ -76,9 +76,9 @@ class AscendTrend:
         limited_date = selected_date - timedelta(days=self.window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
-        selected_stock_month = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / 'stock_month.parquet').filter(date_filter)
-        selected_ma_week = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / 'ma_week.parquet').filter(date_filter)
-        selected_ma_month = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / 'ma_month.parquet').filter(date_filter)
+        selected_stock_month = pl.read_parquet(Config.Paths.DataPath / 'stock' / self.symbol / 'stock_month.parquet').filter(date_filter)
+        selected_ma_week = pl.read_parquet(Config.Paths.DataPath / 'stock' / self.symbol / 'ma_week.parquet').filter(date_filter)
+        selected_ma_month = pl.read_parquet(Config.Paths.DataPath / 'stock' / self.symbol / 'ma_month.parquet').filter(date_filter)
 
         breakthrough = selected_ma_week.filter(
             (pl.col('ma_30').shift(1) < pl.col('ma_60').shift(1)) & 
@@ -122,8 +122,8 @@ class AscendTrend:
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
         
         period = 'week'
-        selected_macd = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / f'macd_{period}.parquet').filter(date_filter)
-        selected_ma = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / f'ma_{period}.parquet').filter(date_filter)
+        selected_macd = pl.read_parquet(Config.Paths.DataPath / 'stock' / self.symbol / f'macd_{period}.parquet').filter(date_filter)
+        selected_ma = pl.read_parquet(Config.Paths.DataPath / 'stock' / self.symbol / f'ma_{period}.parquet').filter(date_filter)
 
         breakthrough = selected_macd.filter(
             (pl.col('dif').shift(1) < 0) & 
@@ -169,8 +169,8 @@ class AscendTrend:
             report.write_excel(Config.Paths.DataPath / 'output' / self.output)
 
         period = 'month'
-        selected_macd = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / f'macd_{period}.parquet').filter(date_filter)
-        selected_ma = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / f'ma_{period}.parquet').filter(date_filter)
+        selected_macd = pl.read_parquet(Config.Paths.DataPath / 'stock' / self.symbol / f'macd_{period}.parquet').filter(date_filter)
+        selected_ma = pl.read_parquet(Config.Paths.DataPath / 'stock' / self.symbol / f'ma_{period}.parquet').filter(date_filter)
 
         breakthrough = selected_macd.filter(
             (pl.col('dif').shift(1) < 0) & 
@@ -216,8 +216,8 @@ class AscendTrend:
             report.write_excel(Config.Paths.DataPath / 'output' / self.output)
 
         period = 'quarter'
-        selected_macd = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / f'macd_{period}.parquet').filter(date_filter)
-        selected_ma = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / f'ma_{period}.parquet').filter(date_filter)
+        selected_macd = pl.read_parquet(Config.Paths.DataPath / 'stock' / self.symbol / f'macd_{period}.parquet').filter(date_filter)
+        selected_ma = pl.read_parquet(Config.Paths.DataPath / 'stock' / self.symbol / f'ma_{period}.parquet').filter(date_filter)
 
         breakthrough = selected_macd.filter(
             (pl.col('dif').shift(1) < 0) & 
@@ -284,7 +284,7 @@ class DescendTrend:
         limited_date = selected_date - timedelta(days=self.window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
-        selected_ma_day = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / 'ma_day.parquet').filter(date_filter)
+        selected_ma_day = pl.read_parquet(Config.Paths.DataPath / 'stock' / self.symbol / 'ma_day.parquet').filter(date_filter)
 
         fallbelow = selected_ma_day.filter(
             (pl.col('ma_60').shift(1) > pl.col('ma_250').shift(1)) & 
@@ -308,7 +308,7 @@ class DescendTrend:
         limited_date = selected_date - timedelta(days=self.window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
-        selected_ma_week = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / 'ma_week.parquet').filter(date_filter)
+        selected_ma_week = pl.read_parquet(Config.Paths.DataPath / 'stock' / self.symbol / 'ma_week.parquet').filter(date_filter)
 
         fallbelow = selected_ma_week.filter(
             (pl.col('ma_20').shift(1) > pl.col('ma_60').shift(1)) & 
@@ -332,7 +332,7 @@ class DescendTrend:
         limited_date = selected_date - timedelta(days=self.window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
-        selected_ma_week = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / 'ma_week.parquet').filter(date_filter)
+        selected_ma_week = pl.read_parquet(Config.Paths.DataPath / 'stock' / self.symbol / 'ma_week.parquet').filter(date_filter)
 
         fallbelow = selected_ma_week.filter(
             (pl.col('ma_30').shift(1) > pl.col('ma_60').shift(1)) & 
@@ -356,8 +356,8 @@ class DescendTrend:
         limited_date = selected_date - timedelta(days=self.window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
-        selected_stock_month = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / 'stock_month.parquet').filter(date_filter)
-        selected_ma_month = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / 'ma_month.parquet').filter(date_filter)
+        selected_stock_month = pl.read_parquet(Config.Paths.DataPath / 'stock' / self.symbol / 'stock_month.parquet').filter(date_filter)
+        selected_ma_month = pl.read_parquet(Config.Paths.DataPath / 'stock' / self.symbol / 'ma_month.parquet').filter(date_filter)
 
         fallbelow = selected_stock_month.join(
             selected_ma_month.select('date', 'ma_30'), on='date'
@@ -397,9 +397,9 @@ class SmallFluctuations:
         limited_date = selected_date - timedelta(days=self.window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
-        selected_macd_month = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / f'macd_month.parquet').filter(date_filter)
-        selected_ma_month = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / 'ma_month.parquet').filter(date_filter)
-        selected_stock_month = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / 'stock_month.parquet').filter(date_filter)
+        selected_macd_month = pl.read_parquet(Config.Paths.DataPath / 'stock' / self.symbol / f'macd_month.parquet').filter(date_filter)
+        selected_ma_month = pl.read_parquet(Config.Paths.DataPath / 'stock' / self.symbol / 'ma_month.parquet').filter(date_filter)
+        selected_stock_month = pl.read_parquet(Config.Paths.DataPath / 'stock' / self.symbol / 'stock_month.parquet').filter(date_filter)
 
         smallmonthhole = selected_macd_month.filter(
             (pl.col('macd') < 0) & 
@@ -462,8 +462,8 @@ class SmallFluctuations:
         limited_date = selected_date - timedelta(days=self.window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
-        selected_macd_month = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / f'macd_month.parquet').filter(date_filter)
-        # selected_boll_week = pl.read_parquet(Config.Paths.DataPath / 'stocks' / self.symbol / f'boll_week.parquet').filter(date_filter)
+        selected_macd_month = pl.read_parquet(Config.Paths.DataPath / 'stock' / self.symbol / f'macd_month.parquet').filter(date_filter)
+        # selected_boll_week = pl.read_parquet(Config.Paths.DataPath / 'stock' / self.symbol / f'boll_week.parquet').filter(date_filter)
 
         climbupmonthhole = selected_macd_month.filter(
             (pl.col('dif') > 0) & 

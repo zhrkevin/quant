@@ -11,8 +11,8 @@ from datetime import date
 import xlsxwriter
 
 from project.configuration import Config
-from algorithm.data.stocks import Stocks
-from algorithm.data.fetch import WriteStocks, SplitStocks
+from algorithm.data.market import Stocks, ETFs
+from algorithm.data.fetch import WriteETFs, SplitETFs, WriteStocks, SplitStocks
 from algorithm.data.index import MovingAverage, MovingAverageConvergenceDivergence, BollingerBands
 
 from algorithm.basic.printf import Printf
@@ -22,7 +22,7 @@ from algorithm.core.judgement import ValuationSignal, BottomSignal
 
 class MergeTask:
 
-    def __init__(self, taskid, today=None):
+    def __init__(self, today=None):
         self.today = today or date.today()
         self.etf = f'etf-{self.today.strftime("%Y%m%d")}.xlsx'
         self.stock = f'stock-{self.today.strftime("%Y%m%d")}.xlsx'
@@ -37,25 +37,34 @@ class MergeTask:
             stock.write_excel(workbook, worksheet="Sheet2")
 
 
-class StockDataTask:
+class DataTask:
 
-    def __init__(self, taskid, algorithm):
-        self.today = date.today()
+    def __init__(self):
+        self.stocks_renew = False
+        self.etfs_renew = False
     
     def run(self):
-        WriteStocks()
+        WriteStocks(renew=self.stocks_renew)
         SplitStocks()
+        
+        WriteETFs(renew=self.etfs_renew)
+        SplitETFs()
 
-        for stock in Stocks:
-            for period in ['day', 'week', 'month', 'quarter']:
-                MovingAverage(stock, period=period)
-                MovingAverageConvergenceDivergence(stock, period=period)
-                BollingerBands(stock, period=period)
+        for period in ['day', 'week', 'month', 'quarter']:
+            for stock in Stocks:
+                MovingAverage(stock, period=period, types='stock')
+                MovingAverageConvergenceDivergence(stock, period=period, types='stock')
+                BollingerBands(stock, period=period, types='stock')
+
+            for etf in ETFs:
+                MovingAverage(etf, period=period, types='etf')
+                MovingAverageConvergenceDivergence(etf, period=period, types='etf')
+                BollingerBands(etf, period=period, types='etf')
 
 
 class StockAlgorithmTask:
 
-    def __init__(self, taskid, today=None):
+    def __init__(self, today=None):
         self.today = today or date.today()
         self.input = 'stock.xlsx'
         self.output = f'stock-{self.today.strftime("%Y%m%d")}.xlsx'
@@ -81,36 +90,11 @@ class StockAlgorithmTask:
         BottomSignal(stock, selected_date=self.today, output=self.output)
 
 
-class ETFDataTask:
-
-    def __init__(self, taskid, algorithm):
-        self.today = date.today()
-    
-    def run(self):
-        WriteStocks()
-        SplitStocks()
-
-        for stock in Stocks:
-            for period in ['day', 'week', 'month', 'quarter']:
-                MovingAverage(stock, period=period)
-                MovingAverageConvergenceDivergence(stock, period=period)
-                BollingerBands(stock, period=period)
-
-
-
-
 if __name__ == '__main__':
-    # DataTask(
-    #     taskid=shortuuid.random(24),
-    #     algorithm='quant',
-    # ).run()
+    DataTask().run()
+    StockAlgorithmTask().run()
 
-    # StockAlgorithmTask(
+    # MergeTask(
     #     taskid=shortuuid.random(24),
     #     today=date(2026, 2, 27),
     # ).run()
-
-    MergeTask(
-        taskid=shortuuid.random(24),
-        today=date(2026, 2, 27),
-    ).run()

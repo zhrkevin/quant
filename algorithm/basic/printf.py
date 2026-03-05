@@ -45,14 +45,14 @@ class Loguru:
     def __init__(self):
         loguru.logger.remove()
         loguru.logger.add(sys.stdout, colorize=True, enqueue=False, format=self.format)
-        loguru.logger.add(Config.Paths.DataPath / 'stocks' / f'test-report.log', rotation='2 MB', enqueue=False, format=self.format, mode='w')
+        loguru.logger.add(Config.Paths.DataPath / 'stock' / f'test-report.log', rotation='2 MB', enqueue=False, format=self.format, mode='w')
 
         self.extra = {'taskid': 'DefaultTaskID'}
         self.logger = loguru.logger.bind(name='DefaultTaskID')
 
     def set(self, stock=None):
         self.extra |= {'stock': stock}
-        loguru.logger.add(Config.Paths.DataPath / 'stocks' / stock / f'report.log', rotation='2 MB', enqueue=False, format=self.format, mode='w')
+        loguru.logger.add(Config.Paths.DataPath / 'stock' / stock / f'report.log', rotation='2 MB', enqueue=False, format=self.format, mode='w')
         self.logger = loguru.logger.bind(name=stock)
 
     def log(self, information, code, color, level, **kwargs):
