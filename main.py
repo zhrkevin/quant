@@ -15,8 +15,8 @@ if __name__ == '__main__':
         host=Config['Information']['Host'],
         port=Config['Information']['AlgorithmPort'],
     )
-    Schedulers.prepare(
-        host=Config['Information']['Host'],
-        port=Config['Information']['SchedulerPort'],
-    )
+    # Schedulers.prepare(
+    #     host=Config['Information']['Host'],
+    #     port=Config['Information']['SchedulerPort'],
+    # )
     Sanic.serve()

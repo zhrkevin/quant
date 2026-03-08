@@ -6,10 +6,9 @@
 
 import sanic
 
-from axon.documents import OpenAPI
-from algorithm.middlewares import Logger, Registration, Authorization, protect
-from algorithm.algorithms import DataProcessing, AlgorithmStartup, DataDownload
-
+from docs.documents import OpenAPI
+from algorithm.middleware import Logger, Registration, Authorization, protect
+from algorithm.tasks import DataTask
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -18,7 +17,7 @@ algorithms_blueprint = sanic.Blueprint(name='AlgorithmsBlueprint', url_prefix='/
 
 
 @algorithms_blueprint.before_server_start
-async def security_listener(app, loop):
+async def security_listener(app):
     OpenAPI()
     Registration()
 
@@ -42,30 +41,28 @@ async def signature_route(request):
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-@algorithms_blueprint.put('/api/<algorithm>/data-process')
+@algorithms_blueprint.post('/api/<algorithm>/data-task')
 @protect()
-async def data_processing_route(request, algorithm):
-    body = {
-        'algorithm': algorithm,
-        'taskid': request.args.get('TaskID'),
-        'callback': request.args.get('Callback'),
-        'schema': request.args.get('Schema'),
-        'data': request.json or {'Content': None},
-    }
-    message = DataProcessing(body=body)
-    return sanic.response.json(message)
-
-
-@algorithms_blueprint.post('/api/<algorithm>/algorithm-startup')
-@protect()
-async def algorithm_startup_route(request, algorithm):
+async def data_task_route(request, algorithm):
     body = {
         'algorithm': algorithm,
         'taskid': request.args.get('TaskID'),
         'callback': request.args.get('Callback'),
     }
-    message = AlgorithmStartup(body=body)
+    message = await DataTask.create(body=body)
     return sanic.response.json(message)
+
+
+# @algorithms_blueprint.post('/api/<algorithm>/algorithm-startup')
+# @protect()
+# async def algorithm_startup_route(request, algorithm):
+#     body = {
+#         'algorithm': algorithm,
+#         'taskid': request.args.get('TaskID'),
+#         'callback': request.args.get('Callback'),
+#     }
+#     message = AlgorithmStartup(body=body)
+#     return sanic.response.json(message)
 
 
 @algorithms_blueprint.get('/api/<algorithm>/files-check')

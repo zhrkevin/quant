@@ -37,13 +37,13 @@ Defaults = Box(
             'CallbackQueue': 'quant-callback',
         },
         'Callbacks': {
-            'Mock': 'http://0.0.0.0:10000/quant/callback/mock',
+            'Mock': 'http://0.0.0.0:10001/quant/callback/mock',
         },
         'Paths': {
             'ProjectPath': ProjectPath,
             'AlgorithmsPath': ProjectPath / 'algorithms',
             'ApiPath': ProjectPath / 'api',
-            'AxonPath': ProjectPath / 'axon',
+            'DocsPath': ProjectPath / 'docs',
             'DataPath': ProjectPath / 'data',
         },
     }
@@ -129,7 +129,7 @@ def callbacks(ctx, **kwargs):
 @click.option('--ProjectPath', 'ProjectPath', default=Defaults['Paths']['ProjectPath'])
 @click.option('--AlgorithmsPath', 'AlgorithmsPath', default=Defaults['Paths']['AlgorithmsPath'])
 @click.option('--ApiPath', 'ApiPath', default=Defaults['Paths']['ApiPath'])
-@click.option('--AxonPath', 'AxonPath', default=Defaults['Paths']['AxonPath'])
+@click.option('--DocsPath', 'DocsPath', default=Defaults['Paths']['DocsPath'])
 @click.option('--DataPath', 'DataPath', default=Defaults['Paths']['DataPath'])
 @click.pass_context
 def paths_config(ctx, **kwargs):
@@ -138,7 +138,7 @@ def paths_config(ctx, **kwargs):
             'ProjectPath': kwargs['ProjectPath'],
             'AlgorithmsPath': kwargs['AlgorithmsPath'],
             'ApiPath': kwargs['ApiPath'],
-            'AxonPath': kwargs['AxonPath'],
+            'DocsPath': kwargs['DocsPath'],
             'DataPath': kwargs['DataPath'],
         }
     )

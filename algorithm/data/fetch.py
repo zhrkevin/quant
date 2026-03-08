@@ -160,7 +160,7 @@ class WriteData:
             })
             print(f'增量数据下载完成')
 
-            new_raw_data = pl.concat([all_raw_data, incremental_raw_data]).unique(subset=['date'], keep='last').sort(
+            new_raw_data = pl.concat([all_raw_data, updated_raw_data]).unique(subset=['date'], keep='last').sort(
                 'date')
             print(f'全量增量量数据合并完成 \n{new_raw_data}')
             new_raw_data.write_parquet(Config.Paths.DataPath / 'etf' / symbol / 'raw.parquet')

@@ -4,6 +4,8 @@
 # Copyright 2015 for Zen. All Rights Reserved.
 # ---------------------------------------------
 
+import shortuuid
+import traceback
 import xlsxwriter
 import polars as pl
 from datetime import date
@@ -15,14 +17,34 @@ from algorithm.data.index import Index
 from algorithm.basic.printf import Printf
 from algorithm.core.trend import AscendTrend, DescendTrend, SmallFluctuations
 from algorithm.core.judgement import ValuationSignal, BottomSignal
+from algorithm.middleware import Callback, Logger, Process
 
 
 class DataTask:
 
-    def __init__(self):
-        # WriteData()
-        SplitData()
-        Index()
+    taskid, callback = None, None
+
+    @classmethod
+    async def create(cls, body):
+        cls.taskid = body['taskid'] or shortuuid.uuid()
+        cls.callback = body['callback'] or Config.Callbacks.Mock
+
+        data_task_process = Process(taskid=cls.taskid, function=cls.data_task)
+        message = await data_task_process.start()
+        # await data_task_process.join()
+        return message
+
+    @classmethod
+    def data_task(cls):
+        try:
+            # WriteData()
+            SplitData()
+            Index()
+            message = Logger(code=200, taskid=cls.taskid, information=f"数据处理任务成功结束。")
+        except Exception as error:
+            message = Logger(code=500, taskid=cls.taskid, information=f"错误信息: {error}\n{traceback.format_exc()}")
+
+        Callback(url=cls.callback, message=message)
 
 
 class AlgorithmTask:
@@ -42,7 +64,7 @@ class AlgorithmTask:
         for etf, name in ETFs.items():
             self.etf_algorithm(etf, name)
 
-        with xlsxwriter.Workbook(Config.Paths.DataPath / 'output' / f'{self.today.strftime("%Y%m%d")}.xlsx') as workbook:
+        with xlsxwriter.Workbook(Config.Paths.DataPath / 'output' / f'report-{self.today.strftime("%Y%m%d")}.xlsx') as workbook:
             stock_report.write_excel(workbook, worksheet="Sheet1")
             etf_report.write_excel(workbook, worksheet="Sheet2")
 
@@ -72,7 +94,12 @@ class AlgorithmTask:
 
 
 if __name__ == '__main__':
-    # DataTask()
-    AlgorithmTask(
-        today=date(2026, 3, 6),
+    DataTask(
+        body={
+            'taskid': None,
+            'callback': None
+        }
     )
+    # AlgorithmTask(
+    #     # today=date(2026, 3, 6),
+    # )

@@ -7,7 +7,7 @@
 import traceback
 
 from project.configuration import Config
-from algorithm.middlewares import MinIO, Logger, Process, Callback
+from algorithm.middleware import MinIO, Logger, Process, Callback
 from algorithm.basic.fetch import WriteStocks, SplitStocks
 
 

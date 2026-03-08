@@ -12,8 +12,8 @@ import numpy as np
 from sanic.log import logger
 
 from project.configuration import Config
-from algorithm.middlewares import MessageQueue
-from algorithm.algorithms import AlgorithmStartup
+from algorithm.middleware import MessageQueue
+from algorithm.tasks import DataTask
 
 
 class AlgorithmScheduler:
@@ -29,7 +29,7 @@ class AlgorithmScheduler:
         if body:
             acknow.ack()
             try:
-                AlgorithmStartup(body=body)
+                DataTask(body=body)   #<===========
             except Exception as error:
                 MessageQueue.produce(queue=self.queue, body=body)
                 print(f"{error}\n{traceback.format_exc()}")
