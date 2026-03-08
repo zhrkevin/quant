@@ -1,0 +1,105 @@
+
+
+:root {
+    --md-admonition-icon--put: url(
+      'data:image/svg+xml;charset=utf-8, <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>audio-input-rca</title><path d="M11 6V12H5V6H7V2C7 1.45 7.45 1 8 1S9 1.45 9 2V6H11M5 14V16C5 17.3 5.84 18.4 7 18.82V23H9V18.82C10.16 18.4 11 17.3 11 16V14H5M17 6V2C17 1.45 16.55 1 16 1S15 1.45 15 2V6H13V12H19V6H17M13 14V16C13 17.3 13.84 18.4 15 18.82V23H17V18.82C18.16 18.4 19 17.3 19 16V14H13Z" /></svg>'
+    )
+  }
+  .md-typeset .admonition.put,
+  .md-typeset details.put {
+    border-color: rgb(255, 141, 79);
+  }
+  .md-typeset .put > .admonition-title,
+  .md-typeset .put > summary {
+    background-color: rgb(255, 244, 238);
+  }
+  .md-typeset .put > .admonition-title::before,
+  .md-typeset .put > summary::before {
+    background-color: rgb(255, 141, 79);
+    -webkit-mask-image: var(--md-admonition-icon--put);
+            mask-image: var(--md-admonition-icon--put);
+  }
+
+
+:root {
+    --md-admonition-icon--get: url(
+      'data:image/svg+xml;charset=utf-8, <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>semantic-web</title><path d="M12.9 4.22C18.73 6.84 20 2 20 2S18.89 8.07 13.79 10.55C12.75 11.06 12.1 11.33 12.1 11.33L3.73 7.25L12.1 3.82C12.1 3.82 11.9 3.76 12.9 4.22M11.12 22L3.33 17.78V9.07L11.12 13.04V22M12.88 22L20.68 17.78V9.07L12.88 13.04V22Z" /></svg>'
+    )
+  }
+  .md-typeset .admonition.get,
+  .md-typeset details.get {
+    border-color: rgb(79, 142, 255);
+  }
+  .md-typeset .get > .admonition-title,
+  .md-typeset .get > summary {
+    background-color: rgb(238, 243, 254);
+  }
+  .md-typeset .get > .admonition-title::before,
+  .md-typeset .get > summary::before {
+    background-color: rgb(79, 142, 255);
+    -webkit-mask-image: var(--md-admonition-icon--get);
+            mask-image: var(--md-admonition-icon--get);
+  }
+
+
+:root {
+    --md-admonition-icon--post: url(
+      'data:image/svg+xml;charset=utf-8, <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>navigation-variant</title><path d="M21 3L3 10.53V11.5L9.84 14.16L12.5 21H13.46L21 3Z" /></svg>'
+    )
+  }
+  .md-typeset .admonition.post,
+  .md-typeset details.post {
+    border-color: rgb(37, 202, 91);
+  }
+  .md-typeset .post > .admonition-title,
+  .md-typeset .post > summary {
+    background-color: rgb(236, 250, 238);
+  }
+  .md-typeset .post > .admonition-title::before,
+  .md-typeset .post > summary::before {
+    background-color: rgb(37, 202, 91);
+    -webkit-mask-image: var(--md-admonition-icon--post);
+            mask-image: var(--md-admonition-icon--post);
+  }
+
+
+:root {
+    --md-admonition-icon--algorithm-changelog: url(
+        'data:image/svg+xml;charset=utf-8, <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>function-variant</title><path d="M12.42,5.29C11.32,5.19 10.35,6 10.25,7.11L10,10H12.82V12H9.82L9.38,17.07C9.18,19.27 7.24,20.9 5.04,20.7C3.79,20.59 2.66,19.9 2,18.83L3.5,17.33C3.83,18.38 4.96,18.97 6,18.63C6.78,18.39 7.33,17.7 7.4,16.89L7.82,12H4.82V10H8L8.27,6.93C8.46,4.73 10.39,3.1 12.6,3.28C13.86,3.39 15,4.09 15.66,5.17L14.16,6.67C13.91,5.9 13.23,5.36 12.42,5.29M22,13.65L20.59,12.24L17.76,15.07L14.93,12.24L13.5,13.65L16.35,16.5L13.5,19.31L14.93,20.72L17.76,17.89L20.59,20.72L22,19.31L19.17,16.5L22,13.65Z" /></svg>'
+    )
+  }
+  .md-typeset .admonition.algorithm-changelog,
+  .md-typeset details.algorithm-changelog {
+    border-color: rgb(79, 142, 255);
+  }
+  .md-typeset .algorithm-changelog > .admonition-title,
+  .md-typeset .algorithm-changelog > summary {
+    background-color: rgb(238, 243, 254);
+  }
+  .md-typeset .algorithm-changelog > .admonition-title::before,
+  .md-typeset .algorithm-changelog > summary::before {
+    background-color: rgb(79, 142, 255);
+    -webkit-mask-image: var(--md-admonition-icon--algorithm-changelog);
+            mask-image: var(--md-admonition-icon--algorithm-changelog);
+  }
+
+
+:root {
+    --md-admonition-icon--project-changelog: url(
+        'data:image/svg+xml;charset=utf-8, <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>code-json</title><path d="M5,3H7V5H5V10A2,2 0 0,1 3,12A2,2 0 0,1 5,14V19H7V21H5C3.93,20.73 3,20.1 3,19V15A2,2 0 0,0 1,13H0V11H1A2,2 0 0,0 3,9V5A2,2 0 0,1 5,3M19,3A2,2 0 0,1 21,5V9A2,2 0 0,0 23,11H24V13H23A2,2 0 0,0 21,15V19A2,2 0 0,1 19,21H17V19H19V14A2,2 0 0,1 21,12A2,2 0 0,1 19,10V5H17V3H19M12,15A1,1 0 0,1 13,16A1,1 0 0,1 12,17A1,1 0 0,1 11,16A1,1 0 0,1 12,15M8,15A1,1 0 0,1 9,16A1,1 0 0,1 8,17A1,1 0 0,1 7,16A1,1 0 0,1 8,15M16,15A1,1 0 0,1 17,16A1,1 0 0,1 16,17A1,1 0 0,1 15,16A1,1 0 0,1 16,15Z" /></svg>'
+    )
+  }
+  .md-typeset .admonition.project-changelog,
+  .md-typeset details.project-changelog {
+    border-color: rgb(37, 202, 91);
+  }
+  .md-typeset .project-changelog > .admonition-title,
+  .md-typeset .project-changelog > summary {
+    background-color: rgb(236, 250, 238);
+  }
+  .md-typeset .project-changelog > .admonition-title::before,
+  .md-typeset .project-changelog > summary::before {
+    background-color: rgb(37, 202, 91);
+    -webkit-mask-image: var(--md-admonition-icon--project-changelog);
+            mask-image: var(--md-admonition-icon--project-changelog);
+  }
