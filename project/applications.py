@@ -5,13 +5,8 @@
 # ---------------------------------------------
 
 from sanic import Sanic
-from sanic.worker.manager import WorkerManager
 
 from api import algorithms_blueprint, schedulers_blueprint, website_blueprint
-
-
-Sanic.start_method = 'fork'
-WorkerManager.THRESHOLD = 600
 
 
 Algorithms = Sanic('AlgorithmsApplication')

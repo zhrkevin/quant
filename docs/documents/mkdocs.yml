@@ -2,7 +2,7 @@
 # Copyright 2015 for Zen. All Rights Reserved.
 # ---------------------------------------------
 
-site_name: Quant 模型
+site_name: Quant
 site_dir: ../homepage
 docs_dir: ../documents
 use_directory_urls: false
@@ -42,8 +42,8 @@ plugins:
     - table-reader:
 
 exclude_docs: |
-    run.py
     __init__.py
+    run.py
     mkdocs.yml
     openapi/
 

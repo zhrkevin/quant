@@ -20,7 +20,7 @@ class OpenAPI:
         self.version = Config['Information']['Version']
         self.path = Config['Paths']['DocsPath'] / 'documents'
         self.apispec = APISpec(
-            openapi_version='3.1.0',
+            openapi_version='3.2.0',
             title='Quant',
             info={'description': 'Project API documents are on [document page](/quant).'},
             servers=[{'url': '/quant', 'description': 'Production'}],
@@ -31,18 +31,13 @@ class OpenAPI:
         self.api()
 
     def docs(self):
-        with open(Config['Paths']['DocsPath'] / 'version', 'w') as file:
-            file.write(f"算法版本 {self.version} \n")
-
         subprocess.run('mkdocs build --config-file mkdocs.yml', cwd=self.path, shell=True)
 
     def api(self):
         Platform(self.apispec)
         Quant(self.apispec)
-
         with open(Config['Paths']['DocsPath'] / 'swagger' / 'project-api.json', 'w') as file:
             json.dump(self.apispec.to_dict(), file, indent=4, ensure_ascii=False)
-
         logger.info(f"算法版本 {self.version}。")
 
 

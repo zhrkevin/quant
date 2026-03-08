@@ -22,7 +22,7 @@ async def models_loader(app):
 
 
 @schedulers_blueprint.after_server_start
-async def listener(app, loop):
+async def scheduler_listener(app):
     logger.info(f"算法引擎，启动模式 {Config['Information']['Mode']}。")
     if Config['Information']['Mode'] not in ['development']:
         scheduler = BackgroundScheduler(timezone='Asia/Shanghai')

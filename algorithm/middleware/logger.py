@@ -52,7 +52,7 @@ class Logger:
                 'taskid': taskid,
                 'information': f"错误信息: {error}\n{traceback.format_exc()}",
             }
-        logger.info(message)
+        logger.info(message['information'])
         return message
 
 

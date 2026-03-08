@@ -4,7 +4,7 @@
 # Copyright 2015 for Zen. All Rights Reserved.
 # ---------------------------------------------
 
-
+from datetime import date
 from project.configuration import Config
 
 
@@ -12,9 +12,9 @@ class Quant:
 
     def __init__(self, openapi):
         openapi.path(
-            path='/api/quant/data-task',
+            path='/api/dividend-low-volatility-strategy/data-task',
             operations={
-                'post': {
+                'put': {
                     'summary': '数据处理',
                     'tags': ['Quant'],
                     'security': [{'Bearer': []}],
@@ -30,15 +30,19 @@ class Quant:
                             'required': 'true',
                             'in': 'query',
                             'schema': {'type': 'string', 'example': Config['Callbacks']['Mock']}
-                        }
+                        },
                     ],
-                    'responses': {'200': {'description': 'Success'}}
+                    'responses': {
+                        '200': {
+                            'description': 'Success'
+                        }
+                    }
                 }
             },
         )
 
         openapi.path(
-            path='/api/quant/algorithm-startup',
+            path='/api/dividend-low-volatility-strategy/algorithm-task',
             operations={
                 'post': {
                     'summary': '算法计算',
@@ -52,39 +56,23 @@ class Quant:
                             'schema': {'type': 'string', 'example': 'LeLe9hhWK6FGMbEFcmwjZXVX'},
                         },
                         {
-                            'name': 'Version',
+                            'name': 'Today',
                             'required': 'true',
                             'in': 'query',
-                            'schema': {'type': 'string', 'enum': ['3.5', '3.5-16k', '4', '4-32k']},
-                        },
-                    ],
-                    'responses': {'200': {'description': 'Success'}}
-                }
-            },
-        )
-
-        openapi.path(
-            path='/api/quant/data-download',
-            operations={
-                'get': {
-                    'summary': '文件查询',
-                    'tags': ['Quant'],
-                    'security': [{'Bearer': []}],
-                    'parameters': [
-                        {
-                            'name': 'TaskID',
-                            'required': 'true',
-                            'in': 'query',
-                            'schema': {'type': 'string', 'example': 'LeLe9hhWK6FGMbEFcmwjZXVX'},
+                            'schema': {'type': 'string', 'example': date.today().strftime('%Y-%m-%d')},
                         },
                         {
-                            'name': 'Schema',
+                            'name': 'Callback',
                             'required': 'true',
                             'in': 'query',
-                            'schema': {'type': 'string', 'enum': ['system/logs', 'stocks/texts', 'output/results']},
+                            'schema': {'type': 'string', 'example': Config['Callbacks']['Mock']}
                         },
                     ],
-                    'responses': {'200': {'description': 'Success'}}
+                    'responses': {
+                        '200': {
+                            'description': 'Success'
+                        }
+                    }
                 }
             },
         )
