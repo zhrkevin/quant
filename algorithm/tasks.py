@@ -24,7 +24,7 @@ from algorithm.core.judgement import ValuationSignal, BottomSignal
 
 class DataTask:
 
-    taskid, callback = None, None
+    taskid, callback = None, Config['Callbacks']['Mock']
 
     @classmethod
     async def run(cls, body):
@@ -52,7 +52,7 @@ class DataTask:
 
 class AlgorithmTask:
 
-    taskid, callback, today = None, None, None
+    today, taskid, callback = None, None, Config['Callbacks']['Mock']
 
     @classmethod
     async def run(cls, body):
@@ -80,9 +80,11 @@ class AlgorithmTask:
             for etf, name in ETFs.items():
                 cls.etf(etf, name, today=today)
 
+            stock_report = pl.read_excel(Config.Paths.DataPath / 'output' / f'stock-today.xlsx')
+            etf_report = pl.read_excel(Config.Paths.DataPath / 'output' / f'etf-today.xlsx')
             with xlsxwriter.Workbook(Config.Paths.DataPath / 'output' / f'report-{today.strftime("%Y%m%d")}.xlsx') as workbook:
-                stock_report.write_excel(workbook, worksheet="Sheet1")
-                etf_report.write_excel(workbook, worksheet="Sheet2")
+                stock_report.write_excel(workbook, worksheet="Stocks")
+                etf_report.write_excel(workbook, worksheet="ETFs")
 
             message = Logger(code=200, taskid=cls.taskid, information=f"算法任务成功完成。")
         except Exception as error:
@@ -117,8 +119,15 @@ class AlgorithmTask:
         BottomSignal(etf, product='etf', selected_date=today, output=output)
 
 
+class MainScheduler:
+
+    @classmethod
+    def run(cls):
+        DataTask.main()
+        AlgorithmTask.main()
+
+
 if __name__ == '__main__':
-    # DataTask.main()
-    AlgorithmTask.main(
-        today=date(2026, 3, 6),
-    )
+    DataTask.main()
+    AlgorithmTask.main()
+

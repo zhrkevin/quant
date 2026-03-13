@@ -4,10 +4,11 @@
 # Copyright 2015 for Zen. All Rights Reserved.
 # ---------------------------------------------
 
-import subprocess
 import json
+import subprocess
 from apispec import APISpec
 from sanic.log import logger
+from datetime import datetime
 
 from project.configuration import Config
 from docs.documents.openapi.platform import Platform
@@ -17,8 +18,7 @@ from docs.documents.openapi.quant import Quant
 class OpenAPI:
 
     def __init__(self):
-        self.version = Config['Information']['Version']
-        self.path = Config['Paths']['DocsPath'] / 'documents'
+        self.version = datetime.now().strftime('%F %T')
         self.apispec = APISpec(
             openapi_version='3.2.0',
             title='Quant',
@@ -31,7 +31,7 @@ class OpenAPI:
         self.api()
 
     def docs(self):
-        subprocess.run('mkdocs build --config-file mkdocs.yml', cwd=self.path, shell=True)
+        subprocess.run('mkdocs build --config-file mkdocs.yml', cwd=Config['Paths']['DocsPath'] / 'documents', shell=True)
 
     def api(self):
         Platform(self.apispec)

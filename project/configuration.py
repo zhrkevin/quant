@@ -4,11 +4,9 @@
 # Copyright 2015 for Zen. All Rights Reserved.
 # ---------------------------------------------
 
-import json
 import click
-from datetime import datetime
-from pathlib import Path, PosixPath
 from box import Box
+from pathlib import Path
 
 
 ProjectPath = Path(__file__).parent.parent
@@ -21,20 +19,19 @@ Defaults = Box(
             'AlgorithmPort': 10001,
             'SchedulerPort': 20001,
             'Security': False,
-            'Version': datetime.now().strftime('%F %T'),
             'Mode': 'development',
         },
         'MinIO': {
-            'Endpoint': 'minio-api.jingzhi-sh.com:3456',
+            'Endpoint': '0.0.0.0:3456',
             'AccessKey': 'algorithm-user',
             'SecretKey': '1cciUuToLVqi9tja',
             'Bucket': 'quant',
         },
         'RabbitMQ': {
-            'Endpoint': 'rabbitmq.jingzhi-sh.com:5678/algorithm',
+            'Endpoint': '0.0.0.0:5678/algorithm',
             'Username': 'algorithm-user',
             'Password': 'HBbB4NUnQ8yTWhHh',
-            'CallbackQueue': 'quant-callback',
+            'CallbackQueue': 'quant',
         },
         'Callbacks': {
             'Mock': 'http://0.0.0.0:10001/quant/callback/mock',
@@ -66,7 +63,6 @@ def callback(ctx, processors):
 @click.option('--AlgorithmPort', 'AlgorithmPort', default=Defaults['Information']['AlgorithmPort'])
 @click.option('--SchedulerPort', 'SchedulerPort', default=Defaults['Information']['SchedulerPort'])
 @click.option('--Security', 'Security', default=Defaults['Information']['Security'])
-@click.option('--Version', 'Version', default=Defaults['Information']['Version'])
 @click.option('--Mode', 'Mode', default=Defaults['Information']['Mode'])
 @click.pass_context
 def information(ctx, **kwargs):
@@ -75,7 +71,6 @@ def information(ctx, **kwargs):
         'AlgorithmPort': kwargs['AlgorithmPort'],
         'SchedulerPort': kwargs['SchedulerPort'],
         'Security': kwargs['Security'],
-        'Version': kwargs['Version'],
         'Mode': kwargs['Mode'],
     }
 
@@ -149,11 +144,3 @@ Config = group.main(standalone_mode=False)
 
 if __name__ == '__main__':
     print(Config.Paths.DataPath)
-
-    # class Encoding(json.JSONEncoder):
-    #     def default(self, data):
-    #         if isinstance(data, PosixPath):
-    #             return str(data)
-    #
-    # j = json.dumps(Config, cls=Encoding, indent=4, ensure_ascii=False)
-    # print(j)

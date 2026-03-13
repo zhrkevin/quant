@@ -46,7 +46,7 @@ class Registration:
         with open(Config['Paths']['DataPath'] / 'system' / 'authentication.key', 'w') as file:
             json.dump(keys, file, indent=4, ensure_ascii=False)
 
-        logger.info(f"算法授权，注册成功，可申请签名或进行验证。")
+        logger.info(f"算法授权注册成功，签名可申请或验证。")
 
 
 class Authorization:

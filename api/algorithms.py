@@ -4,16 +4,11 @@
 # Copyright 2015 for Zen. All Rights Reserved.
 # ---------------------------------------------
 
-from typing import Any
-
-
 import sanic
 
 from docs.documents import OpenAPI
 from algorithm.middleware import Logger, Registration, Authorization, protect
 from algorithm.tasks import DataTask, AlgorithmTask
-
-# -------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 algorithms_blueprint = sanic.Blueprint(name='AlgorithmsBlueprint', url_prefix='/quant')
@@ -41,9 +36,6 @@ async def signature_route(request):
     return sanic.response.json(message)
 
 
-# -------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
 @algorithms_blueprint.put('/api/<algorithm>/data-task')
 @protect()
 async def data_task_route(request, algorithm):
@@ -69,22 +61,11 @@ async def algorithm_task_route(request, algorithm):
     return sanic.response.json(message)
 
 
-# @algorithms_blueprint.get('/api/<algorithm>/files-check')
-# @protect()
-# async def files_check_route(request, algorithm):
-#     body = {
-#         'algorithm': algorithm,
-#         'taskid': request.args.get('TaskID'),
-#         'schema': request.args.get('Schema'),
-#     }
-#     filepath = DataDownload(body=body)
-#     return await sanic.response.file(filepath)
-
-
-# -------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
 @algorithms_blueprint.post('/callback/<callback>')
 async def mock_callback_route(request, callback):
-    message = Logger(code=900, taskid=request.json.get('taskid'), information=f"Mock API 收到回调 [{callback}] 的信息。")
+    message = Logger(
+        code=900,
+        taskid=request.json.get('taskid'),
+        information=f"Mock API 收到回调 [{callback}] 的信息。"
+    )
     return sanic.response.json(message)
