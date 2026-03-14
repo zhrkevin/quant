@@ -123,8 +123,11 @@ class MainScheduler:
 
     @classmethod
     def run(cls):
-        DataTask.main()
-        AlgorithmTask.main()
+        if date.today().weekday() >= 5:
+            DataTask.main()            
+            AlgorithmTask.main()
+        else:
+            Printf.info(f'\n{'-'*20} 今天非交易日 {'-'*20} ')
 
 
 if __name__ == '__main__':

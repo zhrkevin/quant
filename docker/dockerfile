@@ -5,7 +5,7 @@
 # docker / kubernetes image
 
 
-FROM python:3.12 as environment
+FROM python:3.14 as environment
 WORKDIR /application
 ENV TZ=Asia/Shanghai
 
@@ -13,11 +13,10 @@ ADD docker/.bashrc /root/.bashrc
 ADD docker/debian.sources /etc/apt/sources.list.d/debian.sources
 RUN apt-get update -y && apt-get install -y vim
 
-ADD requirements.txt requirements.txt
-RUN pip install --no-cache-dir --index-url https://mirrors.aliyun.com/pypi/simple --upgrade pip setuptools
-RUN pip install --no-cache-dir --index-url https://mirrors.aliyun.com/pypi/simple --requirement requirements.txt
+RUN pip install --no-cache-dir --index-url https://mirrors.aliyun.com/pypi/simple --upgrade pdm
+RUN pdm update --no-self --update-all --unconstrained --verbose
+RUN pdm install --no-self --no-editable --no-cache --verbose
 
-
-FROM quant:environment-latest as test
+FROM quant:environment as test
 ADD . /application
 CMD bash run.sh test

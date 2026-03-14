@@ -26,7 +26,7 @@ elif [[ ${OPERATION} = 'up' ]]; then
         --restart always \
         --name ${CONTAINER} \
         --hostname ${CONTAINER} \
-        --publish 10000:10000 \
+        --publish 10001:10001 \
         --detach --interactive --tty ${IMAGE}:${BRANCH}-latest
 elif [[ ${OPERATION} = 'check' ]]; then
     pwd
