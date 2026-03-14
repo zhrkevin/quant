@@ -7,7 +7,6 @@
 import json
 import traceback
 from minio import Minio
-from sanic.log import logger
 from datetime import datetime
 
 from project.configuration import Config
@@ -52,7 +51,7 @@ class Logger:
                 'taskid': taskid,
                 'information': f"错误信息: {error}\n{traceback.format_exc()}",
             }
-        logger.info(message['information'])
+        print(message['information'])
         return message
 
 

@@ -5,9 +5,8 @@
 # ---------------------------------------------
 
 import copy
-from datetime import date
-from numpy.ma import product
 import polars as pl
+from datetime import date
 
 from project.configuration import Config
 from algorithm.basic.printf import Printf
@@ -24,13 +23,13 @@ class ValuationSignal:
         self.condition()
 
     def condition(self):
-        selected_stock_dividend = pl.read_excel(Config.Paths.DataPath / 'stock' / 'dividends.xlsx')
+        selected_stock_dividend = pl.read_excel(Config['Paths']['DataPath'] / 'stock' / 'dividends.xlsx')
         selected_stock_dividend = selected_stock_dividend.filter(
             (pl.col('编号') == self.symbol) & 
             (pl.col('年份') <= self.selected_date.year)
         )
         
-        stock_data = pl.read_parquet(Config.Paths.DataPath / self.product / self.symbol / 'day.parquet')
+        stock_data = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'day.parquet')
         latest_stock_close = stock_data.filter(pl.col('date') <= self.selected_date)['qfq_close'][-1] 
         latest_dividend_ratio = selected_stock_dividend['分红'][-1] / latest_stock_close
         public_service = selected_stock_dividend['公用事业'][-1]
@@ -50,12 +49,12 @@ class ValuationSignal:
         Printf.info(f'\n股票 {self.symbol} 日期 ({self.selected_date}) {condition}')
         Printf.info(f'最新分红 {selected_stock_dividend["分红"][-1]:.4f} 最新股价 {latest_stock_close:.4f} 最新分红率 {latest_dividend_ratio}')
         
-        report = pl.read_excel(Config.Paths.DataPath / 'output' / self.output)
+        report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / self.output)
         report = report.with_columns(
             pl.when(pl.col('编号') == self.symbol).then(pl.lit(condition)).otherwise(pl.col('估值')).alias('估值'),
             pl.when(pl.col('编号') == self.symbol).then(pl.lit(latest_dividend_ratio)).otherwise(pl.col('分红率')).alias('分红率'),
         )
-        report.write_excel(Config.Paths.DataPath / 'output' / self.output)
+        report.write_excel(Config['Paths']['DataPath'] / 'output' / self.output)
 
 
 class BottomSignal:
@@ -74,7 +73,7 @@ class BottomSignal:
     def condition1(self):
         begin_date = self.selected_date.replace(year=self.selected_date.year - 6)
 
-        stock_data = pl.read_parquet(Config.Paths.DataPath / self.product / self.symbol / 'day.parquet')
+        stock_data = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'day.parquet')
         selected_stock_data = stock_data.filter((pl.col('date') >= begin_date) & (pl.col('date') <= self.selected_date))
         
         toppest_stock_price = selected_stock_data[f'{self.adjust}_high'].max()
@@ -84,23 +83,23 @@ class BottomSignal:
         Printf.info(f"\n股票 {self.symbol} 底部参考值 ({ratio:.3f}% / 50%)")
         Printf.info(f"6 年最高股价 ({toppest_stock_price:.4f}) 当前股价 ({latest_stock_close:.4f})")
 
-        report = pl.read_excel(Config.Paths.DataPath / 'output' / self.output)
+        report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / self.output)
         report = report.with_columns(
             pl.when((pl.col('编号') == self.symbol) & (ratio < 50)).then(pl.lit(True)).otherwise(pl.col('跌幅超过50%')).alias('跌幅超过50%'),
             pl.when(pl.col('编号') == self.symbol).then(pl.lit(f"{ratio:.3f}%")).otherwise(pl.col('股价比值')).alias('股价比值'),
         )
-        report.write_excel(Config.Paths.DataPath / 'output' / self.output)
+        report.write_excel(Config['Paths']['DataPath'] / 'output' / self.output)
 
     def condition2(self):
-        stock_data = pl.read_parquet(Config.Paths.DataPath / self.product / self.symbol / 'day.parquet')
+        stock_data = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'day.parquet')
         selected_stock_data = stock_data.filter(pl.col('date') <= self.selected_date)
         latest_stock_high = selected_stock_data[f'{self.adjust}_high'][-1]
         latest_stock_low = selected_stock_data[f'{self.adjust}_low'][-1]
 
-        boll_month = pl.read_parquet(Config.Paths.DataPath / self.product / self.symbol / 'boll_month.parquet')
+        boll_month = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'boll_month.parquet')
         latest_boll_month_lower = boll_month.filter(pl.col('date') <= self.selected_date)['boll_lower'][-1]
 
-        boll_quarter = pl.read_parquet(Config.Paths.DataPath / self.product / self.symbol / 'boll_quarter.parquet')
+        boll_quarter = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'boll_quarter.parquet')
         selected_boll_quarter = boll_quarter.filter(pl.col('date') <= self.selected_date)
         latest_boll_quarter_mid = selected_boll_quarter['boll_mid'][-1] or 0
         latest_boll_quarter_lower = selected_boll_quarter['boll_lower'][-1] or 0
@@ -111,11 +110,11 @@ class BottomSignal:
             Printf.info(f"Boll 月线下轨 ({latest_boll_month_lower:.4f})")
             Printf.info(f"Boll 季线中下轨 ({latest_boll_quarter_mid:.4f} {latest_boll_quarter_lower:.4f})")
 
-            report = pl.read_excel(Config.Paths.DataPath / 'output' / self.output)
+            report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / self.output)
             report = report.with_columns(
                 pl.when(pl.col('编号') == self.symbol).then(pl.lit(True)).otherwise(pl.col('底部信号')).alias('底部信号')
             )
-            report.write_excel(Config.Paths.DataPath / 'output' / self.output)
+            report.write_excel(Config['Paths']['DataPath'] / 'output' / self.output)
 
 
 if __name__ == '__main__':

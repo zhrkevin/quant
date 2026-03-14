@@ -6,6 +6,7 @@
 
 
 import copy
+import shutil
 import traceback
 import xlsxwriter
 import polars as pl
@@ -15,9 +16,8 @@ from project.configuration import Config
 from algorithm.basic.printf import Printf
 from algorithm.middleware import Callback, Logger, Process
 
-from algorithm.data.product import Stocks, ETFs
-from algorithm.data.fetch import WriteData, SplitData
-from algorithm.data.index import Index
+from algorithm.core.product import Stocks, ETFs
+from algorithm.core.fetch import WriteData, SplitData, Index
 from algorithm.core.trend import AscendTrend, DescendTrend, SmallFluctuations
 from algorithm.core.judgement import ValuationSignal, BottomSignal
 
@@ -40,9 +40,15 @@ class DataTask:
     def main(cls):
         """运行数据处理任务"""
         try:
-            WriteData()
-            SplitData()
-            Index()
+            for symbol in Stocks:
+                WriteData().stocks(symbol)
+                SplitData().stocks(symbol)
+
+            for symbol in ETFs:
+                WriteData().etfs(symbol)
+                SplitData().etfs(symbol)
+
+            Index.run()
             message = Logger(code=200, taskid=cls.taskid, information=f"数据处理任务成功完成。")
         except Exception as error:
             message = Logger(code=500, taskid=cls.taskid, information=f"错误信息: {error}\n{traceback.format_exc()}")
@@ -70,19 +76,23 @@ class AlgorithmTask:
         try:
             today = cls.today if cls.today else copy.deepcopy(today)
 
-            stock_report = pl.read_excel(Config.Paths.DataPath / 'output' / 'stock.xlsx')
-            stock_report.write_excel(Config.Paths.DataPath / 'output' / f'stock-today.xlsx')
+            shutil.copy(
+                Config['Paths']['DataPath'] / 'output' / 'stock.xlsx',
+                Config['Paths']['DataPath'] / 'output' / 'stock-today.xlsx'
+            )
             for stock, name in Stocks.items():
                 cls.stock(stock, name, today=today)
         
-            etf_report = pl.read_excel(Config.Paths.DataPath / 'output' / 'etf.xlsx')
-            etf_report.write_excel(Config.Paths.DataPath / 'output' / f'etf-today.xlsx')
+            shutil.copy(
+                Config['Paths']['DataPath'] / 'output' / 'etf.xlsx',
+                Config['Paths']['DataPath'] / 'output' / 'etf-today.xlsx'
+            )
             for etf, name in ETFs.items():
                 cls.etf(etf, name, today=today)
 
-            stock_report = pl.read_excel(Config.Paths.DataPath / 'output' / f'stock-today.xlsx')
-            etf_report = pl.read_excel(Config.Paths.DataPath / 'output' / f'etf-today.xlsx')
-            with xlsxwriter.Workbook(Config.Paths.DataPath / 'output' / f'report-{today.strftime("%Y%m%d")}.xlsx') as workbook:
+            stock_report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / f'stock-today.xlsx')
+            etf_report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / f'etf-today.xlsx')
+            with xlsxwriter.Workbook(Config['Paths']['DataPath'] / 'output' / f'report-{today.strftime("%Y%m%d")}.xlsx') as workbook:
                 stock_report.write_excel(workbook, worksheet="Stocks")
                 etf_report.write_excel(workbook, worksheet="ETFs")
 
@@ -131,6 +141,5 @@ class MainScheduler:
 
 
 if __name__ == '__main__':
-    DataTask.main()
+    # DataTask.main()
     AlgorithmTask.main()
-

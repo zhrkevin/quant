@@ -11,7 +11,7 @@ import akshare_proxy_patch
 from datetime import date
 
 from project.configuration import Config
-from algorithm.data.product import Stocks, ETFs
+from algorithm.core.product import Stocks, ETFs
 
 
 akshare_proxy_patch.install_patch("101.201.173.125", "", 30)
@@ -20,38 +20,39 @@ pl.Config(tbl_rows=12, tbl_cols=-1)
 
 class WriteData:
 
-    def __init__(self, renew=False):
-        self.renew = renew
-        self.save()
+    renew = None
 
-    def save(self):
-        for symbol in Stocks:
-            os.makedirs(Config.Paths.DataPath / 'stock' / symbol) if not os.path.exists(Config.Paths.DataPath / 'stock' / symbol) else None
-            self.download_all_stocks_data(symbol)
-            self.download_updated_stocks_data(symbol)
+    @classmethod
+    def stocks(cls, symbol, renew=False):
+        cls.renew = renew
+        os.makedirs(Config['Paths']['DataPath'] / 'stock' / symbol) if not os.path.exists(Config['Paths']['DataPath'] / 'stock' / symbol) else None
+        cls.all_stocks_data(symbol)
+        cls.updated_stocks_data(symbol)
+    
+    @classmethod
+    def etfs(cls, symbol, renew=False):
+        cls.renew = renew
+        os.makedirs(Config['Paths']['DataPath'] / 'etf' / symbol) if not os.path.exists(Config['Paths']['DataPath'] / 'etf' / symbol) else None
+        cls.all_etfs_data(symbol)
+        cls.updated_etfs_data(symbol)
 
-        for symbol in ETFs:
-            os.makedirs(Config.Paths.DataPath / 'etf' / symbol) if not os.path.exists(Config.Paths.DataPath / 'etf' / symbol) else None
-            self.download_all_etfs_data(symbol)
-            self.download_updated_etfs_data(symbol)
-
-    def download_all_stocks_data(self, symbol='sh600025', start_date='20150101', end_date='20251231'):
-        if not self.renew and os.path.exists(Config.Paths.DataPath / 'stock' / symbol / 'raw.parquet'):
+    @classmethod
+    def all_stocks_data(cls, symbol='sh600025', start_date='20150101', end_date='20251231'):
+        if not cls.renew and os.path.exists(Config['Paths']['DataPath'] / 'stock' / symbol / 'raw.parquet'):
             print(f'{symbol} 全量数据已存在')
         else:
-            print(f'{symbol} 全量数据重新下载')
             raw_data = pl.from_pandas(
                 ak.stock_zh_a_daily(symbol=symbol, start_date=start_date, end_date=end_date, adjust='')
             )
-            print('全量除权数据下载完成')
+            print(f'{symbol} 全量除权数据下载完成')
             qfq_data = pl.from_pandas(
                 ak.stock_zh_a_daily(symbol=symbol, start_date=start_date, end_date=end_date, adjust='qfq')
             )
-            print('全量前复权数据下载完成')
+            print(f'{symbol} 全量前复权数据下载完成')
             hfq_data = pl.from_pandas(
                 ak.stock_zh_a_daily(symbol=symbol, start_date=start_date, end_date=end_date, adjust='hfq')
             )
-            print('全量后复权数据下载完成')
+            print(f'{symbol} 全量后复权数据下载完成')
 
             new_raw_data = pl.DataFrame({
                 'date': raw_data['date'],
@@ -61,11 +62,11 @@ class WriteData:
                 'volume': raw_data['volume'], 'amount': raw_data['amount'], 'turnover': raw_data['turnover'],
             })
             print(f'三种复权类型全量数据合并完成 \n{new_raw_data}')
-            new_raw_data.write_parquet(Config.Paths.DataPath / 'stock' / symbol / 'raw.parquet')
+            new_raw_data.write_parquet(Config['Paths']['DataPath'] / 'stock' / symbol / 'raw.parquet')
 
     @staticmethod
-    def download_updated_stocks_data(symbol='sh600025'):
-        all_raw_data = pl.read_parquet(Config.Paths.DataPath / 'stock' / symbol / 'raw.parquet')
+    def updated_stocks_data(symbol='sh600025'):
+        all_raw_data = pl.read_parquet(Config['Paths']['DataPath'] / 'stock' / symbol / 'raw.parquet')
         print(f'读取全量数据')
 
         if all_raw_data['date'].max() >= date.today():
@@ -73,7 +74,6 @@ class WriteData:
         else:
             print(f'最新日期： {all_raw_data["date"].max()} 今天日期：{date.today()}')
 
-            print(f'{symbol} \n增量数据开始下载')
             updated_raw_data = pl.from_pandas(
                 ak.stock_zh_a_daily(
                     symbol=symbol,
@@ -82,7 +82,7 @@ class WriteData:
                     adjust=''
                 )
             )
-            print('增量除权数据下载完成')
+            print(f'{symbol} 增量除权数据下载完成')
             updated_qfq_data = pl.from_pandas(
                 ak.stock_zh_a_daily(
                     symbol=symbol,
@@ -91,7 +91,7 @@ class WriteData:
                     adjust='qfq'
                 )
             )
-            print('增量前复权数据下载完成')
+            print(f'{symbol} 增量前复权数据下载完成')
             updated_hfq_data = pl.from_pandas(
                 ak.stock_zh_a_daily(
                     symbol=symbol,
@@ -100,7 +100,7 @@ class WriteData:
                     adjust='hfq'
                 )
             )
-            print('增量后复权数据下载完成')
+            print(f'{symbol} 增量后复权数据下载完成')
 
             updated_data = pl.DataFrame({
                 'date': updated_raw_data['date'],
@@ -111,13 +111,13 @@ class WriteData:
             })
             new_raw_data = pl.concat([all_raw_data, updated_data]).unique(subset=['date'], keep='last').sort('date')
             print(f'全量增量量数据合并完成 \n{new_raw_data}')
-            new_raw_data.write_parquet(Config.Paths.DataPath / 'stock' / symbol / 'raw.parquet')
+            new_raw_data.write_parquet(Config['Paths']['DataPath'] / 'stock' / symbol / 'raw.parquet')
 
-    def download_all_etfs_data(self, symbol='sh000016'):
-        if not self.renew and os.path.exists(Config.Paths.DataPath / 'etf' / symbol / 'raw.parquet'):
+    @classmethod
+    def all_etfs_data(cls, symbol='sh000016'):  
+        if not cls.renew and os.path.exists(Config['Paths']['DataPath'] / 'etf' / symbol / 'raw.parquet'):
             print(f'{symbol} 全量数据已存在')
         else:
-            print(f'{symbol} 全量数据开始下载')
             all_raw_data = pl.from_pandas(
                 ak.stock_zh_index_daily_em(symbol=symbol, start_date='20150101', end_date='20251231')
             )
@@ -129,12 +129,12 @@ class WriteData:
                 'low': 'raw_low',
                 'close': 'raw_close',
             })
-            print(f'全量数据下载完成 \n{all_raw_data}')
-            all_raw_data.write_parquet(Config.Paths.DataPath / 'etf' / symbol / 'raw.parquet')
+            print(f'{symbol} 全量数据下载完成 \n{all_raw_data}')
+            all_raw_data.write_parquet(Config['Paths']['DataPath'] / 'etf' / symbol / 'raw.parquet')
 
-    @staticmethod
-    def download_updated_etfs_data(symbol='sh000016'):
-        all_raw_data = pl.read_parquet(Config.Paths.DataPath / 'etf' / symbol / 'raw.parquet')
+    @classmethod
+    def updated_etfs_data(cls, symbol='sh000016'):
+        all_raw_data = pl.read_parquet(Config['Paths']['DataPath'] / 'etf' / symbol / 'raw.parquet')
         update_date = all_raw_data['date'].max()
         print(f'读取全量数据')
 
@@ -143,7 +143,6 @@ class WriteData:
         else:
             print(f'最新日期：{update_date} 今天日期：{date.today()}')
 
-            print(f'{symbol} 增量数据开始下载')
             updated_raw_data = pl.from_pandas(
                 ak.stock_zh_index_daily_em(
                     symbol=symbol, start_date=update_date.strftime('%Y%m%d'),
@@ -158,27 +157,20 @@ class WriteData:
                 'low': 'raw_low',
                 'close': 'raw_close',
             })
-            print(f'增量数据下载完成')
+            print(f'{symbol} 增量数据下载完成')
 
             new_raw_data = pl.concat([all_raw_data, updated_raw_data]).unique(subset=['date'], keep='last').sort(
                 'date')
-            print(f'全量增量量数据合并完成 \n{new_raw_data}')
-            new_raw_data.write_parquet(Config.Paths.DataPath / 'etf' / symbol / 'raw.parquet')
+            print(f'{symbol} 全量增量量数据合并完成 \n{new_raw_data}')
+            new_raw_data.write_parquet(Config['Paths']['DataPath'] / 'etf' / symbol / 'raw.parquet')
 
 
 class SplitData:
 
-    def __init__(self):
-        for symbol in Stocks:
-            self.stocks(symbol)
-
-        for symbol in ETFs:
-            self.etfs(symbol)
-
-    @staticmethod
-    def stocks(symbol):
+    @classmethod
+    def stocks(cls, symbol):
         # 读入原始数据
-        raw_data = pl.read_parquet(Config.Paths.DataPath / 'stock' / symbol / 'raw.parquet')
+        raw_data = pl.read_parquet(Config['Paths']['DataPath'] / 'stock' / symbol / 'raw.parquet')
 
         # 按日天统计数据
         day_data = raw_data.with_columns(
@@ -188,7 +180,7 @@ class SplitData:
         ).select(
             'year', 'day', pl.exclude('year', 'day')
         )
-        day_data.write_parquet(Config.Paths.DataPath / 'stock' / symbol / 'day.parquet')
+        day_data.write_parquet(Config['Paths']['DataPath'] / 'stock' / symbol / 'day.parquet')
         print(day_data)
 
         # 按周度统计数据
@@ -205,7 +197,7 @@ class SplitData:
                 pl.when(pl.col('raw_close').last() >= pl.col('raw_open').first()).then(pl.lit('green')).otherwise(pl.lit('red')).alias('color'),
             ]
         ).sort('date')
-        week_data.write_parquet(Config.Paths.DataPath / 'stock' / symbol / 'week.parquet')
+        week_data.write_parquet(Config['Paths']['DataPath'] / 'stock' / symbol / 'week.parquet')
         print(week_data)
 
         # 按月度统计数据
@@ -222,7 +214,7 @@ class SplitData:
                 pl.when(pl.col('raw_close').last() >= pl.col('raw_open').first()).then(pl.lit('green')).otherwise(pl.lit('red')).alias('color'),
             ]
         ).sort('date')
-        month_data.write_parquet(Config.Paths.DataPath / 'stock' / symbol / 'month.parquet')
+        month_data.write_parquet(Config['Paths']['DataPath'] / 'stock' / symbol / 'month.parquet')
         print(month_data)
         
         # 按季度统计数据
@@ -239,13 +231,13 @@ class SplitData:
                 pl.when(pl.col('raw_close').last() >= pl.col('raw_open').first()).then(pl.lit('green')).otherwise(pl.lit('red')).alias('color'),
             ]
         ).sort('date')
-        quarter_data.write_parquet(Config.Paths.DataPath / 'stock' / symbol / 'quarter.parquet')
+        quarter_data.write_parquet(Config['Paths']['DataPath'] / 'stock' / symbol / 'quarter.parquet')
         print(quarter_data)
 
-    @staticmethod
-    def etfs(symbol):
+    @classmethod
+    def etfs(cls, symbol):
         # 读入原始数据
-        raw_data = pl.read_parquet(Config.Paths.DataPath / 'etf' / symbol / 'raw.parquet')
+        raw_data = pl.read_parquet(Config['Paths']['DataPath'] / 'etf' / symbol / 'raw.parquet')
         print(raw_data)
 
         # 按日天统计数据
@@ -256,7 +248,7 @@ class SplitData:
         ).select(
             'year', 'day', pl.exclude('year', 'day')
         )
-        day_data.write_parquet(Config.Paths.DataPath / 'etf' / symbol / 'day.parquet')
+        day_data.write_parquet(Config['Paths']['DataPath'] / 'etf' / symbol / 'day.parquet')
         print(day_data)
 
         # 按周度统计数据
@@ -271,7 +263,7 @@ class SplitData:
                 pl.when(pl.col('raw_close').last() >= pl.col('raw_open').first()).then(pl.lit('green')).otherwise(pl.lit('red')).alias('color'),
             ]
         ).sort('date')
-        week_data.write_parquet(Config.Paths.DataPath / 'etf' / symbol / 'week.parquet')
+        week_data.write_parquet(Config['Paths']['DataPath'] / 'etf' / symbol / 'week.parquet')
         print(week_data)
 
         # 按月度统计数据
@@ -286,7 +278,7 @@ class SplitData:
                 pl.when(pl.col('raw_close').last() >= pl.col('raw_open').first()).then(pl.lit('green')).otherwise(pl.lit('red')).alias('color'),
             ]
         ).sort('date')
-        month_data.write_parquet(Config.Paths.DataPath / 'etf' / symbol / 'month.parquet')
+        month_data.write_parquet(Config['Paths']['DataPath'] / 'etf' / symbol / 'month.parquet')
         print(month_data)
         
         # 按季度统计数据
@@ -301,12 +293,86 @@ class SplitData:
                 pl.when(pl.col('raw_close').last() >= pl.col('raw_open').first()).then(pl.lit('green')).otherwise(pl.lit('red')).alias('color'),
             ]
         ).sort('date')
-        quarter_data.write_parquet(Config.Paths.DataPath / 'etf' / symbol / 'quarter.parquet')
+        quarter_data.write_parquet(Config['Paths']['DataPath'] / 'etf' / symbol / 'quarter.parquet')
         print(quarter_data)
+
+
+class Index:
+
+    @classmethod
+    def run(cls):
+        for period in ['day', 'week', 'month', 'quarter']:
+            for stock in Stocks:
+                cls.moving_average(stock, period, product='stock')
+                cls.moving_average_convergence_divergence(stock, period, product='stock')
+                cls.bollinger_bands(stock, period, product='stock')
+            for etf in ETFs:
+                cls.moving_average(etf, period, product='etf')
+                cls.moving_average_convergence_divergence(etf, period, product='etf')
+                cls.bollinger_bands(etf, period, product='etf')
+
+    @classmethod
+    def moving_average(cls, symbol, period, product, adjust='raw'):
+        # 计算移动平均线 MA
+        raw_data = pl.read_parquet(Config['Paths']['DataPath'] / product / symbol / f'{period}.parquet')
+        new_data = raw_data.select([
+            pl.col('date'),
+            pl.col(f'{adjust}_close').rolling_mean(5).alias('ma_5'),      # 005 trading period
+            pl.col(f'{adjust}_close').rolling_mean(10).alias('ma_10'),    # 010 trading period
+            pl.col(f'{adjust}_close').rolling_mean(20).alias('ma_20'),    # 020 trading period
+            pl.col(f'{adjust}_close').rolling_mean(30).alias('ma_30'),    # 030 trading period
+            pl.col(f'{adjust}_close').rolling_mean(60).alias('ma_60'),    # 060 trading period
+            pl.col(f'{adjust}_close').rolling_mean(250).alias('ma_250'),  # 250 trading period
+        ])
+        new_data.write_parquet(Config['Paths']['DataPath'] / product / symbol / f'ma_{period}.parquet')
+        print(new_data)
+
+    @classmethod
+    def moving_average_convergence_divergence(cls, symbol, period, product, adjust='raw'):
+        # 计算指数移动平均线 EMA、快线 DIF、慢线 DEA、柱状图 MACD 
+        fast, slow, span = 12, 26, 9
+        raw_data = pl.read_parquet(Config['Paths']['DataPath'] / product / symbol / f'{period}.parquet')
+        ema = pl.DataFrame({
+            'date': raw_data['date'],
+            'ema_fast': raw_data.select([
+                pl.col(f'{adjust}_close').ewm_mean(span=fast, adjust=False)
+            ]),
+            'ema_slow': raw_data.select([
+                pl.col(f'{adjust}_close').ewm_mean(span=slow, adjust=False)
+            ]),
+        })
+        new_data = pl.DataFrame({
+            'date': ema['date'],
+            'dif': ema['ema_fast'] - ema['ema_slow'],
+            'dea': (ema['ema_fast'] - ema['ema_slow']).ewm_mean(span=span, adjust=False),
+        })
+        new_data = new_data.with_columns(
+            pl.col('date'),
+            (pl.col('dif') - pl.col('dea')).alias('macd'),
+            pl.when(pl.col('dif') - pl.col('dea') >= 0).then(pl.lit('red')).otherwise(pl.lit('green')).alias('color')
+        )
+        new_data.write_parquet(Config['Paths']['DataPath'] / product / symbol / f'macd_{period}.parquet')
+        print(new_data)
+
+    @classmethod
+    def bollinger_bands(cls, symbol, period, product, adjust='raw'):
+        # 计算布林线 20 周期 + 2 倍标准差
+        mean, std = 20, 2
+        raw_data = pl.read_parquet(Config['Paths']['DataPath'] / product / symbol / f'{period}.parquet')
+        new_data = raw_data.select([
+            pl.col('date'),
+            pl.col(f'{adjust}_close').rolling_mean(mean).alias('boll_mid'),
+            (pl.col(f'{adjust}_close').rolling_mean(mean) + pl.col(f'{adjust}_close').rolling_std(mean) * std).alias('boll_upper'),
+            (pl.col(f'{adjust}_close').rolling_mean(mean) - pl.col(f'{adjust}_close').rolling_std(mean) * std).alias('boll_lower'),
+        ])
+        new_data.write_parquet(Config['Paths']['DataPath'] / product / symbol / f'boll_{period}.parquet')
+        print(new_data)
 
 
 if __name__ == '__main__':
     WriteData()
     SplitData()
+    Index()
 
     # Plotting('sh600036', period='day')
+

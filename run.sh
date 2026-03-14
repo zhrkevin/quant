@@ -11,12 +11,7 @@ MODE=${1-'development'}
 
 if [[ ${MODE} = 'development' ]]; then
     python -B -u main.py \
-        Information --Mode=development
-elif [[ ${MODE} = 'test' ]]; then
-    python -B -u main.py \
-        Information --Mode=test \
-        MinIO --Bucket=quant-test \
-        RabbitMQ --CallbackQueue=quant-callback-test
+        Information --Mode=development --AlgorithmPort=8001 --SchedulerPort=9001
 elif [[ ${MODE} = 'production' ]]; then
     python -B -u main.py \
         Information --Mode=production \

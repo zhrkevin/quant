@@ -35,16 +35,14 @@ pdm update --no-self --update-all --unconstrained --verbose
 
 ```text
 ./   
-├──  algorithms/         算法目录   
-├──  api/                网络通信 API 目录    
-├──  axon/               在线文档与 swagger 目录   
-├──  data/               数据存储目录    
-├──  docker/             镜像构建目录    
-├──  project/            项目与配置目录     
-├──  .gitignore          gitignore 忽略文件   
-├──  .gitlab-ci.yml      gitlab runner 自动集成配置文件   
-├──  main.py             主函数文件   
-├──  pyproject.toml      依赖包配置文件   
-├──  readme.md           说明文件    
-└──  requirements.txt    依赖包安装文件                     
+├──  algorithms/         算法目录
+├──  api/                API 目录
+├──  data/               数据存储目录
+├──  docker/             镜像构建目录
+├──  docs/               文档目录
+├──  project/            项目与配置目录
+├──  main.py             主函数文件
+├──  pyproject.toml      依赖包配置文件
+├──  readme.md           说明文件
+└──  run.sh              运行脚本文件
 ```
