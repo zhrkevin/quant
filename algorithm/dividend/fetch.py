@@ -11,7 +11,7 @@ import akshare_proxy_patch
 from datetime import date
 
 from project.configuration import Config
-from algorithm.core.product import Stocks, ETFs
+from algorithm.dividend.product import Stocks, ETFs
 
 
 akshare_proxy_patch.install_patch("101.201.173.125", "", 30)

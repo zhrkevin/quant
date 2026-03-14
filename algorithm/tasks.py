@@ -4,7 +4,6 @@
 # Copyright 2015 for Zen. All Rights Reserved.
 # ---------------------------------------------
 
-
 import copy
 import shutil
 import traceback
@@ -16,10 +15,10 @@ from project.configuration import Config
 from algorithm.basic.printf import Printf
 from algorithm.middleware import Callback, Logger, Process
 
-from algorithm.core.product import Stocks, ETFs
-from algorithm.core.fetch import WriteData, SplitData, Index
-from algorithm.core.trend import AscendTrend, DescendTrend, SmallFluctuations
-from algorithm.core.judgement import ValuationSignal, BottomSignal
+from algorithm.dividend.product import Stocks, ETFs
+from algorithm.dividend.fetch import WriteData, SplitData, Index
+from algorithm.dividend.trend import AscendTrend, DescendTrend, SmallFluctuations
+from algorithm.dividend.judgement import ValuationSignal, BottomSignal
 
 
 class DataTask:
