@@ -9,7 +9,7 @@
 
 
 OPERATION=${1-'check'}
-BRANCH=${2-'test'}
+BRANCH=${2-'main'}
 IMAGE='quant'
 CONTAINER='quant'
 
@@ -19,15 +19,14 @@ if [[ ${OPERATION} = 'build' ]]; then
         --no-cache \
         --progress plain \
         --file 'docker/dockerfile' \
-        --target=${BRANCH} \
-        --tag ${IMAGE}:${BRANCH}-latest .
+        --tag ${IMAGE}:${BRANCH} .
 elif [[ ${OPERATION} = 'up' ]]; then
     docker run \
         --restart always \
         --name ${CONTAINER} \
         --hostname ${CONTAINER} \
         --publish 10001:10001 \
-        --detach --interactive --tty ${IMAGE}:${BRANCH}-latest
+        --detach --interactive --tty ${IMAGE}:${BRANCH}
 elif [[ ${OPERATION} = 'check' ]]; then
     pwd
     ls -alhF --color=auto ./

@@ -28,7 +28,7 @@ docs = [
 ]
 main = [
     "akshare>=1.18.39",
-    "akshare-proxy-patch>=0.2.12",
+    "akshare-proxy-patch>=0.2.13",
     "apispec>=6.10.0",
     "apscheduler>=3.11.2",
     "click>=8.3.1",

@@ -9,7 +9,6 @@
 
 MODE=${1-'development'}
 
-
 if [[ ${MODE} = 'development' ]]; then
     python -B -u main.py \
         Information --Mode=development

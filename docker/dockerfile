@@ -4,19 +4,16 @@
 
 # docker / kubernetes image
 
+# FROM python:3.14-slim
+# ENV TZ=Asia/Shanghai
+# ADD docker/.bashrc /root/.bashrc
+# ADD docker/debian.sources /etc/apt/sources.list.d/debian.sources
+# RUN apt-get update -y && apt-get install -y vim git
+# RUN pip install --no-cache-dir --index-url https://mirrors.aliyun.com/pypi/simple --upgrade pdm
 
-FROM python:3.14 as environment
+FROM python:3.14
 WORKDIR /application
-ENV TZ=Asia/Shanghai
-
-ADD docker/.bashrc /root/.bashrc
-ADD docker/debian.sources /etc/apt/sources.list.d/debian.sources
-RUN apt-get update -y && apt-get install -y vim
-
-RUN pip install --no-cache-dir --index-url https://mirrors.aliyun.com/pypi/simple --upgrade pdm
+ENV PATH=/application/.venv/bin:$PATH
+RUN git clone https://github.com/zhrkevin/quant.git /application
 RUN pdm update --no-self --update-all --unconstrained --verbose
-RUN pdm install --no-self --no-editable --no-cache --verbose
-
-FROM quant:environment as test
-ADD . /application
-CMD bash run.sh test
+CMD bash run.sh
