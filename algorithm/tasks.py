@@ -141,5 +141,5 @@ class MainScheduler:
 
 
 if __name__ == '__main__':
-    # DataTask.main()
+    DataTask.main()
     AlgorithmTask.main()

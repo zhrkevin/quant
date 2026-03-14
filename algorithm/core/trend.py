@@ -32,9 +32,9 @@ class AscendTrend:
         limited_date = selected_date - timedelta(days=window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
-        selected_stock_month = pl.read_parquet(Config.Paths.DataPath / self.product / self.symbol / 'month.parquet').filter(date_filter)
-        selected_ma_week = pl.read_parquet(Config.Paths.DataPath / self.product / self.symbol / f'ma_week.parquet').filter(date_filter)
-        selected_ma_month = pl.read_parquet(Config.Paths.DataPath / self.product / self.symbol / 'ma_month.parquet').filter(date_filter)
+        selected_stock_month = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'month.parquet').filter(date_filter)
+        selected_ma_week = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / f'ma_week.parquet').filter(date_filter)
+        selected_ma_month = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'ma_month.parquet').filter(date_filter)
 
         breakthrough = selected_ma_week.filter(
             (pl.col('ma_20').shift(1) < pl.col('ma_60').shift(1)) & 
@@ -43,11 +43,11 @@ class AscendTrend:
         Printf.info(f'@ 触发 MA-Week-20 首次突破 MA-Week-60：\n{[d.strftime("%Y-%m-%d") for d in breakthrough]}') if not breakthrough.is_empty() else None
 
         if selected_date in breakthrough:
-            report = pl.read_excel(Config.Paths.DataPath / 'output' / self.output)
+            report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / self.output)
             report = report.with_columns(
                 pl.when(pl.col('编号') == self.symbol).then(pl.lit(True)).otherwise(pl.col('上升趋势 1-1')).alias('上升趋势 1-1')
             )
-            report.write_excel(Config.Paths.DataPath / 'output' / self.output)
+            report.write_excel(Config['Paths']['DataPath'] / 'output' / self.output)
 
         standup = selected_stock_month.join(
             selected_ma_month.select('date', 'ma_30'), on='date'
@@ -58,11 +58,11 @@ class AscendTrend:
         Printf.info(f'@ 触发 Stock-Low 站上 MA-Month-30 线：\n{[d.strftime("%Y-%m-%d") for d in standup]}') if not standup.is_empty() else None
 
         if selected_date in standup:
-            report = pl.read_excel(Config.Paths.DataPath / 'output' / self.output)
+            report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / self.output)
             report = report.with_columns(
                 pl.when(pl.col('编号') == self.symbol).then(pl.lit(True)).otherwise(pl.col('上升趋势 1-2')).alias('上升趋势 1-2')
             )
-            report.write_excel(Config.Paths.DataPath / 'output' / self.output)
+            report.write_excel(Config['Paths']['DataPath'] / 'output' / self.output)
 
     def condition2(self, window=60):
         Printf.info(f'(2) 周 30 价格突破周 60 价格 (再次确认首突)，同步判断是否站上 30 月线。')
@@ -70,9 +70,9 @@ class AscendTrend:
         limited_date = selected_date - timedelta(days=window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
-        selected_stock_month = pl.read_parquet(Config.Paths.DataPath / self.product / self.symbol / 'month.parquet').filter(date_filter)
-        selected_ma_week = pl.read_parquet(Config.Paths.DataPath / self.product / self.symbol / 'ma_week.parquet').filter(date_filter)
-        selected_ma_month = pl.read_parquet(Config.Paths.DataPath / self.product / self.symbol / 'ma_month.parquet').filter(date_filter)
+        selected_stock_month = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'month.parquet').filter(date_filter)
+        selected_ma_week = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'ma_week.parquet').filter(date_filter)
+        selected_ma_month = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'ma_month.parquet').filter(date_filter)
 
         breakthrough = selected_ma_week.filter(
             (pl.col('ma_30').shift(1) < pl.col('ma_60').shift(1)) & 
@@ -81,11 +81,11 @@ class AscendTrend:
         Printf.info(f'@ 触发 MA-Week-30 首次突破 MA-Week-60：\n{[d.strftime("%Y-%m-%d") for d in breakthrough]}') if not breakthrough.is_empty() else None
 
         if selected_date in breakthrough:
-            report = pl.read_excel(Config.Paths.DataPath / 'output' / self.output)
+            report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / self.output)
             report = report.with_columns(
                 pl.when(pl.col('编号') == self.symbol).then(pl.lit(True)).otherwise(pl.col('上升趋势 2-1')).alias('上升趋势 2-1')
             )
-            report.write_excel(Config.Paths.DataPath / 'output' / self.output)
+            report.write_excel(Config['Paths']['DataPath'] / 'output' / self.output)
 
         standup = selected_stock_month.join(
             selected_ma_month.select('date', 'ma_30'), on='date'
@@ -96,11 +96,11 @@ class AscendTrend:
         Printf.info(f'@ 触发 Stock-Low 站上 MA-Month-30 线：\n{[d.strftime("%Y-%m-%d") for d in standup]}') if not standup.is_empty() else None
 
         if selected_date in standup:
-            report = pl.read_excel(Config.Paths.DataPath / 'output' / self.output)
+            report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / self.output)
             report = report.with_columns(
                 pl.when(pl.col('编号') == self.symbol).then(pl.lit(True)).otherwise(pl.col('上升趋势 2-2')).alias('上升趋势 2-2')
             )
-            report.write_excel(Config.Paths.DataPath / 'output' / self.output)
+            report.write_excel(Config['Paths']['DataPath'] / 'output' / self.output)
 
     def condition3(self, window=60):
         Printf.info(f'(3) MACD 突破0轴后回踩均线，缠绕，变成多头趋势 (短线看日线，长线看周、月、季线)。')
@@ -110,8 +110,8 @@ class AscendTrend:
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
         
         period = 'week'
-        selected_macd = pl.read_parquet(Config.Paths.DataPath / self.product / self.symbol / f'macd_{period}.parquet').filter(date_filter)
-        selected_ma = pl.read_parquet(Config.Paths.DataPath / self.product / self.symbol / f'ma_{period}.parquet').filter(date_filter)
+        selected_macd = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / f'macd_{period}.parquet').filter(date_filter)
+        selected_ma = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / f'ma_{period}.parquet').filter(date_filter)
 
         breakthrough = selected_macd.filter(
             (pl.col('dif').shift(1) < 0) & 
@@ -121,11 +121,11 @@ class AscendTrend:
         Printf.info(f'@ 触发 MACD-{period.title()} 突破 0 轴：\n{[d.strftime("%Y-%m-%d") for d in breakthrough]}') if not breakthrough.is_empty() else None
 
         if selected_date in breakthrough:
-            report = pl.read_excel(Config.Paths.DataPath / 'output' / self.output)
+            report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / self.output)
             report = report.with_columns(
                 pl.when(pl.col('编号') == self.symbol).then(pl.lit(True)).otherwise(pl.col('上升趋势 3-1')).alias('上升趋势 3-1')
             )
-            report.write_excel(Config.Paths.DataPath / 'output' / self.output)
+            report.write_excel(Config['Paths']['DataPath'] / 'output' / self.output)
 
         longposition = selected_ma.filter(
             (pl.col('ma_10') > pl.col('ma_20')) & 
@@ -144,15 +144,15 @@ class AscendTrend:
             Printf.info(f'时间区间 {i+1}：[{group[0] if len(group) == 1 else f"{group[0]} ~ {group[-1]}"}]')
 
         if selected_date in longposition:
-            report = pl.read_excel(Config.Paths.DataPath / 'output' / self.output)
+            report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / self.output)
             report = report.with_columns(
                 pl.when(pl.col('编号') == self.symbol).then(pl.lit(True)).otherwise(pl.col('上升趋势 3-2')).alias('上升趋势 3-2')
             )
-            report.write_excel(Config.Paths.DataPath / 'output' / self.output)
+            report.write_excel(Config['Paths']['DataPath'] / 'output' / self.output)
 
         period = 'month'
-        selected_macd = pl.read_parquet(Config.Paths.DataPath / self.product / self.symbol / f'macd_{period}.parquet').filter(date_filter)
-        selected_ma = pl.read_parquet(Config.Paths.DataPath / self.product / self.symbol / f'ma_{period}.parquet').filter(date_filter)
+        selected_macd = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / f'macd_{period}.parquet').filter(date_filter)
+        selected_ma = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / f'ma_{period}.parquet').filter(date_filter)
 
         breakthrough = selected_macd.filter(
             (pl.col('dif').shift(1) < 0) & 
@@ -162,11 +162,11 @@ class AscendTrend:
         Printf.info(f'@ 触发 MACD-{period.title()} 突破 0 轴：\n{[d.strftime("%Y-%m-%d") for d in breakthrough]}') if not breakthrough.is_empty() else None
 
         if selected_date in breakthrough:
-            report = pl.read_excel(Config.Paths.DataPath / 'output' / self.output)
+            report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / self.output)
             report = report.with_columns(
                 pl.when(pl.col('编号') == self.symbol).then(pl.lit(True)).otherwise(pl.col('上升趋势 4-1')).alias('上升趋势 4-1')
             )
-            report.write_excel(Config.Paths.DataPath / 'output' / self.output)
+            report.write_excel(Config['Paths']['DataPath'] / 'output' / self.output)
 
         longposition = selected_ma.filter(
             (pl.col('ma_10') > pl.col('ma_20')) & 
@@ -185,15 +185,15 @@ class AscendTrend:
             Printf.info(f'时间区间 {i+1}：[{group[0] if len(group) == 1 else f"{group[0]} ~ {group[-1]}"}]')
 
         if selected_date in longposition:
-            report = pl.read_excel(Config.Paths.DataPath / 'output' / self.output)
+            report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / self.output)
             report = report.with_columns(
                 pl.when(pl.col('编号') == self.symbol).then(pl.lit(True)).otherwise(pl.col('上升趋势 4-2')).alias('上升趋势 4-2')
             )
-            report.write_excel(Config.Paths.DataPath / 'output' / self.output)
+            report.write_excel(Config['Paths']['DataPath'] / 'output' / self.output)
 
         period = 'quarter'
-        selected_macd = pl.read_parquet(Config.Paths.DataPath / self.product / self.symbol / f'macd_{period}.parquet').filter(date_filter)
-        selected_ma = pl.read_parquet(Config.Paths.DataPath / self.product / self.symbol / f'ma_{period}.parquet').filter(date_filter)
+        selected_macd = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / f'macd_{period}.parquet').filter(date_filter)
+        selected_ma = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / f'ma_{period}.parquet').filter(date_filter)
 
         breakthrough = selected_macd.filter(
             (pl.col('dif').shift(1) < 0) & 
@@ -203,11 +203,11 @@ class AscendTrend:
         Printf.info(f'@ 触发 MACD-{period.title()} 突破 0 轴：\n{[d.strftime("%Y-%m-%d") for d in breakthrough]}') if not breakthrough.is_empty() else None
 
         if selected_date in breakthrough:
-            report = pl.read_excel(Config.Paths.DataPath / 'output' / self.output)
+            report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / self.output)
             report = report.with_columns(
                 pl.when(pl.col('编号') == self.symbol).then(pl.lit(True)).otherwise(pl.col('上升趋势 5-1')).alias('上升趋势 5-1')
             )
-            report.write_excel(Config.Paths.DataPath / 'output' / self.output)
+            report.write_excel(Config['Paths']['DataPath'] / 'output' / self.output)
         
         longposition = selected_ma.filter(
             (pl.col('ma_10') > pl.col('ma_20')) & 
@@ -226,11 +226,11 @@ class AscendTrend:
             Printf.info(f'时间区间 {i+1}：[{group[0] if len(group) == 1 else f"{group[0]} ~ {group[-1]}"}]')
 
         if selected_date in longposition:
-            report = pl.read_excel(Config.Paths.DataPath / 'output' / self.output)
+            report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / self.output)
             report = report.with_columns(
                 pl.when(pl.col('编号') == self.symbol).then(pl.lit(True)).otherwise(pl.col('上升趋势 5-2')).alias('上升趋势 5-2')
             )
-            report.write_excel(Config.Paths.DataPath / 'output' / self.output)
+            report.write_excel(Config['Paths']['DataPath'] / 'output' / self.output)
 
 
 class DescendTrend:
@@ -254,7 +254,7 @@ class DescendTrend:
         limited_date = selected_date - timedelta(days=window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
-        selected_ma_day = pl.read_parquet(Config.Paths.DataPath / self.product / self.symbol / 'ma_day.parquet').filter(date_filter)
+        selected_ma_day = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'ma_day.parquet').filter(date_filter)
 
         fallbelow = selected_ma_day.filter(
             (pl.col('ma_60').shift(1) > pl.col('ma_250').shift(1)) & 
@@ -263,11 +263,11 @@ class DescendTrend:
         Printf.info(f'@ 触发 MA-Day-60 跌破 MA-Day-250：\n{[d.strftime("%Y-%m-%d") for d in fallbelow]}') if not fallbelow.is_empty() else None
 
         if selected_date in fallbelow:
-            report = pl.read_excel(Config.Paths.DataPath / 'output' / self.output)
+            report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / self.output)
             report = report.with_columns(
                 pl.when(pl.col('编号') == self.symbol).then(pl.lit(True)).otherwise(pl.col('下降趋势 1-1')).alias('下降趋势 1-1')
             )
-            report.write_excel(Config.Paths.DataPath / 'output' / self.output)
+            report.write_excel(Config['Paths']['DataPath'] / 'output' / self.output)
         
     def condition2(self, window=60):
         Printf.info(f'(2) 周 20 跌破周 60。')
@@ -275,7 +275,7 @@ class DescendTrend:
         limited_date = selected_date - timedelta(days=window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
-        selected_ma_week = pl.read_parquet(Config.Paths.DataPath / self.product / self.symbol / 'ma_week.parquet').filter(date_filter)
+        selected_ma_week = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'ma_week.parquet').filter(date_filter)
 
         fallbelow = selected_ma_week.filter(
             (pl.col('ma_20').shift(1) > pl.col('ma_60').shift(1)) & 
@@ -284,11 +284,11 @@ class DescendTrend:
         Printf.info(f'@ 触发 MA-Week-20 跌破 MA-Week-60：\n{[d.strftime("%Y-%m-%d") for d in fallbelow]}') if not fallbelow.is_empty() else None
         
         if selected_date in fallbelow:
-            report = pl.read_excel(Config.Paths.DataPath / 'output' / self.output)
+            report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / self.output)
             report = report.with_columns(
                 pl.when(pl.col('编号') == self.symbol).then(pl.lit(True)).otherwise(pl.col('下降趋势 2-1')).alias('下降趋势 2-1')
             )
-            report.write_excel(Config.Paths.DataPath / 'output' / self.output)
+            report.write_excel(Config['Paths']['DataPath'] / 'output' / self.output)
         
     def condition3(self, window=60):
         Printf.info(f'(3) 周 30 跌破周 60。')
@@ -296,7 +296,7 @@ class DescendTrend:
         limited_date = selected_date - timedelta(days=window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
-        selected_ma_week = pl.read_parquet(Config.Paths.DataPath / self.product / self.symbol / 'ma_week.parquet').filter(date_filter)
+        selected_ma_week = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'ma_week.parquet').filter(date_filter)
 
         fallbelow = selected_ma_week.filter(
             (pl.col('ma_30').shift(1) > pl.col('ma_60').shift(1)) & 
@@ -305,11 +305,11 @@ class DescendTrend:
         Printf.info(f'@ 触发 MA-Week-30 跌破 MA-Week-60：\n{[d.strftime("%Y-%m-%d") for d in fallbelow]}') if not fallbelow.is_empty() else None
         
         if selected_date in fallbelow:
-            report = pl.read_excel(Config.Paths.DataPath / 'output' / self.output)
+            report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / self.output)
             report = report.with_columns(
                 pl.when(pl.col('编号') == self.symbol).then(pl.lit(True)).otherwise(pl.col('下降趋势 3-1')).alias('下降趋势 3-1')
             )
-            report.write_excel(Config.Paths.DataPath / 'output' / self.output)
+            report.write_excel(Config['Paths']['DataPath'] / 'output' / self.output)
         
     def condition4(self, window=60):
         Printf.info(f'(4) 跌破月 30。')
@@ -317,8 +317,8 @@ class DescendTrend:
         limited_date = selected_date - timedelta(days=window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
-        selected_stock_month = pl.read_parquet(Config.Paths.DataPath / self.product / self.symbol / 'month.parquet').filter(date_filter)
-        selected_ma_month = pl.read_parquet(Config.Paths.DataPath / self.product / self.symbol / 'ma_month.parquet').filter(date_filter)
+        selected_stock_month = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'month.parquet').filter(date_filter)
+        selected_ma_month = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'ma_month.parquet').filter(date_filter)
 
         fallbelow = selected_stock_month.join(
             selected_ma_month.select('date', 'ma_30'), on='date'
@@ -329,11 +329,11 @@ class DescendTrend:
         Printf.info(f'@ 触发 Stock-Low 下穿跌破 MA-Month-30 线：\n{[d.strftime("%Y-%m-%d") for d in fallbelow]}') if not fallbelow.is_empty() else None
         
         if selected_date in fallbelow:
-            report = pl.read_excel(Config.Paths.DataPath / 'output' / self.output)
+            report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / self.output)
             report = report.with_columns(
                 pl.when(pl.col('编号') == self.symbol).then(pl.lit(True)).otherwise(pl.col('下降趋势 4-1')).alias('下降趋势 4-1')
             )
-            report.write_excel(Config.Paths.DataPath / 'output' / self.output)
+            report.write_excel(Config['Paths']['DataPath'] / 'output' / self.output)
 
 
 class SmallFluctuations:
@@ -355,9 +355,9 @@ class SmallFluctuations:
         limited_date = selected_date - timedelta(days=window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
-        selected_macd_month = pl.read_parquet(Config.Paths.DataPath / self.product / self.symbol / f'macd_month.parquet').filter(date_filter)
-        selected_ma_month = pl.read_parquet(Config.Paths.DataPath / self.product / self.symbol / 'ma_month.parquet').filter(date_filter)
-        selected_stock_month = pl.read_parquet(Config.Paths.DataPath / self.product / self.symbol / 'month.parquet').filter(date_filter)
+        selected_macd_month = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / f'macd_month.parquet').filter(date_filter)
+        selected_ma_month = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'ma_month.parquet').filter(date_filter)
+        selected_stock_month = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'month.parquet').filter(date_filter)
 
         smallmonthhole = selected_macd_month.filter(
             (pl.col('macd') < 0) & 
@@ -377,11 +377,11 @@ class SmallFluctuations:
                 Printf.info(f'时间区间 {i+1}: [{group[0] if len(group) == 1 else f"{group[0]} ~ {group[-1]}"}]')
 
         if selected_date in smallmonthhole:
-            report = pl.read_excel(source=Config.Paths.DataPath / 'output' / self.output)
+            report = pl.read_excel(source=Config['Paths']['DataPath'] / 'output' / self.output)
             report = report.with_columns(
                 pl.when(pl.col('编号') == self.symbol).then(pl.lit(True)).otherwise(pl.col('小调整 1-1')).alias('小调整 1-1')
             )
-            report.write_excel(Config.Paths.DataPath / 'output' / self.output)
+            report.write_excel(Config['Paths']['DataPath'] / 'output' / self.output)
 
         fallbelow = selected_stock_month.join(
             selected_ma_month.select('date', 'ma_30'), on='date'
@@ -402,11 +402,11 @@ class SmallFluctuations:
                 Printf.info(f'时间区间 {i+1}: [{group[0] if len(group) == 1 else f"{group[0]} ~ {group[-1]}"}]')
 
         if selected_date in intersection:
-            report = pl.read_excel(Config.Paths.DataPath / 'output' / self.output)
+            report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / self.output)
             report = report.with_columns(
                 pl.when(pl.col('编号') == self.symbol).then(pl.lit(True)).otherwise(pl.col('小调整 1-2')).alias('小调整 1-2')
             )
-            report.write_excel(Config.Paths.DataPath / 'output' / self.output)
+            report.write_excel(Config['Paths']['DataPath'] / 'output' / self.output)
 
     def condition2(self, window=60):
         Printf.info(f'(2) 坑内出来以后，Boll 周下是买点。')
@@ -414,8 +414,8 @@ class SmallFluctuations:
         limited_date = selected_date - timedelta(days=window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
-        selected_macd_month = pl.read_parquet(Config.Paths.DataPath / self.product / self.symbol / f'macd_month.parquet').filter(date_filter)
-        # selected_boll_week = pl.read_parquet(Config.Paths.DataPath / self.product / self.symbol / f'boll_week.parquet').filter(date_filter)
+        selected_macd_month = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / f'macd_month.parquet').filter(date_filter)
+        # selected_boll_week = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / f'boll_week.parquet').filter(date_filter)
 
         climbupmonthhole = selected_macd_month.filter(
             (pl.col('dif') > 0) & 
@@ -427,11 +427,11 @@ class SmallFluctuations:
         Printf.info(f'@ 触发 MACD-Month 坑内出：{[d.strftime("%Y-%m-%d") for d in climbupmonthhole]}') if not climbupmonthhole.is_empty() else None
 
         if selected_date in climbupmonthhole:
-            report = pl.read_excel(Config.Paths.DataPath / 'output' / self.output)
+            report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / self.output)
             report = report.with_columns(
                 pl.when(pl.col('编号') == self.symbol).then(pl.lit(True)).otherwise(pl.col('小调整 2-1')).alias('小调整 2-1')
             )
-            report.write_excel(Config.Paths.DataPath / 'output' / self.output)
+            report.write_excel(Config['Paths']['DataPath'] / 'output' / self.output)
         
         # latest_stock_low < latest_boll_week
 
