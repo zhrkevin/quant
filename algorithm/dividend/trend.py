@@ -5,8 +5,8 @@
 # ---------------------------------------------
 
 import copy
+import datetime
 import polars as pl
-from datetime import date, timedelta
 
 from project.configuration import Config
 from algorithm.basic.printf import Printf
@@ -16,7 +16,7 @@ class AscendTrend:
 
     def __init__(self, symbol, product='stock', selected_date=None, adjust='raw', output='report-test.xlsx'):
         self.symbol = symbol
-        self.selected_date = selected_date or date.today()
+        self.selected_date = selected_date or datetime.date.today()
         self.adjust = adjust
         self.output = output
         self.product = product
@@ -28,8 +28,8 @@ class AscendTrend:
 
     def condition1(self, window=60):
         Printf.info(f'(1) 周 20 价格突破周 60 价格 (首突)，同步判断是否站上 30 月线。')
-        selected_date = date(2026, 1, 3) if self.selected_date is None else copy.deepcopy(self.selected_date)
-        limited_date = selected_date - timedelta(days=window + 7)
+        selected_date = datetime.date(2026, 1, 3) if self.selected_date is None else copy.deepcopy(self.selected_date)
+        limited_date = selected_date - datetime.timedelta(days=window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
         selected_stock_month = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'month.parquet').filter(date_filter)
@@ -66,8 +66,8 @@ class AscendTrend:
 
     def condition2(self, window=60):
         Printf.info(f'(2) 周 30 价格突破周 60 价格 (再次确认首突)，同步判断是否站上 30 月线。')
-        selected_date = date(2026, 1, 3) if self.selected_date is None else copy.deepcopy(self.selected_date)
-        limited_date = selected_date - timedelta(days=window + 7)
+        selected_date = datetime.date(2026, 1, 3) if self.selected_date is None else copy.deepcopy(self.selected_date)
+        limited_date = selected_date - datetime.timedelta(days=window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
         selected_stock_month = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'month.parquet').filter(date_filter)
@@ -104,8 +104,8 @@ class AscendTrend:
 
     def condition3(self, window=60):
         Printf.info(f'(3) MACD 突破0轴后回踩均线，缠绕，变成多头趋势 (短线看日线，长线看周、月、季线)。')
-        selected_date = date(2026, 1, 3) if self.selected_date is None else copy.deepcopy(self.selected_date)
-        limited_date = selected_date - timedelta(days=window + 7)
+        selected_date = datetime.date(2026, 1, 3) if self.selected_date is None else copy.deepcopy(self.selected_date)
+        limited_date = selected_date - datetime.timedelta(days=window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
         
@@ -250,8 +250,8 @@ class DescendTrend:
 
     def condition1(self, window=60):
         Printf.info(f'(1) 日 60 跌破日 250。')
-        selected_date = date(2026, 1, 3) if self.selected_date is None else copy.deepcopy(self.selected_date)
-        limited_date = selected_date - timedelta(days=window + 7)
+        selected_date = datetime.date(2026, 1, 3) if self.selected_date is None else copy.deepcopy(self.selected_date)
+        limited_date = selected_date - datetime.timedelta(days=window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
         selected_ma_day = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'ma_day.parquet').filter(date_filter)
@@ -271,8 +271,8 @@ class DescendTrend:
         
     def condition2(self, window=60):
         Printf.info(f'(2) 周 20 跌破周 60。')
-        selected_date = date(2026, 1, 3) if self.selected_date is None else copy.deepcopy(self.selected_date)
-        limited_date = selected_date - timedelta(days=window + 7)
+        selected_date = datetime.date(2026, 1, 3) if self.selected_date is None else copy.deepcopy(self.selected_date)
+        limited_date = selected_date - datetime.timedelta(days=window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
         selected_ma_week = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'ma_week.parquet').filter(date_filter)
@@ -292,8 +292,8 @@ class DescendTrend:
         
     def condition3(self, window=60):
         Printf.info(f'(3) 周 30 跌破周 60。')
-        selected_date = date(2026, 1, 3) if self.selected_date is None else copy.deepcopy(self.selected_date)
-        limited_date = selected_date - timedelta(days=window + 7)
+        selected_date = datetime.date(2026, 1, 3) if self.selected_date is None else copy.deepcopy(self.selected_date)
+        limited_date = selected_date - datetime.timedelta(days=window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
         selected_ma_week = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'ma_week.parquet').filter(date_filter)
@@ -313,8 +313,8 @@ class DescendTrend:
         
     def condition4(self, window=60):
         Printf.info(f'(4) 跌破月 30。')
-        selected_date = date(2026, 1, 3) if self.selected_date is None else copy.deepcopy(self.selected_date)
-        limited_date = selected_date - timedelta(days=window + 7)
+        selected_date = datetime.date(2026, 1, 3) if self.selected_date is None else copy.deepcopy(self.selected_date)
+        limited_date = selected_date - datetime.timedelta(days=window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
         selected_stock_month = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'month.parquet').filter(date_filter)
@@ -351,8 +351,8 @@ class SmallFluctuations:
 
     def condition1(self, window=60):
         Printf.info(f'(1) 月小坑，参考月 30 价格。')
-        selected_date = date(2026, 1, 3) if self.selected_date is None else copy.deepcopy(self.selected_date)
-        limited_date = selected_date - timedelta(days=window + 7)
+        selected_date = datetime.date(2026, 1, 3) if self.selected_date is None else copy.deepcopy(self.selected_date)
+        limited_date = selected_date - datetime.timedelta(days=window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
         selected_macd_month = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / f'macd_month.parquet').filter(date_filter)
@@ -410,8 +410,8 @@ class SmallFluctuations:
 
     def condition2(self, window=60):
         Printf.info(f'(2) 坑内出来以后，Boll 周下是买点。')
-        selected_date = date(2026, 1, 3) if self.selected_date is None else copy.deepcopy(self.selected_date)
-        limited_date = selected_date - timedelta(days=window + 7)
+        selected_date = datetime.date(2026, 1, 3) if self.selected_date is None else copy.deepcopy(self.selected_date)
+        limited_date = selected_date - datetime.timedelta(days=window + 7)
 
         date_filter = (pl.col('date') <= selected_date) & (pl.col('date') >= limited_date)
         selected_macd_month = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / f'macd_month.parquet').filter(date_filter)

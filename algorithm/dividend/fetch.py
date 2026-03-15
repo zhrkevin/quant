@@ -8,7 +8,7 @@ import os
 import polars as pl
 import akshare as ak
 import akshare_proxy_patch
-from datetime import date
+import datetime
 
 from project.configuration import Config
 from algorithm.dividend.product import Stocks, ETFs
@@ -69,16 +69,16 @@ class WriteData:
         all_raw_data = pl.read_parquet(Config['Paths']['DataPath'] / 'stock' / symbol / 'raw.parquet')
         print(f'读取全量数据')
 
-        if all_raw_data['date'].max() >= date.today():
+        if all_raw_data['date'].max() >= datetime.date.today():
             print(f'{symbol} \n增量数据已更新')
         else:
-            print(f'最新日期： {all_raw_data["date"].max()} 今天日期：{date.today()}')
+            print(f'最新日期： {all_raw_data["date"].max()} 今天日期：{datetime.date.today()}')
 
             updated_raw_data = pl.from_pandas(
                 ak.stock_zh_a_daily(
                     symbol=symbol,
                     start_date=all_raw_data['date'].max(),
-                    end_date=date.today().strftime('%Y%m%d'),
+                    end_date=datetime.date.today().strftime('%Y%m%d'),
                     adjust=''
                 )
             )
@@ -87,7 +87,7 @@ class WriteData:
                 ak.stock_zh_a_daily(
                     symbol=symbol,
                     start_date=all_raw_data['date'].max(),
-                    end_date=date.today().strftime('%Y%m%d'),
+                    end_date=datetime.date.today().strftime('%Y%m%d'),
                     adjust='qfq'
                 )
             )
@@ -96,7 +96,7 @@ class WriteData:
                 ak.stock_zh_a_daily(
                     symbol=symbol,
                     start_date=all_raw_data['date'].max(),
-                    end_date=date.today().strftime('%Y%m%d'),
+                    end_date=datetime.date.today().strftime('%Y%m%d'),
                     adjust='hfq'
                 )
             )

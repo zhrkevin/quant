@@ -5,8 +5,8 @@
 # ---------------------------------------------
 
 import copy
+import datetime
 import polars as pl
-from datetime import date
 
 from project.configuration import Config
 from algorithm.basic.printf import Printf
@@ -18,7 +18,7 @@ class ValuationSignal:
         self.symbol = symbol
         self.output = output
         self.product = product
-        self.selected_date = date(2026, 1, 1) if selected_date is None else copy.deepcopy(selected_date)
+        self.selected_date = datetime.date(2026, 1, 1) if selected_date is None else copy.deepcopy(selected_date)
 
         self.condition()
 
@@ -65,7 +65,7 @@ class BottomSignal:
         self.adjust = adjust
         self.output = output
 
-        self.selected_date = date(2026, 1, 3) if selected_date is None else copy.deepcopy(selected_date)
+        self.selected_date = datetime.date(2026, 1, 3) if selected_date is None else copy.deepcopy(selected_date)
 
         self.condition1()
         self.condition2()
@@ -119,4 +119,4 @@ class BottomSignal:
 
 if __name__ == '__main__':
     ValuationSignal('sh600941')
-    BottomSignal('sh600941', selected_date=date(2026, 2, 25))
+    BottomSignal('sh600941', selected_date=datetime.date(2026, 2, 25))

@@ -8,7 +8,7 @@ import sanic
 from sanic.log import logger
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from algorithm.tasks import MainScheduler
+from algorithm.dividend.tasks import MainScheduler
 
 
 schedulers_blueprint = sanic.Blueprint(name='SchedulersBlueprint', url_prefix='/quant')

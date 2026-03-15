@@ -8,7 +8,7 @@ import sanic
 
 from docs.documents import OpenAPI
 from algorithm.middleware import Logger, Registration, Authorization, protect
-from algorithm.tasks import DataTask, AlgorithmTask
+from algorithm.dividend.tasks import DataTask, AlgorithmTask
 
 
 algorithms_blueprint = sanic.Blueprint(name='AlgorithmsBlueprint', url_prefix='/quant')
