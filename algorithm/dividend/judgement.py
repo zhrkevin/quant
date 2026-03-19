@@ -9,7 +9,7 @@ import datetime
 import polars as pl
 
 from project.configuration import Config
-from algorithm.basic.printf import Printf
+from algorithm.middleware.logger import Logger
 
 
 class ValuationSignal:
@@ -46,8 +46,8 @@ class ValuationSignal:
 
         latest_dividend_ratio = f"{latest_dividend_ratio*100:.4f}%"
 
-        Printf.info(f'\n股票 {self.symbol} 日期 ({self.selected_date}) {condition}')
-        Printf.info(f'最新分红 {selected_stock_dividend["分红"][-1]:.4f} 最新股价 {latest_stock_close:.4f} 最新分红率 {latest_dividend_ratio}')
+        Logger.info(f'\n股票 {self.symbol} 日期 ({self.selected_date}) {condition}')
+        Logger.info(f'最新分红 {selected_stock_dividend["分红"][-1]:.4f} 最新股价 {latest_stock_close:.4f} 最新分红率 {latest_dividend_ratio}')
         
         report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / self.output)
         report = report.with_columns(
@@ -80,8 +80,8 @@ class BottomSignal:
         latest_stock_close = selected_stock_data[f'{self.adjust}_close'][-1]
         ratio = latest_stock_close / toppest_stock_price * 100
 
-        Printf.info(f"\n股票 {self.symbol} 底部参考值 ({ratio:.3f}% / 50%)")
-        Printf.info(f"6 年最高股价 ({toppest_stock_price:.4f}) 当前股价 ({latest_stock_close:.4f})")
+        Logger.info(f"\n股票 {self.symbol} 底部参考值 ({ratio:.3f}% / 50%)")
+        Logger.info(f"6 年最高股价 ({toppest_stock_price:.4f}) 当前股价 ({latest_stock_close:.4f})")
 
         report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / self.output)
         report = report.with_columns(
@@ -105,10 +105,10 @@ class BottomSignal:
         latest_boll_quarter_lower = selected_boll_quarter['boll_lower'][-1] or 0
 
         if latest_boll_month_lower >= latest_stock_low >= latest_boll_quarter_lower and latest_stock_high <= latest_boll_quarter_mid:
-            Printf.info(f"\n股票 {self.symbol} 触发底部信号 Boll 月线下轨 + 季线中下轨")
-            Printf.info(f"当前 ({self.selected_date}) 股价最高值 ({latest_stock_high:.4f}) 最低值 ({latest_stock_low:.4f})")
-            Printf.info(f"Boll 月线下轨 ({latest_boll_month_lower:.4f})")
-            Printf.info(f"Boll 季线中下轨 ({latest_boll_quarter_mid:.4f} {latest_boll_quarter_lower:.4f})")
+            Logger.info(f"\n股票 {self.symbol} 触发底部信号 Boll 月线下轨 + 季线中下轨")
+            Logger.info(f"当前 ({self.selected_date}) 股价最高值 ({latest_stock_high:.4f}) 最低值 ({latest_stock_low:.4f})")
+            Logger.info(f"Boll 月线下轨 ({latest_boll_month_lower:.4f})")
+            Logger.info(f"Boll 季线中下轨 ({latest_boll_quarter_mid:.4f} {latest_boll_quarter_lower:.4f})")
 
             report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / self.output)
             report = report.with_columns(

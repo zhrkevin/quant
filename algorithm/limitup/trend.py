@@ -10,7 +10,7 @@ from akshare.futures.symbol_var import symbol
 import polars as pl
 
 from project.configuration import Config
-from algorithm.basic.printf import Printf
+from algorithm.basic. import Printf
 
 
 pl.Config(tbl_rows=-1, tbl_cols=-1)

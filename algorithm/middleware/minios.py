@@ -23,7 +23,7 @@ class MinIO:
     )
     bucket = Config['MinIO']['Bucket']
 
-    if mode not in ['development'] and not client.bucket_exists(bucket):
+    if mode not in ['test'] and not client.bucket_exists(bucket):
         client.make_bucket(bucket)
 
     @classmethod
@@ -44,7 +44,7 @@ class MinIO:
     @classmethod
     def upload(cls, filename):
         try:
-            if cls.mode in ['development']:
+            if cls.mode in ['test']:
                 return cls.exist(filename)
             else:
                 cls.client.fput_object(
@@ -61,7 +61,7 @@ class MinIO:
     @classmethod
     def download(cls, filename):
         try:
-            if cls.mode in ['development']:
+            if cls.mode in ['test']:
                 return cls.exist(filename)
             else:
                 cls.client.fget_object(

@@ -7,11 +7,12 @@
 # ${MODE} == development, test, production
 
 
-MODE=${1-'development'}
+MODE=${1-'test'}
 
-if [[ ${MODE} = 'development' ]]; then
+if [[ ${MODE} = 'test' ]]; then
     python -B -u main.py \
-        Information --Mode=development --AlgorithmPort=8001 --SchedulerPort=9001
+        Information --Mode=test --AlgorithmPort=8001 --SchedulerPort=9001 \
+        Callbacks --Mock="http://0.0.0.0:8001/quant/callback/mock"
 elif [[ ${MODE} = 'production' ]]; then
     python -B -u main.py \
         Information --Mode=production \

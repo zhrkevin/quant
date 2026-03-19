@@ -5,10 +5,10 @@
 # ---------------------------------------------
 
 import os
+import datetime
 import polars as pl
 import akshare as ak
 import akshare_proxy_patch
-import datetime
 
 from project.configuration import Config
 from algorithm.dividend.product import Stocks, ETFs
@@ -138,15 +138,15 @@ class WriteData:
         update_date = all_raw_data['date'].max()
         print(f'读取全量数据')
 
-        if update_date >= date.today():
+        if update_date >= datetime.date.today():
             print(f'{symbol} 增量数据已更新')
         else:
-            print(f'最新日期：{update_date} 今天日期：{date.today()}')
+            print(f'最新日期：{update_date} 今天日期：{datetime.date.today()}')
 
             updated_raw_data = pl.from_pandas(
                 ak.stock_zh_index_daily_em(
                     symbol=symbol, start_date=update_date.strftime('%Y%m%d'),
-                    end_date=date.today().strftime('%Y%m%d')
+                    end_date=datetime.date.today().strftime('%Y%m%d')
                 )
             )
             updated_raw_data = updated_raw_data.with_columns(

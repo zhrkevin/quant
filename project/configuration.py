@@ -19,7 +19,7 @@ Defaults = Box(
             'AlgorithmPort': 10001,
             'SchedulerPort': 20001,
             'Security': False,
-            'Mode': 'development',
+            'Mode': 'test',
         },
         'MinIO': {
             'Endpoint': '0.0.0.0:3456',

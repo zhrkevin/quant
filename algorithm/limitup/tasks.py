@@ -12,7 +12,7 @@ import polars as pl
 from datetime import date
 
 from project.configuration import Config
-from algorithm.basic.printf import Printf
+from algorithm.basic. import Printf
 from algorithm.middleware import Callback, Logger, Process
 
 from algorithm.limitup.fetch import SplitData, Index, FetchLimitUp

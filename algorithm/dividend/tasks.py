@@ -6,15 +6,12 @@
 
 import copy
 import shutil
-import traceback
 import xlsxwriter
 import polars as pl
 from datetime import date
 
 from project.configuration import Config
-from algorithm.basic.printf import Printf
 from algorithm.middleware import Callback, Logger, Process
-
 from algorithm.dividend.product import Stocks, ETFs
 from algorithm.dividend.fetch import WriteData, SplitData, Index
 from algorithm.dividend.trend import AscendTrend, DescendTrend, SmallFluctuations
@@ -48,9 +45,9 @@ class DataTask:
                 SplitData().etfs(symbol)
 
             Index.run()
-            message = Logger(code=200, taskid=cls.taskid, information=f"数据处理任务成功完成。")
+            message = Logger.info(taskid=cls.taskid, information=f"数据处理任务成功完成。")
         except Exception as error:
-            message = Logger(code=500, taskid=cls.taskid, information=f"错误信息: {error}\n{traceback.format_exc()}")
+            message = Logger.error(taskid=cls.taskid, information=f"错误信息: {error}\n{traceback.format_exc()}")
         
         Callback(url=cls.callback, message=message)
 
@@ -95,35 +92,35 @@ class AlgorithmTask:
                 stock_report.write_excel(workbook, worksheet="Stocks")
                 etf_report.write_excel(workbook, worksheet="ETFs")
 
-            message = Logger(code=200, taskid=cls.taskid, information=f"算法任务成功完成。")
+            message = Logger.info(taskid=cls.taskid, information=f"算法任务成功完成。")
         except Exception as error:
-            message = Logger(code=500, taskid=cls.taskid, information=f"错误信息: {error}\n{traceback.format_exc()}")
+            message = Logger.error(taskid=cls.taskid, information=f"错误信息: {error}\n{traceback.format_exc()}")
         
         Callback(url=cls.callback, message=message)
 
     @classmethod
     def stock(cls, stock='sh600025', name='华能水电', today=date.today(), output=f'stock-today.xlsx'):
-        Printf.info(f'\n{'='*16} {stock} {name} {'='*16}')
+        Logger.info(f'\n{'='*16} {stock} {name} {'='*16}')
 
-        Printf.info(f'\n{'-'*20} 趋势判断 {'-'*20} ')
+        Logger.info(f'\n{'-'*20} 趋势判断 {'-'*20} ')
         AscendTrend(stock, product='stock', selected_date=today, output=output)
         DescendTrend(stock, product='stock', selected_date=today, output=output)
         SmallFluctuations(stock, product='stock', selected_date=today, output=output)
 
-        Printf.info(f'\n{'-'*20} 策略分类 {'-'*20} ')
+        Logger.info(f'\n{'-'*20} 策略分类 {'-'*20} ')
         ValuationSignal(stock, product='stock', selected_date=today, output=output)
         BottomSignal(stock, product='stock', selected_date=today, output=output)
 
     @classmethod
     def etf(cls, etf='sh600025', name='华能水电', today=date.today(), output=f'etf-today.xlsx'):
-        Printf.info(f'\n{'='*16} {etf} {name} {'='*16}')
+        Logger.info(f'\n{'='*16} {etf} {name} {'='*16}')
     
-        Printf.info(f'\n{'-'*20} 趋势判断 {'-'*20} ')
+        Logger.info(f'\n{'-'*20} 趋势判断 {'-'*20} ')
         AscendTrend(etf, product='etf', selected_date=today, output=output)
         DescendTrend(etf, product='etf', selected_date=today, output=output)
         SmallFluctuations(etf, product='etf', selected_date=today, output=output)
     
-        Printf.info(f'\n{'-'*20} 策略分类 {'-'*20} ')
+        Logger.info(f'\n{'-'*20} 策略分类 {'-'*20} ')
         # ValuationSignal(etf, product='etf', selected_date=today, output=output)
         BottomSignal(etf, product='etf', selected_date=today, output=output)
 
@@ -132,13 +129,11 @@ class MainScheduler:
 
     @classmethod
     def run(cls):
-        if date.today().weekday() >= 5:
-            DataTask.main()            
+        if date.today().weekday() < 5:
+            DataTask.main()
             AlgorithmTask.main()
-        else:
-            Printf.info(f'\n{'-'*20} 今天非交易日 {'-'*20} ')
+        Logger.info(f'\n{'-'*20} 今天 {date.today()} 星期{ date.today().weekday()+1} {'-'*20}')
 
 
 if __name__ == '__main__':
-    DataTask.main()
-    AlgorithmTask.main()
+    MainScheduler.run()

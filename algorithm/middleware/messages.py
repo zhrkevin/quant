@@ -23,7 +23,7 @@ class MessageQueue:
     @classmethod
     def produce(cls, queue, body):
         try:
-            if cls.mode not in ['development']:
+            if cls.mode not in ['test']:
                 queues = Queue(
                     name=queue,
                     exchange=Exchange(name=queue, type="topic", durable=True)
@@ -37,7 +37,7 @@ class MessageQueue:
     @classmethod
     def consume(cls, queue, acknowledge):
         try:
-            if cls.mode not in ['development']:
+            if cls.mode not in ['test']:
                 queues = Queue(
                     name=queue,
                     exchange=Exchange(name=queue, type="topic", durable=True)
@@ -52,11 +52,11 @@ class MessageQueue:
 
 class Callback:
 
-    # 本机 Development 模式调试时，注意关闭本机的代理 vpn
+    # 本机 Test 模式调试时，注意关闭本机的代理 vpn
 
     def __init__(self, url, message):
         try:
-            if Config['Information']['Mode'] in ['development']:
+            if Config['Information']['Mode'] in ['test']:
                 response = httpx.post(url=url, json=message, timeout=4)
                 assert response.is_success, response.json()
                 logger.info(f"回调后端服务，请求成功 <Response {response.status_code}>: {response.json()}")

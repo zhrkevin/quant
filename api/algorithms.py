@@ -7,7 +7,7 @@
 import sanic
 
 from docs.documents import OpenAPI
-from algorithm.middleware import Logger, Registration, Authorization, protect
+from algorithm.middleware import Registration, Authorization, protect
 from algorithm.dividend.tasks import DataTask, AlgorithmTask
 
 
@@ -63,9 +63,9 @@ async def algorithm_task_route(request, algorithm):
 
 @algorithms_blueprint.post('/callback/<callback>')
 async def mock_callback_route(request, callback):
-    message = Logger(
-        code=900,
-        taskid=request.json.get('taskid'),
-        information=f"Mock API 收到回调 [{callback}] 的信息。"
-    )
+    message = {
+        'code': 900,
+        'information': f"Mock API 收到回调 [{callback}] 的信息。",
+        'taskid': request.json.get('taskid'),
+    }
     return sanic.response.json(message)
