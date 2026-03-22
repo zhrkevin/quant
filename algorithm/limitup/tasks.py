@@ -5,18 +5,15 @@
 # ---------------------------------------------
 
 import copy
-import shutil
 import traceback
-import xlsxwriter
 import polars as pl
 from datetime import date
 
 from project.configuration import Config
-from algorithm.basic. import Printf
 from algorithm.middleware import Callback, Logger, Process
 
-from algorithm.limitup.fetch import SplitData, Index, FetchLimitUp
-from algorithm.limitup.trend import AscendTrend
+from algorithm.limitup.fetch import WriteData, SplitData, Indices
+from algorithm.limitup.trend import Trend
 
 
 pl.Config(tbl_rows=-1, tbl_cols=-1)
@@ -37,13 +34,15 @@ class DataTask:
         return message
 
     @classmethod
-    def main(cls):
+    def main(cls, symbol = '600036'):
         """运行数据处理任务"""
         try:
-            FetchLimitUp.run()
-            message = Logger(code=200, taskid=cls.taskid, information=f"数据处理任务成功完成。")
+            WriteData.run(symbol)
+            SplitData.run(symbol)
+            Indices.run(symbol)
+            message = Logger.success(code=200, taskid=cls.taskid, information=f"数据处理任务成功完成。")
         except Exception as error:
-            message = Logger(code=500, taskid=cls.taskid, information=f"错误信息: {error}\n{traceback.format_exc()}")
+            message = Logger.error(code=500, taskid=cls.taskid, information=f"错误信息: {error}\n{traceback.format_exc()}")
         
         Callback(url=cls.callback, message=message)
 
@@ -63,46 +62,26 @@ class AlgorithmTask:
         return message
 
     @classmethod
-    def main(cls, today=date.today()):
+    def main(cls, symbol='600036', today=date.today()):
         """运行算法任务"""
         try:
             today = cls.today if cls.today else copy.deepcopy(today)
 
-            # shutil.copy(
-            #     Config['Paths']['DataPath'] / 'output' / 'stock.xlsx',
-            #     Config['Paths']['DataPath'] / 'output' / 'stock-today.xlsx'
-            # )
-            # for stock, name in Stocks.items():
-            #     cls.stock(stock, name, today=today)
-
-            # stock_report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / f'stock-today.xlsx')
-            # etf_report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / f'etf-today.xlsx')
-            # with xlsxwriter.Workbook(Config['Paths']['DataPath'] / 'output' / f'report-{today.strftime("%Y%m%d")}.xlsx') as workbook:
-            #     stock_report.write_excel(workbook, worksheet="Stocks")
-            #     etf_report.write_excel(workbook, worksheet="ETFs")
-
-            message = Logger(code=200, taskid=cls.taskid, information=f"算法任务成功完成。")
+            Trend.run(symbol)
+            message = Logger.success(code=200, taskid=cls.taskid, information=f"算法任务成功完成。")
         except Exception as error:
-            message = Logger(code=500, taskid=cls.taskid, information=f"错误信息: {error}\n{traceback.format_exc()}")
+            message = Logger.error(code=500, taskid=cls.taskid, information=f"错误信息: {error}\n{traceback.format_exc()}")
         
         Callback(url=cls.callback, message=message)
-
-    @classmethod
-    def stock(cls, stock='sh600025', name='华能水电', today=date.today(), output=f'stock-today.xlsx'):
-        Printf.info(f'\n{'='*16} {stock} {name} {'='*16}')
-
-        Printf.info(f'\n{'-'*20} 趋势判断 {'-'*20} ')
-        AscendTrend(stock, product='stock', selected_date=today, output=output)
 
 
 class MainScheduler:
 
     @classmethod
-    def run(cls):
-        DataTask.main()            
-        AlgorithmTask.main()
+    def run(cls, symbol='600036'):
+        DataTask.main(symbol)            
+        AlgorithmTask.main(symbol)
 
 
 if __name__ == '__main__':
-    DataTask.main()
-    AlgorithmTask.main()
+    MainScheduler.run(symbol='600726')

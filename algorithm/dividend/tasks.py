@@ -45,7 +45,7 @@ class DataTask:
                 SplitData().etfs(symbol)
 
             Index.run()
-            message = Logger.info(taskid=cls.taskid, information=f"数据处理任务成功完成。")
+            message = Logger.info(taskid=cls.taskid, information="数据处理任务成功完成。")
         except Exception as error:
             message = Logger.error(taskid=cls.taskid, information=f"错误信息: {error}\n{traceback.format_exc()}")
         
@@ -128,11 +128,11 @@ class AlgorithmTask:
 class MainScheduler:
 
     @classmethod
-    def run(cls):
+    def run(cls, today=date.today()):
         if date.today().weekday() < 5:
             DataTask.main()
-            AlgorithmTask.main()
-        Logger.info(f'\n{'-'*20} 今天 {date.today()} 星期{ date.today().weekday()+1} {'-'*20}')
+            AlgorithmTask.main(today)
+        Logger.info(f'\n{'-'*20} 今天 {today} 星期{ today.weekday()+1} {'-'*20}')
 
 
 if __name__ == '__main__':
