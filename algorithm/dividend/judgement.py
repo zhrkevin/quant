@@ -8,7 +8,7 @@ import copy
 import datetime
 import polars as pl
 
-from project.configuration import Config
+from project import Config
 from algorithm.middleware.logger import Logger
 
 

@@ -4,9 +4,10 @@
 # Copyright 2015 for Zen. All Rights Reserved.
 # ---------------------------------------------
 
+import warnings
 from sanic import Sanic
 
-from project.configuration import Config
+from project import Config
 from api import algorithms_blueprint, schedulers_blueprint, website_blueprint
 
 
@@ -21,6 +22,8 @@ Schedulers.blueprint(website_blueprint)
 
 
 if __name__ == '__main__':
+    warnings.filterwarnings('ignore', category=DeprecationWarning)
+
     Algorithms.prepare(
         host=Config['Information']['Host'],
         port=Config['Information']['AlgorithmPort'],

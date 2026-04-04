@@ -10,11 +10,11 @@ import polars as pl
 import akshare as ak
 import akshare_proxy_patch
 
-from project.configuration import Config
+from project import Config
 from algorithm.dividend.product import Stocks, ETFs
 
 
-akshare_proxy_patch.install_patch("101.201.173.125", "", 30)
+akshare_proxy_patch.install_patch(auth_ip="101.201.173.125", auth_token="20260403HAHSSA7W", retry=30)
 pl.Config(tbl_rows=12, tbl_cols=-1)
 
 

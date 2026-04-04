@@ -8,9 +8,8 @@ import os
 import sys
 import loguru
 import inspect
-from datetime import date
 
-from project.configuration import Config
+from project import Config
 
 
 class StackFrame:
@@ -38,9 +37,7 @@ class Loguru:
     mode = Config['Information']['Mode']
 
     # format documents: https://loguru.readthedocs.io/en/stable/api/logger.html#loguru._logger.Logger.add
-    content = "{message}"
-    format = f"<level>{content}</level>"
-    today = date.today().strftime("%Y%m%d")
+    format = "<level>[{time:YYYY-MM-DD:HH:mm:ss}] {message}</level>"
 
     def __init__(self):
         loguru.logger.remove()

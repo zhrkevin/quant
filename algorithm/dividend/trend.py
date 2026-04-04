@@ -7,7 +7,7 @@
 import polars as pl
 from datetime import date, timedelta
 
-from project.configuration import Config
+from project import Config
 from algorithm.middleware.logger import Logger
 
 
@@ -231,7 +231,7 @@ class DescendTrend:
             )
 
 
-class SmallFluctuations:
+class SmallFluctuation:
 
     def __init__(self, symbol, selected_date=None, product='stock', adjust='raw', output='report-test.xlsx'):
         self.symbol = symbol
@@ -319,6 +319,60 @@ class SmallFluctuations:
             )
         
         # latest_stock_low < latest_boll_week
+
+
+class CycleFluctuation:
+
+    def __init__(self, symbol, product='stock', selected_date=None, adjust='raw', output='report-test.xlsx'):
+        self.symbol = symbol
+        self.adjust = adjust
+        self.product = product
+        self.selected_date = selected_date or date.today()
+        self.filter = (pl.col('date') <= self.selected_date) & (pl.col('date') >= self.selected_date - timedelta(days=60 + 7))
+
+        Logger.info(f'\n2、周期判断')
+        self.report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / output)
+        self.condition1()
+        self.condition2()
+        self.report.write_excel(Config['Paths']['DataPath'] / 'output' / output)
+
+    def condition1(self):
+        Logger.info(f'(1) 收盘价跌破 250 日。')
+
+        selected_stock_day = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'day.parquet').filter(self.filter)
+        selected_ma_day = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'ma_day.parquet').filter(self.filter)
+
+        fallbelow = selected_stock_day.join(
+            selected_ma_day.select('date', 'ma_250'), on='date'
+        ).filter(
+            (pl.col(f'{self.adjust}_close').shift(1) > pl.col('ma_250').shift(1)) &
+            (pl.col(f'{self.adjust}_close') < pl.col('ma_250'))
+        ).drop_nulls()['date']
+        Logger.info(f'@ 触发跌破 MA-Day-250：\n{[d.strftime("%Y-%m-%d") for d in fallbelow]}') if not fallbelow.is_empty() else None
+
+        if self.selected_date in fallbelow:
+            self.report = self.report.with_columns(
+                pl.when(pl.col('编号') == self.symbol).then(pl.lit(True)).otherwise(pl.col('周期 1-1')).alias('周期 1-1')
+            )
+
+    def condition2(self):
+        Logger.info(f'(2) 收盘价跌破 250 周。')
+
+        selected_stock_week = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'week.parquet').filter(self.filter)
+        selected_ma_week = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'ma_week.parquet').filter(self.filter)
+
+        fallbelow = selected_stock_week.join(
+            selected_ma_week.select('date', 'ma_250'), on='date'
+        ).filter(
+            (pl.col(f'{self.adjust}_close').shift(1) > pl.col('ma_250').shift(1)) &
+            (pl.col(f'{self.adjust}_close') < pl.col('ma_250'))
+        ).drop_nulls()['date']
+        Logger.info(f'@ 触发跌破 MA-Week-250：\n{[d.strftime("%Y-%m-%d") for d in fallbelow]}') if not fallbelow.is_empty() else None
+
+        if self.selected_date in fallbelow:
+            self.report = self.report.with_columns(
+                pl.when(pl.col('编号') == self.symbol).then(pl.lit(True)).otherwise(pl.col('周期 2-1')).alias('周期 2-1')
+            )
 
 
 if __name__ == '__main__':

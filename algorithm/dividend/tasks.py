@@ -6,15 +6,16 @@
 
 import copy
 import shutil
+import traceback
 import xlsxwriter
 import polars as pl
-from datetime import date
+from datetime import date, datetime
 
-from project.configuration import Config
+from project import Config
 from algorithm.middleware import Callback, Logger, Process
 from algorithm.dividend.product import Stocks, ETFs
 from algorithm.dividend.fetch import WriteData, SplitData, Index
-from algorithm.dividend.trend import AscendTrend, DescendTrend, SmallFluctuations
+from algorithm.dividend.trend import AscendTrend, DescendTrend, SmallFluctuation, CycleFluctuation
 from algorithm.dividend.judgement import ValuationSignal, BottomSignal
 
 
@@ -33,16 +34,16 @@ class DataTask:
         return message
 
     @classmethod
-    def main(cls):
+    def main(cls, today=date.today()):
         """运行数据处理任务"""
         try:
             for symbol in Stocks:
-                WriteData().stocks(symbol)
-                SplitData().stocks(symbol)
+                WriteData.stocks(symbol)
+                SplitData.stocks(symbol)
 
             for symbol in ETFs:
-                WriteData().etfs(symbol)
-                SplitData().etfs(symbol)
+                WriteData.etfs(symbol)
+                SplitData.etfs(symbol)
 
             Index.run()
             message = Logger.info(taskid=cls.taskid, information="数据处理任务成功完成。")
@@ -105,7 +106,8 @@ class AlgorithmTask:
         Logger.info(f'\n{'-'*20} 趋势判断 {'-'*20} ')
         AscendTrend(stock, product='stock', selected_date=today, output=output)
         DescendTrend(stock, product='stock', selected_date=today, output=output)
-        SmallFluctuations(stock, product='stock', selected_date=today, output=output)
+        SmallFluctuation(stock, product='stock', selected_date=today, output=output)
+        CycleFluctuation(stock, product='stock', selected_date=today, output=output)
 
         Logger.info(f'\n{'-'*20} 策略分类 {'-'*20} ')
         ValuationSignal(stock, product='stock', selected_date=today, output=output)
@@ -118,8 +120,9 @@ class AlgorithmTask:
         Logger.info(f'\n{'-'*20} 趋势判断 {'-'*20} ')
         AscendTrend(etf, product='etf', selected_date=today, output=output)
         DescendTrend(etf, product='etf', selected_date=today, output=output)
-        SmallFluctuations(etf, product='etf', selected_date=today, output=output)
-    
+        SmallFluctuation(etf, product='etf', selected_date=today, output=output)
+        CycleFluctuation(etf, product='etf', selected_date=today, output=output)
+        
         Logger.info(f'\n{'-'*20} 策略分类 {'-'*20} ')
         # ValuationSignal(etf, product='etf', selected_date=today, output=output)
         BottomSignal(etf, product='etf', selected_date=today, output=output)
@@ -129,10 +132,9 @@ class MainScheduler:
 
     @classmethod
     def run(cls, today=date.today()):
-        if date.today().weekday() < 5:
-            DataTask.main()
-            AlgorithmTask.main(today)
-        Logger.info(f'\n{'-'*20} 今天 {today} 星期{ today.weekday()+1} {'-'*20}')
+        DataTask.main()
+        AlgorithmTask.main(today)
+        Logger.info(f'\n{'-'*20} {datetime.now()} 星期{ today.weekday()+1} {'-'*20}')
 
 
 if __name__ == '__main__':

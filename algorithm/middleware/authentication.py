@@ -16,7 +16,7 @@ from cryptography.hazmat.primitives.hashes import SHA512
 from cryptography.hazmat.primitives.asymmetric.ec import generate_private_key, ECDSA, BrainpoolP512R1
 from cryptography.hazmat.primitives.serialization import Encoding, PrivateFormat, PublicFormat, NoEncryption, load_pem_private_key, load_pem_public_key
 
-from project.configuration import Config
+from project import Config
 
 
 FormatPrivate = PrivateFormat.PKCS8

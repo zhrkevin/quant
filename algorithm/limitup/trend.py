@@ -7,7 +7,7 @@
 import datetime
 import polars as pl
 
-from project.configuration import Config
+from project import Config
 from algorithm.middleware import Logger
 from algorithm.limitup.fetch import WriteData, SplitData, Indices
 
@@ -323,6 +323,12 @@ class Trend:
 
         print(result)
         return flag, result
+
+
+class ShortLine:
+
+    pass
+
 
 
 if __name__ == '__main__':

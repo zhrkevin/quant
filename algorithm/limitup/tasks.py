@@ -9,7 +9,7 @@ import traceback
 import polars as pl
 from datetime import date
 
-from project.configuration import Config
+from project import Config
 from algorithm.middleware import Callback, Logger, Process
 
 from algorithm.limitup.fetch import WriteData, SplitData, Indices
@@ -34,7 +34,7 @@ class DataTask:
         return message
 
     @classmethod
-    def main(cls, symbol = '600036'):
+    def main(cls, symbol='600036'):
         """运行数据处理任务"""
         try:
             WriteData.run(symbol)
@@ -66,7 +66,6 @@ class AlgorithmTask:
         """运行算法任务"""
         try:
             today = cls.today if cls.today else copy.deepcopy(today)
-
             Trend.run(symbol)
             message = Logger.success(code=200, taskid=cls.taskid, information=f"算法任务成功完成。")
         except Exception as error:
@@ -78,7 +77,7 @@ class AlgorithmTask:
 class MainScheduler:
 
     @classmethod
-    def run(cls, symbol='600036'):
+    def run(cls, symbol):
         DataTask.main(symbol)            
         AlgorithmTask.main(symbol)
 

@@ -4,9 +4,9 @@
 # Copyright 2015 for Zen. All Rights Reserved.
 # ---------------------------------------------
 
-from project.config import Config
+from website.run import OpenAPI
 
 
 __all__ = [
-    'Config',
+    'OpenAPI',
 ]

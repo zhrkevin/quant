@@ -9,7 +9,7 @@ import traceback
 from sanic.log import logger
 from kombu import Connection, Exchange, Queue
 
-from project.configuration import Config
+from project import Config
 
 
 class MessageQueue:

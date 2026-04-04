@@ -6,7 +6,7 @@
 
 import sanic
 
-from docs.documents import OpenAPI
+from website import OpenAPI
 from algorithm.middleware import Registration, Authorization, protect
 from algorithm.dividend.tasks import DataTask, AlgorithmTask
 

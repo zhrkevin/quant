@@ -10,7 +10,7 @@ import traceback
 from minio import Minio
 from sanic.log import logger
 
-from project.configuration import Config
+from project import Config
 
 
 class MinIO:
