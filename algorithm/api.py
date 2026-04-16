@@ -5,19 +5,28 @@
 # ---------------------------------------------
 
 import sanic
+from sanic.log import logger
+from apscheduler.schedulers.background import BackgroundScheduler
 
-from website import OpenAPI
-from algorithm.middleware import Registration, Authorization, protect
-from algorithm.dividend.tasks import DataTask, AlgorithmTask
+from algorithm.basic.authentication import Registration, Authorization, protect
+from algorithm.dividend.tasks import DataTask, AlgorithmTask, MainScheduler
 
 
 algorithms_blueprint = sanic.Blueprint(name='AlgorithmsBlueprint', url_prefix='/quant')
 
 
-@algorithms_blueprint.before_server_start
-async def algorithm_listener(app):
-    OpenAPI()
+@algorithms_blueprint.listener('before_server_start')
+async def algorithm_listener(app, loop=None):
     Registration()
+    logger.info(f"算法授权注册成功，签名可申请或验证。")
+
+
+@algorithms_blueprint.listener('after_server_start')
+async def scheduler_listener(app, loop=None):
+    scheduler = BackgroundScheduler(timezone='Asia/Shanghai')
+    scheduler.add_job(MainScheduler.run, trigger='cron', day_of_week='1-5', hour=17, minute=10, misfire_grace_time=None)
+    scheduler.start()
+    logger.info(f"定时任务加载成功。触发时间为周一至周五 17:10。")
 
 
 @algorithms_blueprint.options('/platform/health')

@@ -18,7 +18,7 @@ class AscendTrend:
         self.adjust = adjust
         self.product = product
         self.selected_date = selected_date or date.today()
-        self.filter = (pl.col('date') <= self.selected_date) & (pl.col('date') >= self.selected_date - timedelta(days=60 + 7))
+        self.filter = (pl.col('日期') <= self.selected_date) & (pl.col('日期') >= self.selected_date - timedelta(days=60 + 7))
 
         Logger.info(f'\n1、上升趋势')
         self.report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / output)
@@ -35,9 +35,9 @@ class AscendTrend:
         selected_ma_month = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'ma_month.parquet').filter(self.filter)
 
         breakthrough = selected_ma_week.filter(
-            (pl.col('ma_20').shift(1) < pl.col('ma_60').shift(1)) & 
-            (pl.col('ma_20') > pl.col('ma_60'))
-        ).drop_nulls()['date']
+            (pl.col('MA20').shift(1) < pl.col('MA60').shift(1)) & 
+            (pl.col('MA20') > pl.col('MA60'))
+        ).drop_nulls()['日期']
         Logger.info(f'@ 触发 MA-Week-20 首次突破 MA-Week-60：\n{[d.strftime("%Y-%m-%d") for d in breakthrough]}') if not breakthrough.is_empty() else None
 
         if self.selected_date in breakthrough:
@@ -46,11 +46,11 @@ class AscendTrend:
             )
 
         standup = selected_stock_month.join(
-            selected_ma_month.select('date', 'ma_30'), on='date'
+            selected_ma_month.select('日期', 'MA30'), on='日期'
         ).filter(
-            (pl.col(f'{self.adjust}_low').shift(1) < pl.col('ma_30').shift(1)) & 
-            (pl.col(f'{self.adjust}_low') > pl.col('ma_30'))
-        ).drop_nulls()['date']
+            (pl.col('最低').shift(1) < pl.col('MA30').shift(1)) & 
+            (pl.col('最低') > pl.col('MA30'))
+        ).drop_nulls()['日期']
         Logger.info(f'@ 触发 Stock-Low 站上 MA-Month-30 线：\n{[d.strftime("%Y-%m-%d") for d in standup]}') if not standup.is_empty() else None
 
         if self.selected_date in standup:
@@ -66,9 +66,9 @@ class AscendTrend:
         selected_ma_month = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'ma_month.parquet').filter(self.filter)
 
         breakthrough = selected_ma_week.filter(
-            (pl.col('ma_30').shift(1) < pl.col('ma_60').shift(1)) & 
-            (pl.col('ma_30') > pl.col('ma_60'))
-        ).drop_nulls()['date']
+            (pl.col('MA30').shift(1) < pl.col('MA60').shift(1)) & 
+            (pl.col('MA30') > pl.col('MA60'))
+        ).drop_nulls()['日期']
         Logger.info(f'@ 触发 MA-Week-30 首次突破 MA-Week-60：\n{[d.strftime("%Y-%m-%d") for d in breakthrough]}') if not breakthrough.is_empty() else None
 
         if self.selected_date in breakthrough:
@@ -77,11 +77,11 @@ class AscendTrend:
             )
 
         standup = selected_stock_month.join(
-            selected_ma_month.select('date', 'ma_30'), on='date'
+            selected_ma_month.select('日期', 'MA30'), on='日期'
         ).filter(
-            (pl.col(f'{self.adjust}_low').shift(1) < pl.col('ma_30').shift(1)) & 
-            (pl.col(f'{self.adjust}_low') > pl.col('ma_30'))
-        ).drop_nulls()['date']
+            (pl.col('最低').shift(1) < pl.col('MA30').shift(1)) & 
+            (pl.col('最低') > pl.col('MA30'))
+        ).drop_nulls()['日期']
         Logger.info(f'@ 触发 Stock-Low 站上 MA-Month-30 线：\n{[d.strftime("%Y-%m-%d") for d in standup]}') if not standup.is_empty() else None
 
         if self.selected_date in standup:
@@ -97,10 +97,10 @@ class AscendTrend:
             selected_ma = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / f'ma_{period}.parquet').filter(self.filter)
 
             breakthrough = selected_macd.filter(
-                (pl.col('dif').shift(1) < 0) & 
-                (pl.col('dif') >= 0) & 
-                (pl.col('dif') > pl.col('dea'))
-            ).drop_nulls()['date']
+                (pl.col('DIF').shift(1) < 0) & 
+                (pl.col('DIF') >= 0) & 
+                (pl.col('DIF') > pl.col('DEA'))
+            ).drop_nulls()['日期']
             Logger.info(f'@ 触发 MACD-{period.title()} 突破 0 轴：\n{[d.strftime("%Y-%m-%d") for d in breakthrough]}') if not breakthrough.is_empty() else None
 
             if self.selected_date in breakthrough:
@@ -117,10 +117,10 @@ class AscendTrend:
                 )
 
             longposition = selected_ma.filter(
-                (pl.col('ma_10') > pl.col('ma_20')) & 
-                (pl.col('ma_20') > pl.col('ma_30')) & 
-                (pl.col('ma_30') > pl.col('ma_60'))
-            )['date']
+                (pl.col('MA10') > pl.col('MA20')) & 
+                (pl.col('MA20') > pl.col('MA30')) & 
+                (pl.col('MA30') > pl.col('MA60'))
+            )['日期']
             Logger.info(f'@ 触发 MA-{period.title()} 多头排列：') if not longposition.is_empty() else None
 
             if self.selected_date in longposition:
@@ -136,7 +136,7 @@ class AscendTrend:
                     pl.when(pl.col('编号') == self.symbol).then(pl.lit(True)).otherwise(pl.col(column)).alias(column)
                 )
 
-            groups, date_indices = [], {date: idx for idx, date in enumerate(selected_ma['date'])}
+            groups, date_indices = [], {date: idx for idx, date in enumerate(selected_ma['日期'])}
             for i, d in enumerate(longposition):
                 if i == 0 or date_indices[d] != date_indices[longposition[i-1]] + 1:
                     groups.append([d])
@@ -153,7 +153,7 @@ class DescendTrend:
         self.adjust = adjust
         self.product = product
         self.selected_date = selected_date or date.today()
-        self.filter = (pl.col('date') <= self.selected_date) & (pl.col('date') >= self.selected_date - timedelta(days=60 + 7))
+        self.filter = (pl.col('日期') <= self.selected_date) & (pl.col('日期') >= self.selected_date - timedelta(days=60 + 7))
 
         Logger.info(f'\n3、下跌趋势')
         self.report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / output)
@@ -169,9 +169,9 @@ class DescendTrend:
         selected_ma_day = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'ma_day.parquet').filter(self.filter)
 
         fallbelow = selected_ma_day.filter(
-            (pl.col('ma_60').shift(1) > pl.col('ma_250').shift(1)) & 
-            (pl.col('ma_60') < pl.col('ma_250'))
-        ).drop_nulls()['date']
+            (pl.col('MA60').shift(1) > pl.col('MA250').shift(1)) & 
+            (pl.col('MA60') < pl.col('MA250'))
+        ).drop_nulls()['日期']
         Logger.info(f'@ 触发 MA-Day-60 跌破 MA-Day-250：\n{[d.strftime("%Y-%m-%d") for d in fallbelow]}') if not fallbelow.is_empty() else None
 
         if self.selected_date in fallbelow:
@@ -185,9 +185,9 @@ class DescendTrend:
         selected_ma_week = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'ma_week.parquet').filter(self.filter)
 
         fallbelow = selected_ma_week.filter(
-            (pl.col('ma_20').shift(1) > pl.col('ma_60').shift(1)) & 
-            (pl.col('ma_20') < pl.col('ma_60'))
-        ).drop_nulls()['date']
+            (pl.col('MA20').shift(1) > pl.col('MA60').shift(1)) & 
+            (pl.col('MA20') < pl.col('MA60'))
+        ).drop_nulls()['日期']
         Logger.info(f'@ 触发 MA-Week-20 跌破 MA-Week-60：\n{[d.strftime("%Y-%m-%d") for d in fallbelow]}') if not fallbelow.is_empty() else None
         
         if self.selected_date in fallbelow:
@@ -201,9 +201,9 @@ class DescendTrend:
         selected_ma_week = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'ma_week.parquet').filter(self.filter)   
 
         fallbelow = selected_ma_week.filter(
-            (pl.col('ma_30').shift(1) > pl.col('ma_60').shift(1)) & 
-            (pl.col('ma_30') < pl.col('ma_60'))
-        ).drop_nulls()['date']
+            (pl.col('MA30').shift(1) > pl.col('MA60').shift(1)) & 
+            (pl.col('MA30') < pl.col('MA60'))
+        ).drop_nulls()['日期']
         Logger.info(f'@ 触发 MA-Week-30 跌破 MA-Week-60：\n{[d.strftime("%Y-%m-%d") for d in fallbelow]}') if not fallbelow.is_empty() else None
         
         if self.selected_date in fallbelow:
@@ -218,11 +218,11 @@ class DescendTrend:
         selected_ma_month = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'ma_month.parquet').filter(self.filter)
 
         fallbelow = selected_stock_month.join(
-            selected_ma_month.select('date', 'ma_30'), on='date'
+            selected_ma_month.select('日期', 'MA30'), on='日期'
         ).filter(
-            (pl.col(f'{self.adjust}_low').shift(1) > pl.col('ma_30').shift(1)) & 
-            (pl.col(f'{self.adjust}_low') < pl.col('ma_30'))
-        ).drop_nulls()['date']
+            (pl.col('最低').shift(1) > pl.col('MA30').shift(1)) & 
+            (pl.col('最低') < pl.col('MA30'))
+        ).drop_nulls()['日期']
         Logger.info(f'@ 触发 Stock-Low 下穿跌破 MA-Month-30 线：\n{[d.strftime("%Y-%m-%d") for d in fallbelow]}') if not fallbelow.is_empty() else None
         
         if self.selected_date in fallbelow:
@@ -238,7 +238,7 @@ class SmallFluctuation:
         self.selected_date = selected_date or date.today()
         self.adjust = adjust
         self.product = product
-        self.filter = (pl.col('date') <= self.selected_date) & (pl.col('date') >= self.selected_date - timedelta(days=60 + 7))
+        self.filter = (pl.col('日期') <= self.selected_date) & (pl.col('日期') >= self.selected_date - timedelta(days=60 + 7))
 
         Logger.info(f'\n4、小调整')
         self.report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / output)
@@ -254,14 +254,14 @@ class SmallFluctuation:
         selected_stock_month = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'month.parquet').filter(self.filter)
 
         smallmonthhole = selected_macd_month.filter(
-            (pl.col('macd') < 0) & 
-            (pl.col('dif') > 0) & 
-            (pl.col('dif') < pl.col('dea'))
-        ).drop_nulls()['date']
+            (pl.col('MACD') < 0) & 
+            (pl.col('DIF') > 0) & 
+            (pl.col('DIF') < pl.col('DEA'))
+        ).drop_nulls()['日期']
         Logger.info(f'@ 触发 MACD-Month 月小坑：') if not smallmonthhole.is_empty() else None
 
         if not smallmonthhole.is_empty():         
-            groups, date_indices = [], {date: idx for idx, date in enumerate(selected_macd_month['date'])}
+            groups, date_indices = [], {date: idx for idx, date in enumerate(selected_macd_month['日期'])}
             for i, d in enumerate(smallmonthhole):
                 if i == 0 or date_indices[d] != date_indices[smallmonthhole[i-1]] + 1:
                     groups.append([d])
@@ -276,15 +276,15 @@ class SmallFluctuation:
             )
 
         fallbelow = selected_stock_month.join(
-            selected_ma_month.select('date', 'ma_30'), on='date'
+            selected_ma_month.select('日期', 'MA30'), on='日期'
         ).filter(
-            (pl.col(f'{self.adjust}_low') >= pl.col('ma_30'))
-        ).drop_nulls()['date']
+            (pl.col('最低') >= pl.col('MA30'))
+        ).drop_nulls()['日期']
         intersection = smallmonthhole.filter(smallmonthhole.is_in(fallbelow.implode()))
         Logger.info(f'@ 始终站上 MA-Month-30 线：') if not intersection.is_empty() else None
 
         if not intersection.is_empty():
-            groups, date_indices = [], {date: idx for idx, date in enumerate(selected_macd_month['date'])}
+            groups, date_indices = [], {date: idx for idx, date in enumerate(selected_macd_month['日期'])}
             for i, d in enumerate(intersection):
                 if i == 0 or date_indices[d] != date_indices[intersection[i-1]] + 1:    
                     groups.append([d])
@@ -305,12 +305,12 @@ class SmallFluctuation:
         # selected_boll_week = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / f'boll_week.parquet').filter(self.filter) 
 
         climbupmonthhole = selected_macd_month.filter(
-            (pl.col('dif') > 0) & 
-            (pl.col('dif').shift(1) < 0) & 
-            (pl.col('dea') < 0) & 
-            (pl.col('dea').shift(1) < 0) & 
-            (pl.col('dif') > pl.col('dea'))
-        ).drop_nulls()['date']
+            (pl.col('DIF') > 0) & 
+            (pl.col('DIF').shift(1) < 0) & 
+            (pl.col('DEA') < 0) & 
+            (pl.col('DEA').shift(1) < 0) & 
+            (pl.col('DIF') > pl.col('DEA'))
+        ).drop_nulls()['日期']
         Logger.info(f'@ 触发 MACD-Month 坑内出：{[d.strftime("%Y-%m-%d") for d in climbupmonthhole]}') if not climbupmonthhole.is_empty() else None
 
         if self.selected_date in climbupmonthhole:
@@ -328,7 +328,7 @@ class CycleFluctuation:
         self.adjust = adjust
         self.product = product
         self.selected_date = selected_date or date.today()
-        self.filter = (pl.col('date') <= self.selected_date) & (pl.col('date') >= self.selected_date - timedelta(days=60 + 7))
+        self.filter = (pl.col('日期') <= self.selected_date) & (pl.col('日期') >= self.selected_date - timedelta(days=60 + 7))
 
         Logger.info(f'\n2、周期判断')
         self.report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / output)
@@ -343,11 +343,11 @@ class CycleFluctuation:
         selected_ma_day = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'ma_day.parquet').filter(self.filter)
 
         fallbelow = selected_stock_day.join(
-            selected_ma_day.select('date', 'ma_250'), on='date'
+            selected_ma_day.select('日期', 'MA250'), on='日期'
         ).filter(
-            (pl.col(f'{self.adjust}_close').shift(1) > pl.col('ma_250').shift(1)) &
-            (pl.col(f'{self.adjust}_close') < pl.col('ma_250'))
-        ).drop_nulls()['date']
+            (pl.col('收盘').shift(1) > pl.col('MA250').shift(1)) &
+            (pl.col('收盘') < pl.col('MA250'))
+        ).drop_nulls()['日期']
         Logger.info(f'@ 触发跌破 MA-Day-250：\n{[d.strftime("%Y-%m-%d") for d in fallbelow]}') if not fallbelow.is_empty() else None
 
         if self.selected_date in fallbelow:
@@ -362,11 +362,11 @@ class CycleFluctuation:
         selected_ma_week = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'ma_week.parquet').filter(self.filter)
 
         fallbelow = selected_stock_week.join(
-            selected_ma_week.select('date', 'ma_250'), on='date'
+            selected_ma_week.select('日期', 'MA250'), on='日期'
         ).filter(
-            (pl.col(f'{self.adjust}_close').shift(1) > pl.col('ma_250').shift(1)) &
-            (pl.col(f'{self.adjust}_close') < pl.col('ma_250'))
-        ).drop_nulls()['date']
+            (pl.col('收盘').shift(1) > pl.col('MA250').shift(1)) &
+            (pl.col('收盘') < pl.col('MA250'))
+        ).drop_nulls()['日期']
         Logger.info(f'@ 触发跌破 MA-Week-250：\n{[d.strftime("%Y-%m-%d") for d in fallbelow]}') if not fallbelow.is_empty() else None
 
         if self.selected_date in fallbelow:

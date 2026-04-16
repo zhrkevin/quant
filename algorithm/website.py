@@ -7,11 +7,16 @@
 import sanic
 
 from project import Config
-
+from website import OpenAPI
 
 website_blueprint = sanic.Blueprint(name='WebsiteBlueprint')
 website_blueprint.static(uri='/quant/site', name='site', file_or_directory=Config['Paths']['WebsitePath'] / 'site', index="index.html")
 website_blueprint.static(uri='/quant/swagger', name='swagger', file_or_directory=Config['Paths']['WebsitePath'] / 'swagger', index="index.html")
+
+
+@website_blueprint.listener('before_server_start')
+async def website_listener(app, loop=None):
+    OpenAPI()
 
 
 @website_blueprint.route(f"/")

@@ -6,17 +6,13 @@
 
 import copy
 import traceback
-import polars as pl
 from datetime import date
 
 from project import Config
 from algorithm.middleware import Callback, Logger, Process
 
-from algorithm.limitup.fetch import WriteData, SplitData, Indices
+from algorithm.basic.fetch import WriteData, SplitData, Indices
 from algorithm.limitup.trend import Trend
-
-
-pl.Config(tbl_rows=-1, tbl_cols=-1)
 
 
 class DataTask:

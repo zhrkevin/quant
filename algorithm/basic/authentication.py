@@ -9,7 +9,6 @@ import sanic
 import shortuuid
 import traceback
 from functools import wraps
-from sanic.log import logger
 from datetime import datetime
 from base64 import b64encode, b64decode
 from cryptography.hazmat.primitives.hashes import SHA512
@@ -46,8 +45,6 @@ class Registration:
         with open(Config['Paths']['DataPath'] / 'system' / 'authentication.key', 'w') as file:
             json.dump(keys, file, indent=4, ensure_ascii=False)
 
-        logger.info(f"算法授权注册成功，签名可申请或验证。")
-
 
 class Authorization:
 
@@ -71,7 +68,7 @@ class Authorization:
         else:
             cls.check, cls.information = None, f"算法授权，操作错误，请检查 {cls.operation}。"
 
-        logger.info(f"{cls.information} 授权信息: {cls.signature} ")
+        print(f"{cls.information} 授权信息: {cls.signature} ")
 
         message = {'check': cls.check, 'signature': cls.signature, 'information': cls.information}
         return message

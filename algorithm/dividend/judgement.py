@@ -30,7 +30,7 @@ class ValuationSignal:
         )
         
         stock_data = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'day.parquet')
-        latest_stock_close = stock_data.filter(pl.col('date') <= self.selected_date)['qfq_close'][-1] 
+        latest_stock_close = stock_data.filter(pl.col('日期') <= self.selected_date)['复权收盘'][-1] 
         latest_dividend_ratio = selected_stock_dividend['分红'][-1] / latest_stock_close
         public_service = selected_stock_dividend['公用事业'][-1]
 
@@ -74,10 +74,10 @@ class BottomSignal:
         begin_date = self.selected_date.replace(year=self.selected_date.year - 6)
 
         stock_data = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'day.parquet')
-        selected_stock_data = stock_data.filter((pl.col('date') >= begin_date) & (pl.col('date') <= self.selected_date))
+        selected_stock_data = stock_data.filter((pl.col('日期') >= begin_date) & (pl.col('日期') <= self.selected_date))
         
-        toppest_stock_price = selected_stock_data[f'{self.adjust}_high'].max()
-        latest_stock_close = selected_stock_data[f'{self.adjust}_close'][-1]
+        toppest_stock_price = selected_stock_data['最高'].max()
+        latest_stock_close = selected_stock_data['收盘'][-1]
         ratio = latest_stock_close / toppest_stock_price * 100
 
         Logger.info(f"\n股票 {self.symbol} 底部参考值 ({ratio:.3f}% / 50%)")
@@ -92,17 +92,17 @@ class BottomSignal:
 
     def condition2(self):
         stock_data = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'day.parquet')
-        selected_stock_data = stock_data.filter(pl.col('date') <= self.selected_date)
-        latest_stock_high = selected_stock_data[f'{self.adjust}_high'][-1]
-        latest_stock_low = selected_stock_data[f'{self.adjust}_low'][-1]
+        selected_stock_data = stock_data.filter(pl.col('日期') <= self.selected_date)
+        latest_stock_high = selected_stock_data['最高'][-1]
+        latest_stock_low = selected_stock_data['最低'][-1]
 
         boll_month = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'boll_month.parquet')
-        latest_boll_month_lower = boll_month.filter(pl.col('date') <= self.selected_date)['boll_lower'][-1]
+        latest_boll_month_lower = boll_month.filter(pl.col('日期') <= self.selected_date)['Boll下轨'][-1]
 
         boll_quarter = pl.read_parquet(Config['Paths']['DataPath'] / self.product / self.symbol / 'boll_quarter.parquet')
-        selected_boll_quarter = boll_quarter.filter(pl.col('date') <= self.selected_date)
-        latest_boll_quarter_mid = selected_boll_quarter['boll_mid'][-1] or 0
-        latest_boll_quarter_lower = selected_boll_quarter['boll_lower'][-1] or 0
+        selected_boll_quarter = boll_quarter.filter(pl.col('日期') <= self.selected_date)
+        latest_boll_quarter_mid = selected_boll_quarter['Boll中轨'][-1] or 0
+        latest_boll_quarter_lower = selected_boll_quarter['Boll下轨'][-1] or 0
 
         if latest_boll_month_lower >= latest_stock_low >= latest_boll_quarter_lower and latest_stock_high <= latest_boll_quarter_mid:
             Logger.info(f"\n股票 {self.symbol} 触发底部信号 Boll 月线下轨 + 季线中下轨")

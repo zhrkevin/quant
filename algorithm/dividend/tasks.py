@@ -7,16 +7,19 @@
 import copy
 import shutil
 import traceback
-import xlsxwriter
+import pandas as pd
 import polars as pl
 from datetime import date, datetime
 
 from project import Config
 from algorithm.middleware import Callback, Logger, Process
+from algorithm.basic.fetch import WriteData, SplitData, Indices
 from algorithm.dividend.product import Stocks, ETFs
-from algorithm.dividend.fetch import WriteData, SplitData, Index
 from algorithm.dividend.trend import AscendTrend, DescendTrend, SmallFluctuation, CycleFluctuation
 from algorithm.dividend.judgement import ValuationSignal, BottomSignal
+
+
+pl.Config(tbl_rows=-1, tbl_cols=-1)
 
 
 class DataTask:
@@ -45,7 +48,7 @@ class DataTask:
                 WriteData.etfs(symbol)
                 SplitData.etfs(symbol)
 
-            Index.run()
+            Indices.run()
             message = Logger.info(taskid=cls.taskid, information="数据处理任务成功完成。")
         except Exception as error:
             message = Logger.error(taskid=cls.taskid, information=f"错误信息: {error}\n{traceback.format_exc()}")
@@ -55,7 +58,7 @@ class DataTask:
 
 class AlgorithmTask:
 
-    today, taskid, callback = None, None, Config['Callbacks']['Mock']
+    today, taskid, stock_report, etf_report, callback = None, None, None, None, Config['Callbacks']['Mock']
 
     @classmethod
     async def run(cls, body):
@@ -77,21 +80,26 @@ class AlgorithmTask:
                 Config['Paths']['DataPath'] / 'output' / 'stock.xlsx',
                 Config['Paths']['DataPath'] / 'output' / 'stock-today.xlsx'
             )
-            for stock, name in Stocks.items():
-                cls.stock(stock, name, today=today)
-        
             shutil.copy(
                 Config['Paths']['DataPath'] / 'output' / 'etf.xlsx',
                 Config['Paths']['DataPath'] / 'output' / 'etf-today.xlsx'
             )
+            for stock, name in Stocks.items():
+                stock_report = cls.stock(stock, name, today=today)
+            
+            # 处理ETF数据
             for etf, name in ETFs.items():
-                cls.etf(etf, name, today=today)
+                etf_report = cls.etf(etf, name, today=today)
 
-            stock_report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / f'stock-today.xlsx')
-            etf_report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / f'etf-today.xlsx')
-            with xlsxwriter.Workbook(Config['Paths']['DataPath'] / 'output' / f'report-{today.strftime("%Y%m%d")}.xlsx') as workbook:
-                stock_report.write_excel(workbook, worksheet="Stocks")
-                etf_report.write_excel(workbook, worksheet="ETFs")
+            print(stock_report)
+            print(etf_report)
+
+            # 写入一个Excel文件的两个sheet
+            stock_report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / 'stock-today.xlsx')
+            etf_report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / 'etf-today.xlsx')
+            with pd.ExcelWriter(Config['Paths']['DataPath'] / 'output' / f'report-{today.strftime("%Y%m%d")}.xlsx', mode='w+') as xlsx:
+                stock_report.to_pandas().to_excel(xlsx, sheet_name='stock', index=False)
+                etf_report.to_pandas().to_excel(xlsx, sheet_name='etf', index=False)
 
             message = Logger.info(taskid=cls.taskid, information=f"算法任务成功完成。")
         except Exception as error:
@@ -100,42 +108,43 @@ class AlgorithmTask:
         Callback(url=cls.callback, message=message)
 
     @classmethod
-    def stock(cls, stock='sh600025', name='华能水电', today=date.today(), output=f'stock-today.xlsx'):
-        Logger.info(f'\n{'='*16} {stock} {name} {'='*16}')
+    def stock(cls, stock='600025', name='华能水电', today=date.today()):
+        print(f'\n{'='*20} {stock} {name} {'='*20}')
 
-        Logger.info(f'\n{'-'*20} 趋势判断 {'-'*20} ')
-        AscendTrend(stock, product='stock', selected_date=today, output=output)
-        DescendTrend(stock, product='stock', selected_date=today, output=output)
-        SmallFluctuation(stock, product='stock', selected_date=today, output=output)
-        CycleFluctuation(stock, product='stock', selected_date=today, output=output)
+        print(f'\n{'-'*20} 趋势判断 {'-'*20} ')
+        AscendTrend(stock, product='stock', selected_date=today, output='stock-today.xlsx')
+        DescendTrend(stock, product='stock', selected_date=today, output='stock-today.xlsx')      
+        SmallFluctuation(stock, product='stock', selected_date=today, output='stock-today.xlsx')
+        CycleFluctuation(stock, product='stock', selected_date=today, output='stock-today.xlsx')
 
-        Logger.info(f'\n{'-'*20} 策略分类 {'-'*20} ')
-        ValuationSignal(stock, product='stock', selected_date=today, output=output)
-        BottomSignal(stock, product='stock', selected_date=today, output=output)
+        print(f'\n{'-'*20} 策略分类 {'-'*20} ')
+        ValuationSignal(stock, product='stock', selected_date=today, output='stock-today.xlsx')
+        BottomSignal(stock, product='stock', selected_date=today, output='stock-today.xlsx')
 
     @classmethod
-    def etf(cls, etf='sh600025', name='华能水电', today=date.today(), output=f'etf-today.xlsx'):
-        Logger.info(f'\n{'='*16} {etf} {name} {'='*16}')
-    
-        Logger.info(f'\n{'-'*20} 趋势判断 {'-'*20} ')
-        AscendTrend(etf, product='etf', selected_date=today, output=output)
-        DescendTrend(etf, product='etf', selected_date=today, output=output)
-        SmallFluctuation(etf, product='etf', selected_date=today, output=output)
-        CycleFluctuation(etf, product='etf', selected_date=today, output=output)
-        
-        Logger.info(f'\n{'-'*20} 策略分类 {'-'*20} ')
-        # ValuationSignal(etf, product='etf', selected_date=today, output=output)
-        BottomSignal(etf, product='etf', selected_date=today, output=output)
+    def etf(cls, etf='000016', name='上证 50', today=date.today()):  
+        print(f'\n{'='*20} {etf} {name} {'='*20}')
+
+        print(f'\n{'-'*20} 趋势判断 {'-'*20} ')
+        AscendTrend(etf, product='etf', selected_date=today, output='etf-today.xlsx')
+        DescendTrend(etf, product='etf', selected_date=today, output='etf-today.xlsx')      
+        SmallFluctuation(etf, product='etf', selected_date=today, output='etf-today.xlsx')
+        CycleFluctuation(etf, product='etf', selected_date=today, output='etf-today.xlsx')
+
+        print(f'\n{'-'*20} 策略分类 {'-'*20} ')
+        BottomSignal(etf, product='etf', selected_date=today, output='etf-today.xlsx')
 
 
 class MainScheduler:
 
     @classmethod
     def run(cls, today=date.today()):
-        DataTask.main()
+        # DataTask.main()
         AlgorithmTask.main(today)
-        Logger.info(f'\n{'-'*20} {datetime.now()} 星期{ today.weekday()+1} {'-'*20}')
+        print(f'\n{'-'*20} {datetime.now()} 星期{ today.weekday()+1} {'-'*20}')
 
 
 if __name__ == '__main__':
-    MainScheduler.run()
+    today = date(2026, 4, 16)
+    MainScheduler.run(today=today)
+    # MainScheduler.run()

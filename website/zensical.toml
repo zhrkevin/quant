@@ -22,23 +22,25 @@ site_description = "A new project generated from the default template project."
 # The site_author attribute. This is used in the HTML head element.
 #
 # Read more: https://zensical.org/docs/setup/basics/#site_author
-site_author = "<your name here>"
+site_author = "zen"
 
 # The site_url is the canonical URL for your site. When building online
 # documentation you should set this.
 # Read more: https://zensical.org/docs/setup/basics/#site_url
 # site_url = "https://www.example.com/"
 
-
-repo_url = "https://github.com/facelessuser/pymdown-extensions"
-
+# The repo_url is the canonical URL for your git repository. When building online
+# documentation you should set this.
+# Read more: https://zensical.org/docs/setup/repository
+repo_url = "https://github.com/zhrkevin/quant"
+repo_name = "zen/quant"
 
 # The copyright notice appears in the page footer and can contain an HTML
 # fragment.
 #
 # Read more: https://zensical.org/docs/setup/basics/#copyright
 copyright = """
-Copyright &copy; 2026
+Copyright &copy; 2015 for Zen. All Rights Reserved.
 """
 
 # Zensical supports both implicit navigation and explicitly defined navigation.
@@ -100,7 +102,7 @@ extra_css = ["extra/block.css", "extra/extra.css"]
 # - https://zensical.org/docs/setup/logo-and-icons/#favicon
 # - https://developer.mozilla.org/en-US/docs/Glossary/Favicon
 #
-favicon = "extra/logo.svg"
+favicon = "extra/favicon.ico"
 
 # Zensical supports more than 60 different languages. This means that the
 # labels and tooltips that Zensical's templates produce are translated.

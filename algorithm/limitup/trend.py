@@ -9,10 +9,6 @@ import polars as pl
 
 from project import Config
 from algorithm.middleware import Logger
-from algorithm.limitup.fetch import WriteData, SplitData, Indices
-
-
-pl.Config(tbl_rows=20, tbl_cols=-1)
 
 
 class Analysis:
