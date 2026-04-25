@@ -37,7 +37,7 @@ class DataTask:
         return message
 
     @classmethod
-    def main(cls, today=date.today()):
+    def main(cls):
         """运行数据处理任务"""
         try:
             for symbol in Stocks:
@@ -58,7 +58,7 @@ class DataTask:
 
 class AlgorithmTask:
 
-    today, taskid, stock_report, etf_report, callback = None, None, None, None, Config['Callbacks']['Mock']
+    today, taskid, callback = None, None, Config['Callbacks']['Mock']
 
     @classmethod
     async def run(cls, body):
@@ -74,25 +74,19 @@ class AlgorithmTask:
     def main(cls, today=date.today()):
         """运行算法任务"""
         try:
+            shutil.copy(Config['Paths']['DataPath'] / 'output' / 'stock.xlsx', Config['Paths']['DataPath'] / 'output' / f'stock-today.xlsx')
+            shutil.copy(Config['Paths']['DataPath'] / 'output' / 'etf.xlsx', Config['Paths']['DataPath'] / 'output' / f'etf-today.xlsx')
+
+            # shutil.copy(Config['Paths']['DataPath'] / 'output' / 'all.xlsx', Config['Paths']['DataPath'] / 'output' / f'all-today.xlsx')
+
             today = cls.today if cls.today else copy.deepcopy(today)
 
-            shutil.copy(
-                Config['Paths']['DataPath'] / 'output' / 'stock.xlsx',
-                Config['Paths']['DataPath'] / 'output' / 'stock-today.xlsx'
-            )
-            shutil.copy(
-                Config['Paths']['DataPath'] / 'output' / 'etf.xlsx',
-                Config['Paths']['DataPath'] / 'output' / 'etf-today.xlsx'
-            )
+            # 计算 stock 和 etf 数据
             for stock, name in Stocks.items():
-                stock_report = cls.stock(stock, name, today=today)
-            
-            # 处理ETF数据
-            for etf, name in ETFs.items():
-                etf_report = cls.etf(etf, name, today=today)
+                cls.stock(stock, name, today=today)
 
-            print(stock_report)
-            print(etf_report)
+            for etf, name in ETFs.items():
+                cls.etf(etf, name, today=today)
 
             # 写入一个Excel文件的两个sheet
             stock_report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / 'stock-today.xlsx')
@@ -110,29 +104,35 @@ class AlgorithmTask:
     @classmethod
     def stock(cls, stock='600025', name='华能水电', today=date.today()):
         print(f'\n{'='*20} {stock} {name} {'='*20}')
+        report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / f'stock-today.xlsx')
 
         print(f'\n{'-'*20} 趋势判断 {'-'*20} ')
-        AscendTrend(stock, product='stock', selected_date=today, output='stock-today.xlsx')
-        DescendTrend(stock, product='stock', selected_date=today, output='stock-today.xlsx')      
-        SmallFluctuation(stock, product='stock', selected_date=today, output='stock-today.xlsx')
-        CycleFluctuation(stock, product='stock', selected_date=today, output='stock-today.xlsx')
+        report = AscendTrend.run(product='stock', symbol=stock, today=today, report=report)
+        report = DescendTrend.run(product='stock', symbol=stock, today=today, report=report)
+        report = SmallFluctuation.run(product='stock', symbol=stock, today=today, report=report)
+        report = CycleFluctuation.run(product='stock', symbol=stock, today=today, report=report)
 
         print(f'\n{'-'*20} 策略分类 {'-'*20} ')
-        ValuationSignal(stock, product='stock', selected_date=today, output='stock-today.xlsx')
-        BottomSignal(stock, product='stock', selected_date=today, output='stock-today.xlsx')
+        report = ValuationSignal.run(product='stock', symbol=stock, today=today, report=report)
+        report = BottomSignal.run(product='stock', symbol=stock, today=today, report=report)
+
+        report.write_excel(Config['Paths']['DataPath'] / 'output' / f'stock-today.xlsx')
 
     @classmethod
     def etf(cls, etf='000016', name='上证 50', today=date.today()):  
         print(f'\n{'='*20} {etf} {name} {'='*20}')
+        report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / f'etf-today.xlsx')
 
         print(f'\n{'-'*20} 趋势判断 {'-'*20} ')
-        AscendTrend(etf, product='etf', selected_date=today, output='etf-today.xlsx')
-        DescendTrend(etf, product='etf', selected_date=today, output='etf-today.xlsx')      
-        SmallFluctuation(etf, product='etf', selected_date=today, output='etf-today.xlsx')
-        CycleFluctuation(etf, product='etf', selected_date=today, output='etf-today.xlsx')
+        report = AscendTrend.run(product='etf', symbol=etf, today=today, report=report)
+        report = DescendTrend.run(product='etf', symbol=etf, today=today, report=report)
+        report = SmallFluctuation.run(product='etf', symbol=etf, today=today, report=report)
+        report = CycleFluctuation.run(product='etf', symbol=etf, today=today, report=report)
 
         print(f'\n{'-'*20} 策略分类 {'-'*20} ')
-        BottomSignal(etf, product='etf', selected_date=today, output='etf-today.xlsx')
+        report = BottomSignal.run(product='etf', symbol=etf, today=today, report=report)
+
+        report.write_excel(Config['Paths']['DataPath'] / 'output' / f'etf-today.xlsx')
 
 
 class MainScheduler:
@@ -145,6 +145,5 @@ class MainScheduler:
 
 
 if __name__ == '__main__':
-    today = date(2026, 4, 16)
-    MainScheduler.run(today=today)
+    MainScheduler.run(today=date(2026, 4, 24))
     # MainScheduler.run()
