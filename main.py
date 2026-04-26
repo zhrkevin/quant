@@ -18,5 +18,5 @@ Algorithms.blueprint(website_blueprint)
 if __name__ == '__main__':
     Algorithms.run(
         host=Config['Information']['Host'],
-        port=Config['Information']['AlgorithmPort'],
+        port=Config['Information']['Port'],
     )

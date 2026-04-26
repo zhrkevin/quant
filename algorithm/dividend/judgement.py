@@ -49,15 +49,15 @@ class ValuationSignal:
         ) else '异常'
 
         cls.report = cls.report.with_columns(
-            pl.when(pl.col('编号') == cls.symbol )
-              .then(pl.lit(condition))
-              .when(pl.col('编号') == '编号')
+            pl.when(pl.col('编号') == '编号')
               .then(pl.lit('估值'))
+              .when(pl.col('编号') == cls.symbol)
+              .then(pl.lit(condition))
               .otherwise(pl.col('估值')).alias('估值'),
-            pl.when(pl.col('编号') == cls.symbol )
-              .then(pl.lit(f'{dividend_ratio:.4f}%'))
-              .when(pl.col('编号') == '编号')
+            pl.when(pl.col('编号') == '编号')
               .then(pl.lit('分红率'))
+              .when(pl.col('编号') == cls.symbol)
+              .then(pl.lit(f'{dividend_ratio:.4f}%'))
               .otherwise(pl.col('分红率')).alias('分红率'),
         )
         Logger.info(f'最新分红 {stock_dividend["分红"][-1]:.4f} 最新股价 {stock_close:.4f} 最新分红率 {dividend_ratio:.4f}%')
@@ -90,16 +90,18 @@ class BottomSignal:
         ratio = latest_stock_close / toppest_stock_price * 100
 
         cls.report = cls.report.with_columns(
-            pl.when((pl.col('编号') == cls.symbol) & (ratio < 50))
+            pl.when(pl.col('编号') == '编号')
+              .then(pl.lit('较过去6年的最高股价的跌幅超过50%'))
+              .when((pl.col('编号') == cls.symbol) & (ratio < 50))
               .then(pl.lit(True))
-              .when(pl.col('编号') == '编号')
-              .then(pl.lit('跌幅超过50%'))
-              .otherwise(pl.lit('')).alias('跌幅超过50%'),
-            pl.when((pl.col('编号') == cls.symbol))
+              .otherwise(pl.lit(''))
+              .alias('跌幅超过50%'),
+            pl.when(pl.col('编号') == '编号')
+              .then(pl.lit('当前股价与6年内最高股价的比值'))
+              .when((pl.col('编号') == cls.symbol))
               .then(pl.lit(f"{ratio:.3f}%"))
-              .when(pl.col('编号') == '编号')
-              .then(pl.lit('股价比值'))
-              .otherwise(pl.col('股价比值')).alias('股价比值'),
+              .otherwise(pl.col('股价比值'))
+              .alias('股价比值'),
         )
 
         Logger.info(f"\n股票 {cls.symbol} 底部参考值 ({ratio:.3f}% / 50%)")
@@ -127,10 +129,10 @@ class BottomSignal:
             Logger.info(f"Boll 季线中下轨 ({latest_boll_quarter_mid:.4f} {latest_boll_quarter_lower:.4f})")
 
             cls.report = cls.report.with_columns(
-                pl.when((pl.col('编号') == cls.symbol))
+                pl.when(pl.col('编号') == '编号')
+                  .then(pl.lit('底部信号:Boll月线下轨+季线中下轨'))
+                  .when(pl.col('编号') == cls.symbol)
                   .then(pl.lit(True))
-                  .when(pl.col('编号') == '编号')
-                  .then(pl.lit('底部信号'))
                   .otherwise(pl.lit(''))
                   .alias('底部信号')
             )

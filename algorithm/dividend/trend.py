@@ -42,10 +42,10 @@ class AscendTrend:
 
         if cls.today in breakthrough:
             cls.report = cls.report.with_columns(
-                pl.when(pl.col('编号') == cls.symbol)
-                  .then(pl.lit(True))
-                  .when(pl.col('编号') == '编号')
+                pl.when(pl.col('编号') == '编号')
                   .then(pl.lit('上升趋势 1-1'))
+                  .when(pl.col('编号') == cls.symbol)
+                  .then(pl.lit(True))
                   .otherwise(pl.lit(''))
                   .alias('上升趋势 1-1')
             )
@@ -57,10 +57,10 @@ class AscendTrend:
 
         if cls.today in standup:
             cls.report = cls.report.with_columns(
-                pl.when(pl.col('编号') == cls.symbol)
-                  .then(pl.lit(True))
-                  .when(pl.col('编号') == '编号')
+                pl.when(pl.col('编号') == '编号')
                   .then(pl.lit('上升趋势 1-2'))
+                  .when(pl.col('编号') == cls.symbol)
+                  .then(pl.lit(True))
                   .otherwise(pl.lit(''))
                   .alias('上升趋势 1-2')
             )
@@ -80,10 +80,10 @@ class AscendTrend:
 
         if cls.today in breakthrough:
             cls.report = cls.report.with_columns(
-                pl.when(pl.col('编号') == cls.symbol)
-                  .then(pl.lit(True))
-                  .when(pl.col('编号') == '编号')
+                pl.when(pl.col('编号') == '编号')
                   .then(pl.lit('上升趋势 2-1'))
+                  .when(pl.col('编号') == cls.symbol)
+                  .then(pl.lit(True))
                   .otherwise(pl.lit(''))
                   .alias('上升趋势 2-1')
             )
@@ -95,10 +95,10 @@ class AscendTrend:
 
         if cls.today in standup:
             cls.report = cls.report.with_columns( 
-                pl.when(pl.col('编号') == cls.symbol)
-                  .then(pl.lit(True))
-                  .when(pl.col('编号') == '编号')
+                pl.when(pl.col('编号') == '编号')
                   .then(pl.lit('上升趋势 2-2'))
+                  .when(pl.col('编号') == cls.symbol)
+                  .then(pl.lit(True))
                   .otherwise(pl.lit(''))
                   .alias('上升趋势 2-2')
             )
@@ -119,10 +119,10 @@ class AscendTrend:
             if cls.today in breakthrough:
                 column = {'week': '上升趋势 3-1', 'month': '上升趋势 4-1', 'quarter': '上升趋势 5-1'}[period]
                 cls.report = cls.report.with_columns(
-                    pl.when(pl.col('编号') == cls.symbol)
-                      .then(pl.lit(True))
-                      .when(pl.col('编号') == '编号')
+                    pl.when(pl.col('编号') == '编号')
                       .then(pl.lit(column))
+                      .when(pl.col('编号') == cls.symbol)
+                      .then(pl.lit(True))
                       .otherwise(pl.lit(''))
                       .alias(column)
                 )
@@ -135,10 +135,10 @@ class AscendTrend:
             if cls.today in longposition:
                 column = {'week': '上升趋势 3-2', 'month': '上升趋势 4-2', 'quarter': '上升趋势 5-2'}[period]
                 cls.report = cls.report.with_columns(
-                    pl.when(pl.col('编号') == cls.symbol)
-                      .then(pl.lit(True))
-                      .when(pl.col('编号') == '编号')
+                    pl.when(pl.col('编号') == '编号')
                       .then(pl.lit(column))
+                      .when(pl.col('编号') == cls.symbol)
+                      .then(pl.lit(True))
                       .otherwise(pl.lit(''))
                       .alias(column)
                 )
@@ -182,10 +182,10 @@ class DescendTrend:
 
         if cls.today in fallbelow:
             cls.report = cls.report.with_columns(
-                pl.when(pl.col('编号') == cls.symbol)
-                  .then(pl.lit(True))
-                  .when(pl.col('编号') == '编号')
+                pl.when(pl.col('编号') == '编号')
                   .then(pl.lit('下降趋势 1-1'))
+                  .when(pl.col('编号') == cls.symbol)
+                  .then(pl.lit(True))
                   .otherwise(pl.lit(''))
                   .alias('下降趋势 1-1')
             )
@@ -203,10 +203,10 @@ class DescendTrend:
 
         if cls.today in fallbelow:
             cls.report = cls.report.with_columns(
-                pl.when(pl.col('编号') == cls.symbol)
-                  .then(pl.lit(True))
-                  .when(pl.col('编号') == '编号')
+                pl.when(pl.col('编号') == '编号')
                   .then(pl.lit('下降趋势 2-1'))
+                  .when(pl.col('编号') == cls.symbol)
+                  .then(pl.lit(True))
                   .otherwise(pl.lit(''))
                   .alias('下降趋势 2-1')
             )
@@ -224,10 +224,10 @@ class DescendTrend:
 
         if cls.today in fallbelow:
             cls.report = cls.report.with_columns(
-                pl.when(pl.col('编号') == cls.symbol)
-                  .then(pl.lit(True))
-                  .when(pl.col('编号') == '编号')
+                pl.when(pl.col('编号') == '编号')
                   .then(pl.lit('下降趋势 3-1'))
+                  .when(pl.col('编号') == cls.symbol)
+                  .then(pl.lit(True))
                   .otherwise(pl.lit(''))
                   .alias('下降趋势 3-1')
             )
@@ -246,10 +246,10 @@ class DescendTrend:
         
         if cls.today in fallbelow:
             cls.report = cls.report.with_columns(
-                pl.when(pl.col('编号') == cls.symbol)
-                  .then(pl.lit(True))
-                  .when(pl.col('编号') == '编号')
+                pl.when(pl.col('编号') == '编号')
                   .then(pl.lit('下降趋势 4-1'))
+                  .when(pl.col('编号') == cls.symbol)
+                  .then(pl.lit(True))
                   .otherwise(pl.lit(''))
                   .alias('下降趋势 4-1')
             )
@@ -286,10 +286,10 @@ class SmallFluctuation:
         
         if cls.today in smallmonthhole:
             cls.report = cls.report.with_columns(
-                pl.when(pl.col('编号') == cls.symbol)
-                  .then(pl.lit(True))
-                  .when(pl.col('编号') == '编号')
+                pl.when(pl.col('编号') == '编号')
                   .then(pl.lit('小调整 1-1'))
+                  .when(pl.col('编号') == cls.symbol)
+                  .then(pl.lit(True))
                   .otherwise(pl.lit(''))
                   .alias('小调整 1-1')
             )
@@ -311,10 +311,10 @@ class SmallFluctuation:
 
         if cls.today in intersection:
             cls.report = cls.report.with_columns(
-                pl.when(pl.col('编号') == cls.symbol)
-                  .then(pl.lit(True))
-                  .when(pl.col('编号') == '编号')
+                pl.when(pl.col('编号') == '编号')
                   .then(pl.lit('小调整 1-2'))
+                  .when(pl.col('编号') == cls.symbol)
+                  .then(pl.lit(True))
                   .otherwise(pl.lit(''))
                   .alias('小调整 1-2')
             )
@@ -340,10 +340,10 @@ class SmallFluctuation:
 
         if cls.today in climbupmonthhole:
             cls.report = cls.report.with_columns(
-                pl.when(pl.col('编号') == cls.symbol)
-                  .then(pl.lit(True))
-                  .when(pl.col('编号') == '编号')
+                pl.when(pl.col('编号') == '编号')
                   .then(pl.lit('小调整 2-1'))
+                  .when(pl.col('编号') == cls.symbol)
+                  .then(pl.lit(True))
                   .otherwise(pl.lit(''))
                   .alias('小调整 2-1')
             )
@@ -381,10 +381,10 @@ class CycleFluctuation:
 
         if cls.today in fallbelow:
             cls.report = cls.report.with_columns(
-                pl.when(pl.col('编号') == cls.symbol)
-                  .then(pl.lit(True))
-                  .when(pl.col('编号') == '编号')
+                pl.when(pl.col('编号') == '编号')
                   .then(pl.lit('周期 1-1'))
+                  .when(pl.col('编号') == cls.symbol)
+                  .then(pl.lit(True))
                   .otherwise(pl.lit(''))
                   .alias('周期 1-1')
             )
@@ -403,10 +403,10 @@ class CycleFluctuation:
 
         if cls.today in fallbelow:
             cls.report = cls.report.with_columns(
-                pl.when(pl.col('编号') == cls.symbol)
-                  .then(pl.lit(True))
-                  .when(pl.col('编号') == '编号')
+                pl.when(pl.col('编号') == '编号')
                   .then(pl.lit('周期 2-1'))
+                  .when(pl.col('编号') == cls.symbol)
+                  .then(pl.lit(True))
                   .otherwise(pl.lit(''))
                   .alias('周期 2-1')
             )

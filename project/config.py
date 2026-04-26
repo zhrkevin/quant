@@ -16,8 +16,7 @@ Defaults = Box(
     {
         'Information': {
             'Host': '0.0.0.0',
-            'AlgorithmPort': 10001,
-            'SchedulerPort': 20001,
+            'Port': 10001,
             'Security': False,
             'Mode': 'test',
         },
@@ -38,7 +37,7 @@ Defaults = Box(
         },
         'Paths': {
             'ProjectPath': ProjectPath,
-            'AlgorithmsPath': ProjectPath / 'algorithms',
+            'AlgorithmPath': ProjectPath / 'algorithm',
             'ApiPath': ProjectPath / 'api',
             'WebsitePath': ProjectPath / 'website',
             'DataPath': ProjectPath / 'data',
@@ -60,16 +59,14 @@ def callback(ctx, processors):
 
 @group.command('Information')
 @click.option('--Host', 'Host', default=Defaults['Information']['Host'])
-@click.option('--AlgorithmPort', 'AlgorithmPort', default=Defaults['Information']['AlgorithmPort'])
-@click.option('--SchedulerPort', 'SchedulerPort', default=Defaults['Information']['SchedulerPort'])
+@click.option('--Port', 'Port', default=Defaults['Information']['Port'])
 @click.option('--Security', 'Security', default=Defaults['Information']['Security'])
 @click.option('--Mode', 'Mode', default=Defaults['Information']['Mode'])
 @click.pass_context
 def information(ctx, **kwargs):
     ctx.obj['Information'] |= {
         'Host': kwargs['Host'],
-        'AlgorithmPort': kwargs['AlgorithmPort'],
-        'SchedulerPort': kwargs['SchedulerPort'],
+        'Port': kwargs['Port'],
         'Security': kwargs['Security'],
         'Mode': kwargs['Mode'],
     }
@@ -122,7 +119,7 @@ def callbacks(ctx, **kwargs):
 
 @group.command('Paths')
 @click.option('--ProjectPath', 'ProjectPath', default=Defaults['Paths']['ProjectPath'])
-@click.option('--AlgorithmsPath', 'AlgorithmsPath', default=Defaults['Paths']['AlgorithmsPath'])
+@click.option('--AlgorithmPath', 'AlgorithmPath', default=Defaults['Paths']['AlgorithmPath'])
 @click.option('--ApiPath', 'ApiPath', default=Defaults['Paths']['ApiPath'])
 @click.option('--WebsitePath', 'WebsitePath', default=Defaults['Paths']['WebsitePath'])
 @click.option('--DataPath', 'DataPath', default=Defaults['Paths']['DataPath'])
@@ -131,7 +128,7 @@ def paths_config(ctx, **kwargs):
     ctx.obj['Paths'].update(
         {
             'ProjectPath': kwargs['ProjectPath'],
-            'AlgorithmsPath': kwargs['AlgorithmsPath'],
+            'AlgorithmPath': kwargs['AlgorithmPath'],
             'ApiPath': kwargs['ApiPath'],
             'WebsitePath': kwargs['WebsitePath'],
             'DataPath': kwargs['DataPath'],

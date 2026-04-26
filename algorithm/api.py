@@ -9,7 +9,7 @@ from sanic.log import logger
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from algorithm.basic.authentication import Registration, Authorization, protect
-from algorithm.dividend.tasks import DataTask, AlgorithmTask, MainScheduler
+from algorithm.dividend.task import DataTask, AlgorithmTask, MainScheduler
 
 
 algorithms_blueprint = sanic.Blueprint(name='AlgorithmsBlueprint', url_prefix='/quant')
@@ -24,7 +24,7 @@ async def algorithm_listener(app, loop=None):
 @algorithms_blueprint.listener('after_server_start')
 async def scheduler_listener(app, loop=None):
     scheduler = BackgroundScheduler(timezone='Asia/Shanghai')
-    scheduler.add_job(MainScheduler.run, trigger='cron', day_of_week='1-5', hour=17, minute=10, misfire_grace_time=None)
+    scheduler.add_job(MainScheduler.run, trigger='cron', day_of_week='1-5', hour=17, minute=10)
     scheduler.start()
     logger.info(f"定时任务加载成功。触发时间为周一至周五 17:10。")
 
