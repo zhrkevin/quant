@@ -32,9 +32,9 @@ class AscendTrend:
     def condition1(cls):
         Logger.info(f'(1) 周 20 价格突破周 60 价格 (首突)，同步判断是否站上 30 月线。')
 
-        selected_stock_month = pl.read_parquet(Config['Paths']['DataPath'] / cls.product / cls.symbol / 'month.parquet').filter(cls.filter)
-        selected_ma_week = pl.read_parquet(Config['Paths']['DataPath'] / cls.product / cls.symbol / f'ma_week.parquet').filter(cls.filter)
-        selected_ma_month = pl.read_parquet(Config['Paths']['DataPath'] / cls.product / cls.symbol / 'ma_month.parquet').filter(cls.filter)
+        selected_stock_month = pl.read_parquet(Config['Paths']['DataPath'] / f'dividend/{cls.product}/{cls.symbol}' / 'month.parquet').filter(cls.filter)
+        selected_ma_week = pl.read_parquet(Config['Paths']['DataPath'] / f'dividend/{cls.product}/{cls.symbol}' / f'ma_week.parquet').filter(cls.filter)
+        selected_ma_month = pl.read_parquet(Config['Paths']['DataPath'] / f'dividend/{cls.product}/{cls.symbol}' / 'ma_month.parquet').filter(cls.filter)
 
         breakthrough = selected_ma_week.filter(
             (pl.col('MA20').shift(1) < pl.col('MA60').shift(1)) & (pl.col('MA20') > pl.col('MA60'))
@@ -70,9 +70,9 @@ class AscendTrend:
     def condition2(cls):
         Logger.info(f'(2) 周 30 价格突破周 60 价格 (再次确认首突)，同步判断是否站上 30 月线。')
 
-        selected_stock_month = pl.read_parquet(Config['Paths']['DataPath'] / cls.product / cls.symbol / 'month.parquet').filter(cls.filter)
-        selected_ma_week = pl.read_parquet(Config['Paths']['DataPath'] / cls.product / cls.symbol / 'ma_week.parquet').filter(cls.filter)
-        selected_ma_month = pl.read_parquet(Config['Paths']['DataPath'] / cls.product / cls.symbol / 'ma_month.parquet').filter(cls.filter)
+        selected_stock_month = pl.read_parquet(Config['Paths']['DataPath'] / f'dividend/{cls.product}/{cls.symbol}' / 'month.parquet').filter(cls.filter)
+        selected_ma_week = pl.read_parquet(Config['Paths']['DataPath'] / f'dividend/{cls.product}/{cls.symbol}' / 'ma_week.parquet').filter(cls.filter)
+        selected_ma_month = pl.read_parquet(Config['Paths']['DataPath'] / f'dividend/{cls.product}/{cls.symbol}' / 'ma_month.parquet').filter(cls.filter)
 
         breakthrough = selected_ma_week.filter(
             (pl.col('MA30').shift(1) < pl.col('MA60').shift(1)) & (pl.col('MA30') > pl.col('MA60'))
@@ -109,8 +109,8 @@ class AscendTrend:
         Logger.info(f'(3) MACD 突破0轴后回踩均线，缠绕，变成多头趋势 (短线看日线，长线看周、月、季线)。')
 
         for period in ['week', 'month', 'quarter']:
-            selected_macd = pl.read_parquet(Config['Paths']['DataPath'] / cls.product / cls.symbol / f'macd_{period}.parquet').filter(cls.filter)
-            selected_ma = pl.read_parquet(Config['Paths']['DataPath'] / cls.product / cls.symbol / f'ma_{period}.parquet').filter(cls.filter)
+            selected_macd = pl.read_parquet(Config['Paths']['DataPath'] / f'dividend/{cls.product}/{cls.symbol}' / f'macd_{period}.parquet').filter(cls.filter)
+            selected_ma = pl.read_parquet(Config['Paths']['DataPath'] / f'dividend/{cls.product}/{cls.symbol}' / f'ma_{period}.parquet').filter(cls.filter)
 
             breakthrough = selected_macd.filter(
                 (pl.col('DIF').shift(1) < 0) & (pl.col('DIF') >= 0) & (pl.col('DIF') > pl.col('DEA'))
@@ -174,7 +174,7 @@ class DescendTrend:
     def condition1(cls):
         Logger.info(f'(1) 日 60 跌破日 250。')
 
-        selected_ma_day = pl.read_parquet(Config['Paths']['DataPath'] / cls.product / cls.symbol / 'ma_day.parquet').filter(cls.filter)
+        selected_ma_day = pl.read_parquet(Config['Paths']['DataPath'] / f'dividend/{cls.product}/{cls.symbol}' / 'ma_day.parquet').filter(cls.filter)
 
         fallbelow = selected_ma_day.filter(
             (pl.col('MA60').shift(1) > pl.col('MA250').shift(1)) & (pl.col('MA60') < pl.col('MA250'))
@@ -195,7 +195,7 @@ class DescendTrend:
     def condition2(cls):
         Logger.info(f'(2) 周 20 跌破周 60。')
 
-        selected_ma_week = pl.read_parquet(Config['Paths']['DataPath'] / cls.product / cls.symbol / 'ma_week.parquet').filter(cls.filter)
+        selected_ma_week = pl.read_parquet(Config['Paths']['DataPath'] / f'dividend/{cls.product}/{cls.symbol}' / 'ma_week.parquet').filter(cls.filter)
 
         fallbelow = selected_ma_week.filter(
             (pl.col('MA20').shift(1) > pl.col('MA60').shift(1)) & (pl.col('MA20') < pl.col('MA60'))
@@ -216,7 +216,7 @@ class DescendTrend:
     def condition3(cls):
         Logger.info(f'(3) 周 30 跌破周 60。')
 
-        selected_ma_week = pl.read_parquet(Config['Paths']['DataPath'] / cls.product / cls.symbol / 'ma_week.parquet').filter(cls.filter)   
+        selected_ma_week = pl.read_parquet(Config['Paths']['DataPath'] / f'dividend/{cls.product}/{cls.symbol}' / 'ma_week.parquet').filter(cls.filter)   
 
         fallbelow = selected_ma_week.filter(
             (pl.col('MA30').shift(1) > pl.col('MA60').shift(1)) & (pl.col('MA30') < pl.col('MA60'))
@@ -237,8 +237,8 @@ class DescendTrend:
     def condition4(cls):
         Logger.info(f'(4) 跌破月 30。')
 
-        selected_stock_month = pl.read_parquet(Config['Paths']['DataPath'] / cls.product / cls.symbol / 'month.parquet').filter(cls.filter)
-        selected_ma_month = pl.read_parquet(Config['Paths']['DataPath'] / cls.product / cls.symbol / 'ma_month.parquet').filter(cls.filter)
+        selected_stock_month = pl.read_parquet(Config['Paths']['DataPath'] / f'dividend/{cls.product}/{cls.symbol}' / 'month.parquet').filter(cls.filter)
+        selected_ma_month = pl.read_parquet(Config['Paths']['DataPath'] / f'dividend/{cls.product}/{cls.symbol}' / 'ma_month.parquet').filter(cls.filter)
 
         fallbelow = selected_stock_month.join(selected_ma_month.select('日期', 'MA30'), on='日期').filter(
             (pl.col('最低').shift(1) > pl.col('MA30').shift(1)) & (pl.col('最低') < pl.col('MA30'))
@@ -276,9 +276,9 @@ class SmallFluctuation:
     def condition1(cls):
         Logger.info(f'(1) 月小坑，参考月 30 价格。')
 
-        selected_macd_month = pl.read_parquet(Config['Paths']['DataPath'] / cls.product / cls.symbol / f'macd_month.parquet').filter(cls.filter)
-        selected_ma_month = pl.read_parquet(Config['Paths']['DataPath'] / cls.product / cls.symbol / 'ma_month.parquet').filter(cls.filter)
-        selected_stock_month = pl.read_parquet(Config['Paths']['DataPath'] / cls.product / cls.symbol / 'month.parquet').filter(cls.filter)
+        selected_macd_month = pl.read_parquet(Config['Paths']['DataPath'] / f'dividend/{cls.product}/{cls.symbol}' / f'macd_month.parquet').filter(cls.filter)
+        selected_ma_month = pl.read_parquet(Config['Paths']['DataPath'] / f'dividend/{cls.product}/{cls.symbol}' / 'ma_month.parquet').filter(cls.filter)
+        selected_stock_month = pl.read_parquet(Config['Paths']['DataPath'] / f'dividend/{cls.product}/{cls.symbol}' / 'month.parquet').filter(cls.filter)
 
         smallmonthhole = selected_macd_month.filter(
             (pl.col('MACD') < 0) & (pl.col('DIF') > 0) & (pl.col('DIF') < pl.col('DEA'))
@@ -332,7 +332,7 @@ class SmallFluctuation:
     def condition2(cls):
         Logger.info(f'(2) 坑内出来以后，Boll 周下是买点。')
 
-        selected_macd_month = pl.read_parquet(Config['Paths']['DataPath'] / cls.product / cls.symbol / f'macd_month.parquet').filter(cls.filter)
+        selected_macd_month = pl.read_parquet(Config['Paths']['DataPath'] / f'dividend/{cls.product}/{cls.symbol}' / f'macd_month.parquet').filter(cls.filter)
 
         climbupmonthhole = selected_macd_month.filter(
             (pl.col('DIF') > 0) & (pl.col('DIF').shift(1) < 0) & (pl.col('DEA') < 0) & (pl.col('DEA').shift(1) < 0) & (pl.col('DIF') > pl.col('DEA'))
@@ -372,8 +372,8 @@ class CycleFluctuation:
     def condition1(cls):
         Logger.info(f'(1) 收盘价跌破 250 日。')
 
-        selected_stock_day = pl.read_parquet(Config['Paths']['DataPath'] / cls.product / cls.symbol / 'day.parquet').filter(cls.filter)
-        selected_ma_day = pl.read_parquet(Config['Paths']['DataPath'] / cls.product / cls.symbol / 'ma_day.parquet').filter(cls.filter)
+        selected_stock_day = pl.read_parquet(Config['Paths']['DataPath'] / f'dividend/{cls.product}/{cls.symbol}' / 'day.parquet').filter(cls.filter)
+        selected_ma_day = pl.read_parquet(Config['Paths']['DataPath'] / f'dividend/{cls.product}/{cls.symbol}' / 'ma_day.parquet').filter(cls.filter)
 
         fallbelow = selected_stock_day.join(selected_ma_day.select('日期', 'MA250'), on='日期').filter(
             (pl.col('收盘').shift(1) > pl.col('MA250').shift(1)) & (pl.col('收盘') < pl.col('MA250'))
@@ -394,8 +394,8 @@ class CycleFluctuation:
     def condition2(cls):
         Logger.info(f'(2) 收盘价跌破 250 周。')
 
-        selected_stock_week = pl.read_parquet(Config['Paths']['DataPath'] / cls.product / cls.symbol / 'week.parquet').filter(cls.filter)
-        selected_ma_week = pl.read_parquet(Config['Paths']['DataPath'] / cls.product / cls.symbol / 'ma_week.parquet').filter(cls.filter)
+        selected_stock_week = pl.read_parquet(Config['Paths']['DataPath'] / f'dividend/{cls.product}/{cls.symbol}' / 'week.parquet').filter(cls.filter)
+        selected_ma_week = pl.read_parquet(Config['Paths']['DataPath'] / f'dividend/{cls.product}/{cls.symbol}' / 'ma_week.parquet').filter(cls.filter)
 
         fallbelow = selected_stock_week.join(selected_ma_week.select('日期', 'MA250'), on='日期').filter(
             (pl.col('收盘').shift(1) > pl.col('MA250').shift(1)) & (pl.col('收盘') < pl.col('MA250'))

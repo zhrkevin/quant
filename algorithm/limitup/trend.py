@@ -13,17 +13,19 @@ from algorithm.middleware import Logger
 
 class Analysis:
 
-    def __init__(self, adjust='raw', output='report-test.xlsx'):
-        self.limitup = pl.read_parquet(Config['Paths']['DataPath'] / 'input' / 'today.parquet')
-        self.adjust = adjust
+    @classmethod
+    def run(cls, adjust='raw', output='report-test.xlsx'):
+        cls.limitup = pl.read_parquet(Config['Paths']['DataPath'] / 'input' / 'today.parquet')
+        cls.adjust = adjust
 
-        self.sorted()
+        cls.sorted()
 
-    def sorted(self):
+    @classmethod
+    def sorted(cls):
         # 读取数据
         
         # 只做拆分，不考虑列的位置
-        self.limitup = self.limitup.with_columns(
+        cls.limitup = cls.limitup.with_columns(
             (pl.col('成交额') / 1e8).alias('成交额(亿)'),
             (pl.col('总市值') / 1e8).alias('总市值(亿)'),
             (pl.col('流通市值') / 1e8).alias('流通市值(亿)'),
@@ -42,7 +44,7 @@ class Analysis:
             ['涨停天数', '涨停板数', '炸板次数'], descending=[True, True, False]
         )
         
-        Logger.info(f'\n今日 {datetime.date.today()} 涨停个股预览：\n{self.limitup}')
+        Logger.info(f'\n今日 {datetime.date.today()} 涨停个股预览：\n{cls.limitup}')
 
 
 class Trend:

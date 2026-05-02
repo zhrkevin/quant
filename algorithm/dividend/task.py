@@ -10,9 +10,9 @@ import polars as pl
 from datetime import date, datetime
 
 from project import Config
-from algorithm.middleware import Callback, Logger, Process
-from algorithm.basic.fetch import WriteData, SplitData, Indices
+from algorithm.middleware import Logger, Callback, Process
 from algorithm.dividend.product import Stocks, ETFs
+from algorithm.dividend.fetch import WriteData, SplitData, Indices
 from algorithm.dividend.trend import AscendTrend, DescendTrend, SmallFluctuation, CycleFluctuation
 from algorithm.dividend.judgement import ValuationSignal, BottomSignal
 
@@ -76,7 +76,7 @@ class AlgorithmTask:
             stock_report = cls.stocks(today)
             etf_report = cls.etfs(today)
 
-            with pd.ExcelWriter(Config['Paths']['DataPath'] / 'output' / f'report-{today.strftime("%Y%m%d")}.xlsx', mode='w+', engine='openpyxl') as xlsx:
+            with pd.ExcelWriter(Config['Paths']['DataPath'] / f'dividend/report' / f'report-{today.strftime("%Y%m%d")}.xlsx', mode='w+', engine='openpyxl') as xlsx:
                 stock_report.to_pandas().to_excel(xlsx, sheet_name='stock', index=False)
                 etf_report.to_pandas().to_excel(xlsx, sheet_name='etf', index=False)
 
@@ -88,7 +88,7 @@ class AlgorithmTask:
 
     @classmethod
     def stocks(cls, today):
-        report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / 'all.xlsx', sheet_name='stock')
+        report = pl.read_excel(Config['Paths']['DataPath'] / f'dividend/report' / 'all.xlsx', sheet_name='stock')
 
         for stock, name in Stocks.items():
             print(f'\n{'='*20} {stock} {name} {'='*20}')
@@ -107,7 +107,7 @@ class AlgorithmTask:
 
     @classmethod
     def etfs(cls, today):  
-        report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / 'all.xlsx', sheet_name='etf')
+        report = pl.read_excel(Config['Paths']['DataPath'] / f'dividend/report' / 'all.xlsx', sheet_name='etf')
 
         for etf, name in ETFs.items():
             print(f'\n{'='*20} {etf} {name} {'='*20}')
@@ -128,7 +128,7 @@ class MainScheduler:
 
     @classmethod
     def run(cls, today=date.today()):
-        DataTask.run(today)
+        # DataTask.run(today)
         AlgorithmTask.run(today)
         print(f'\n{'-'*20} {datetime.now()} 星期{ today.weekday()+1} {'-'*20}')
 

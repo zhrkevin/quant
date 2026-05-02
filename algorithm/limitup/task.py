@@ -11,7 +11,7 @@ from datetime import date
 from project import Config
 from algorithm.middleware import Callback, Logger, Process
 
-from algorithm.basic.fetch import WriteData, SplitData, Indices
+from algorithm.limitup.fetch import FetchLimitUp
 from algorithm.limitup.trend import Trend
 
 
@@ -20,17 +20,17 @@ class DataTask:
     taskid, callback = None, Config['Callbacks']['Mock']
 
     @classmethod
-    async def run(cls, body):
+    async def main(cls, body):
         """创建并启动数据任务"""
         cls.taskid = body['taskid']
         cls.callback = body['callback']
 
-        data_task_process = Process(taskid=cls.taskid, function=cls.main)
+        data_task_process = Process(taskid=cls.taskid, function=cls.run)
         message = await data_task_process.start()
         return message
 
     @classmethod
-    def main(cls, symbol='600036'):
+    def run(cls, symbol='600036'):
         """运行数据处理任务"""
         try:
             WriteData.run(symbol)
@@ -73,10 +73,9 @@ class AlgorithmTask:
 class MainScheduler:
 
     @classmethod
-    def run(cls, symbol):
-        DataTask.main(symbol)            
-        AlgorithmTask.main(symbol)
+    def run(cls, today=date.today()):
+        FetchLimitUp.run(today)
 
 
 if __name__ == '__main__':
-    MainScheduler.run(symbol='600726')
+    MainScheduler.run()

@@ -12,7 +12,6 @@ import akshare_proxy_patch
 from project import Config
 
 
-
 akshare_proxy_patch.install_patch(auth_ip="101.201.173.125", auth_token="20260403HAHSSA7W")
 pl.Config(tbl_rows=12, tbl_cols=8)
 
@@ -21,31 +20,29 @@ class WriteData:
 
     @classmethod
     def run(cls, product, symbol, today, refresh=False):
-        if product == 'stock':
-            os.makedirs(Config['Paths']['DataPath'] / 'stock' / symbol) if not os.path.exists(Config['Paths']['DataPath'] / 'stock' / symbol) else None
-            cls.stock(symbol, today, refresh=refresh)
-        elif product == 'etf':
-            os.makedirs(Config['Paths']['DataPath'] / 'etf' / symbol) if not os.path.exists(Config['Paths']['DataPath'] / 'etf' / symbol) else None
-            cls.etf(symbol, today, refresh=refresh)
-        else:
-            raise ValueError(f'未知产品类型: {product}')
-
-    @classmethod
-    def stock(cls, symbol, today, refresh=False):
-        if refresh or not os.path.exists(Config['Paths']['DataPath'] / 'stock' / symbol / 'raw.parquet'):
+        if not os.path.exists(Config['Paths']['DataPath'] / f'dividend/{product}/{symbol}'):
+            os.makedirs(Config['Paths']['DataPath'] / f'dividend/{product}/{symbol}')
+        
+        if refresh or not os.path.exists(Config['Paths']['DataPath'] / f'dividend/{product}/{symbol}' / 'raw.parquet'):
             all_data = pl.DataFrame()
             start_date = '20150101'
             end_date = today.strftime('%Y%m%d')
             update = True
         else:
-            all_data = pl.read_parquet(Config['Paths']['DataPath'] / 'stock' / symbol / 'raw.parquet')
+            all_data = pl.read_parquet(Config['Paths']['DataPath'] / f'dividend/{product}/{symbol}' / 'raw.parquet')
             start_date = all_data['日期'].max().strftime('%Y%m%d')
             end_date = today.strftime('%Y%m%d')
             update = True if all_data['日期'].max() < today else False
-
-        print(f'数据日期: {start_date} 今天日期: {end_date}')
         
         if update:
+            new_data = cls.main(product, symbol, start_date, end_date)
+            new_data = new_data if all_data.is_empty() else pl.concat([all_data, new_data]).unique(subset=['日期'], keep='last').sort('日期') 
+            new_data.write_parquet(Config['Paths']['DataPath'] / f'dividend/{product}/{symbol}' / 'raw.parquet')
+        print(f'数据日期: {start_date} 今天日期: {end_date}')
+
+    @classmethod
+    def main(cls, product, symbol, start_date, end_date):
+        if product == 'stock':
             raw_data = pl.from_pandas(ak.stock_zh_a_hist(symbol=symbol, start_date=start_date, end_date=end_date, adjust=''))
             qfq_data = pl.from_pandas(ak.stock_zh_a_hist(symbol=symbol, start_date=start_date, end_date=end_date, adjust='qfq'))
             hfq_data = pl.from_pandas(ak.stock_zh_a_hist(symbol=symbol, start_date=start_date, end_date=end_date, adjust='hfq'))
@@ -76,29 +73,11 @@ class WriteData:
                 '成交额': qfq_data['成交额'], 
                 '换手率': qfq_data['换手率'],
             })
-            new_data = new_data if all_data.is_empty() else pl.concat([all_data, new_data]).unique(subset=['日期'], keep='last').sort('日期') 
-            new_data.write_parquet(Config['Paths']['DataPath'] / 'stock' / symbol / 'raw.parquet')
-            print(f'{symbol} 数据合并完成 \n{new_data}')
-
-    @classmethod
-    def etf(cls, symbol, today, refresh=False):
-        if refresh or not os.path.exists(Config['Paths']['DataPath'] / 'etf' / symbol / 'raw.parquet'):
-            all_data = pl.DataFrame()
-            start_date = '20150101'
-            end_date = today.strftime('%Y%m%d')
-            update = True
-        else:
-            all_data = pl.read_parquet(Config['Paths']['DataPath'] / 'etf' / symbol / 'raw.parquet')
-            start_date = all_data['日期'].max().strftime('%Y%m%d')
-            end_date = today.strftime('%Y%m%d')
-            update = True if all_data['日期'].max() < today else False
-
-        print(f'数据日期: {start_date} 今天日期: {end_date}')
-        
-        if update:
+            print(f'{symbol} 数据提取完成 \n{new_data}')
+        elif product == 'etf':
             raw_data = pl.from_pandas(ak.index_zh_a_hist(symbol=symbol, start_date=start_date, end_date=end_date))
             print(f'{symbol} 数据下载完成')
-            
+
             new_data = pl.DataFrame({
                 '日期': raw_data['日期'].cast(pl.Date),
                 '开盘': raw_data['开盘'],
@@ -112,40 +91,41 @@ class WriteData:
                 '成交额': raw_data['成交额'], 
                 '换手率': raw_data['换手率'],
             })
-            new_data = new_data if all_data.is_empty() else pl.concat([all_data, new_data]).unique(subset=['日期'], keep='last').sort('日期') 
-            new_data.write_parquet(Config['Paths']['DataPath'] / 'etf' / symbol / 'raw.parquet')
-            print(f'{symbol} 数据合并完成 \n{new_data}')
+            print(f'{symbol} 数据提取完成 \n{new_data}')
+        else:
+            raise ValueError(f'未知产品类型: {product}')
+        return new_data
 
 
 class SplitData:
 
     @classmethod
-    def run(cls, product,symbol, today):
+    def run(cls, product, symbol, today):
         # 读入原始数据
-        raw_data = pl.read_parquet(Config['Paths']['DataPath'] / product / symbol / 'raw.parquet')
+        raw_data = pl.read_parquet(Config['Paths']['DataPath'] / f'dividend/{product}/{symbol}' / 'raw.parquet')
         if raw_data['日期'].max() < today:
             # 按日天统计数据
             day_data = raw_data.group_by(pl.col('日期').dt.year().alias('年'), pl.col('日期').dt.ordinal_day().alias('日'))
             day_data = cls.aggregation(product, day_data)
-            day_data.write_parquet(Config['Paths']['DataPath'] / product / symbol / 'day.parquet')
+            day_data.write_parquet(Config['Paths']['DataPath'] / f'dividend/{product}/{symbol}' / 'day.parquet')
             print(day_data)
 
             # 按周度统计数据
             week_data = raw_data.group_by(pl.col('日期').dt.year().alias('年'), pl.col('日期').dt.week().alias('周'))
             week_data = cls.aggregation(product, week_data)
-            week_data.write_parquet(Config['Paths']['DataPath'] / product / symbol / 'week.parquet')
+            week_data.write_parquet(Config['Paths']['DataPath'] / f'dividend/{product}/{symbol}' / 'week.parquet')
             print(week_data)
 
             # 按月度统计数据
             month_data  = raw_data.group_by(pl.col('日期').dt.year().alias('年'), pl.col('日期').dt.month().alias('月'))
             month_data = cls.aggregation(product, month_data)
-            month_data.write_parquet(Config['Paths']['DataPath'] / product / symbol / 'month.parquet')
+            month_data.write_parquet(Config['Paths']['DataPath'] / f'dividend/{product}/{symbol}' / 'month.parquet')
             print(month_data)
             
             # 按季度统计数据
             quarter_data = raw_data.group_by(pl.col('日期').dt.year().alias('年'), pl.col('日期').dt.quarter().alias('季度'))
             quarter_data = cls.aggregation(product, quarter_data)
-            quarter_data.write_parquet(Config['Paths']['DataPath'] / product / symbol / 'quarter.parquet')
+            quarter_data.write_parquet(Config['Paths']['DataPath'] / f'dividend/{product}/{symbol}' / 'quarter.parquet')
             print(quarter_data)
 
     @classmethod
@@ -204,16 +184,16 @@ class Indices:
     @classmethod
     def run(cls, product, symbol):
         for period in ['day', 'week', 'month', 'quarter']:
-            raw_data = pl.read_parquet(Config['Paths']['DataPath'] / product / symbol / f'{period}.parquet')
+            raw_data = pl.read_parquet(Config['Paths']['DataPath'] / f'dividend/{product}/{symbol}' / f'{period}.parquet')
 
             ma_data = cls.moving_average(product, raw_data)
-            ma_data.write_parquet(Config['Paths']['DataPath'] / product / symbol / f'ma_{period}.parquet')
+            ma_data.write_parquet(Config['Paths']['DataPath'] / f'dividend/{product}/{symbol}' / f'{period}.parquet')
             
             macd_data = cls.moving_average_convergence_divergence(product, raw_data)
-            macd_data.write_parquet(Config['Paths']['DataPath'] / product / symbol / f'macd_{period}.parquet')
+            macd_data.write_parquet(Config['Paths']['DataPath'] / f'dividend/{product}/{symbol}' / f'{period}.parquet')
             
             boll_data = cls.bollinger_bands(product, raw_data)
-            boll_data.write_parquet(Config['Paths']['DataPath'] / product / symbol / f'boll_{period}.parquet')
+            boll_data.write_parquet(Config['Paths']['DataPath'] / f'dividend/{product}/{symbol}' / f'{period}.parquet')
 
     @classmethod
     def moving_average(cls, product, raw_data):
@@ -330,8 +310,8 @@ class Indices:
 
 
 if __name__ == '__main__':
-    # WriteData.stocks('000001')
-    # SplitData.run('stock', '000001')
-    # Indices.run('stock', '000001')
+    from datetime import date
+    WriteData.run('stock', '000001', today=date.today())
+    SplitData.run('stock', '000001', today=date.today())
+    Indices.run('stock', '000001')
     # Plotting('sh600036', period='day')
-    pass

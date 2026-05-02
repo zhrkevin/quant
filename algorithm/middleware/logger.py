@@ -42,7 +42,7 @@ class Loguru:
     def __init__(self):
         loguru.logger.remove()
         loguru.logger.add(sys.stdout, colorize=True, enqueue=False, format=self.format)
-        loguru.logger.add(Config['Paths']['DataPath'] / 'output' / f'report.log', rotation='2 MB', enqueue=False, format=self.format, mode='w')
+        loguru.logger.add(Config['Paths']['DataPath'] / 'system' / 'report.log', rotation='2 MB', enqueue=False, format=self.format, mode='w')
 
         self.extra = {'taskid': 'DefaultTaskID'}
         self.logger = loguru.logger.bind(name='DefaultTaskID')
