@@ -17,8 +17,8 @@ Defaults = Box(
         'Information': {
             'Host': '0.0.0.0',
             'Port': 10001,
-            'Security': False,
             'Mode': 'test',
+            'Security': False,
         },
         'MinIO': {
             'Endpoint': '0.0.0.0:3456',
@@ -38,7 +38,6 @@ Defaults = Box(
         'Paths': {
             'ProjectPath': ProjectPath,
             'AlgorithmPath': ProjectPath / 'algorithm',
-            'ApiPath': ProjectPath / 'api',
             'WebsitePath': ProjectPath / 'website',
             'DataPath': ProjectPath / 'data',
         },
@@ -60,15 +59,15 @@ def callback(ctx, processors):
 @group.command('Information')
 @click.option('--Host', 'Host', default=Defaults['Information']['Host'])
 @click.option('--Port', 'Port', default=Defaults['Information']['Port'])
-@click.option('--Security', 'Security', default=Defaults['Information']['Security'])
 @click.option('--Mode', 'Mode', default=Defaults['Information']['Mode'])
+@click.option('--Security', 'Security', default=Defaults['Information']['Security'])
 @click.pass_context
 def information(ctx, **kwargs):
     ctx.obj['Information'] |= {
         'Host': kwargs['Host'],
         'Port': kwargs['Port'],
-        'Security': kwargs['Security'],
         'Mode': kwargs['Mode'],
+        'Security': kwargs['Security'],
     }
 
 
@@ -120,7 +119,6 @@ def callbacks(ctx, **kwargs):
 @group.command('Paths')
 @click.option('--ProjectPath', 'ProjectPath', default=Defaults['Paths']['ProjectPath'])
 @click.option('--AlgorithmPath', 'AlgorithmPath', default=Defaults['Paths']['AlgorithmPath'])
-@click.option('--ApiPath', 'ApiPath', default=Defaults['Paths']['ApiPath'])
 @click.option('--WebsitePath', 'WebsitePath', default=Defaults['Paths']['WebsitePath'])
 @click.option('--DataPath', 'DataPath', default=Defaults['Paths']['DataPath'])
 @click.pass_context
@@ -129,7 +127,6 @@ def paths_config(ctx, **kwargs):
         {
             'ProjectPath': kwargs['ProjectPath'],
             'AlgorithmPath': kwargs['AlgorithmPath'],
-            'ApiPath': kwargs['ApiPath'],
             'WebsitePath': kwargs['WebsitePath'],
             'DataPath': kwargs['DataPath'],
         }

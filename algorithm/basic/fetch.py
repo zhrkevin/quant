@@ -5,13 +5,12 @@
 # ---------------------------------------------
 
 import os
-import datetime
 import polars as pl
 import akshare as ak
 import akshare_proxy_patch
 
 from project import Config
-from algorithm.dividend.product import Stocks, ETFs
+
 
 
 akshare_proxy_patch.install_patch(auth_ip="101.201.173.125", auth_token="20260403HAHSSA7W")
@@ -21,28 +20,38 @@ pl.Config(tbl_rows=12, tbl_cols=8)
 class WriteData:
 
     @classmethod
-    def stocks(cls, symbol, refresh=False):
-        os.makedirs(Config['Paths']['DataPath'] / 'stock' / symbol) if not os.path.exists(Config['Paths']['DataPath'] / 'stock' / symbol) else None
-        cls.all_stocks_data(symbol, refresh=refresh)
-        cls.updated_stocks_data(symbol)
-    
-    @classmethod
-    def etfs(cls, symbol, refresh=False):
-        os.makedirs(Config['Paths']['DataPath'] / 'etf' / symbol) if not os.path.exists(Config['Paths']['DataPath'] / 'etf' / symbol) else None
-        cls.all_etfs_data(symbol, refresh=refresh)
-        cls.updated_etfs_data(symbol)
+    def run(cls, product, symbol, today, refresh=False):
+        if product == 'stock':
+            os.makedirs(Config['Paths']['DataPath'] / 'stock' / symbol) if not os.path.exists(Config['Paths']['DataPath'] / 'stock' / symbol) else None
+            cls.stock(symbol, today, refresh=refresh)
+        elif product == 'etf':
+            os.makedirs(Config['Paths']['DataPath'] / 'etf' / symbol) if not os.path.exists(Config['Paths']['DataPath'] / 'etf' / symbol) else None
+            cls.etf(symbol, today, refresh=refresh)
+        else:
+            raise ValueError(f'未知产品类型: {product}')
 
     @classmethod
-    def all_stocks_data(cls, symbol, start_date='20150101', end_date='20251231', refresh=False):
-        if not refresh and os.path.exists(Config['Paths']['DataPath'] / 'stock' / symbol / 'raw.parquet'):
-            print(f'{symbol} 全量数据已存在')
+    def stock(cls, symbol, today, refresh=False):
+        if refresh or not os.path.exists(Config['Paths']['DataPath'] / 'stock' / symbol / 'raw.parquet'):
+            all_data = pl.DataFrame()
+            start_date = '20150101'
+            end_date = today.strftime('%Y%m%d')
+            update = True
         else:
+            all_data = pl.read_parquet(Config['Paths']['DataPath'] / 'stock' / symbol / 'raw.parquet')
+            start_date = all_data['日期'].max().strftime('%Y%m%d')
+            end_date = today.strftime('%Y%m%d')
+            update = True if all_data['日期'].max() < today else False
+
+        print(f'数据日期: {start_date} 今天日期: {end_date}')
+        
+        if update:
             raw_data = pl.from_pandas(ak.stock_zh_a_hist(symbol=symbol, start_date=start_date, end_date=end_date, adjust=''))
             qfq_data = pl.from_pandas(ak.stock_zh_a_hist(symbol=symbol, start_date=start_date, end_date=end_date, adjust='qfq'))
             hfq_data = pl.from_pandas(ak.stock_zh_a_hist(symbol=symbol, start_date=start_date, end_date=end_date, adjust='hfq'))
-            print(f'{symbol} 全量数据下载完成')
-
-            all_data = pl.DataFrame({
+            print(f'{symbol} 数据下载完成')
+            
+            new_data = pl.DataFrame({
                 '日期': raw_data['日期'],
                 '开盘': qfq_data['开盘'],
                 '最高': qfq_data['最高'], 
@@ -52,352 +61,159 @@ class WriteData:
                 '复权最高': hfq_data['最高'], 
                 '复权最低': hfq_data['最低'], 
                 '复权收盘': hfq_data['收盘'],
-                '除权开盘': raw_data['开盘'],
+                '除权开盘': raw_data['开盘'], 
                 '除权最高': raw_data['最高'], 
                 '除权最低': raw_data['最低'], 
                 '除权收盘': raw_data['收盘'],
-                '成交量': qfq_data['成交量'], 
-                '成交额': qfq_data['成交额'], 
-                '换手率': qfq_data['换手率'],
-                '涨跌额': qfq_data['涨跌额'],
-                '除权振幅': qfq_data['振幅'],
-                '除权涨跌幅': qfq_data['涨跌幅'],
                 '振幅': qfq_data['振幅'], 
                 '涨跌幅': qfq_data['涨跌幅'],
                 '复权振幅': hfq_data['振幅'], 
                 '复权涨跌幅': hfq_data['涨跌幅'],
-            })
-            all_data.write_parquet(Config['Paths']['DataPath'] / 'stock' / symbol / 'raw.parquet')
-            print(f'{symbol} 全量数据合并完成 \n{all_data}')
-
-    @staticmethod
-    def updated_stocks_data(symbol):
-        all_data = pl.read_parquet(Config['Paths']['DataPath'] / 'stock' / symbol / 'raw.parquet')
-        last_date, today_date = all_data['日期'].max(), datetime.date.today()
-        print(f'数据日期: {last_date} 今天日期: {today_date}')
-
-        if last_date >= today_date:
-            print(f'{symbol} 增量数据已更新')
-        else:
-            raw_data = pl.from_pandas(ak.stock_zh_a_hist(symbol=symbol, start_date=last_date.strftime('%Y%m%d'), end_date=today_date.strftime('%Y%m%d'), adjust=''))
-            qfq_data = pl.from_pandas(ak.stock_zh_a_hist(symbol=symbol, start_date=last_date.strftime('%Y%m%d'), end_date=today_date.strftime('%Y%m%d'), adjust='qfq'))
-            hfq_data = pl.from_pandas(ak.stock_zh_a_hist(symbol=symbol, start_date=last_date.strftime('%Y%m%d'), end_date=today_date.strftime('%Y%m%d'), adjust='hfq'))
-            print(f'{symbol} 增量数据下载完成')
-
-            updated_data = pl.DataFrame({
-                '日期': raw_data['日期'],
-                '开盘': qfq_data['开盘'],
-                '最高': qfq_data['最高'], 
-                '最低': qfq_data['最低'], 
-                '收盘': qfq_data['收盘'],
-                '复权开盘': hfq_data['开盘'], 
-                '复权最高': hfq_data['最高'], 
-                '复权最低': hfq_data['最低'], 
-                '复权收盘': hfq_data['收盘'],
-                '除权开盘': raw_data['开盘'],
-                '除权最高': raw_data['最高'], 
-                '除权最低': raw_data['最低'], 
-                '除权收盘': raw_data['收盘'],
+                '除权振幅': raw_data['振幅'], 
+                '除权涨跌幅': raw_data['涨跌幅'],
+                '涨跌额': qfq_data['涨跌额'], 
                 '成交量': qfq_data['成交量'], 
                 '成交额': qfq_data['成交额'], 
                 '换手率': qfq_data['换手率'],
-                '涨跌额': qfq_data['涨跌额'],
-                '除权振幅': qfq_data['振幅'],
-                '除权涨跌幅': qfq_data['涨跌幅'],
-                '振幅': qfq_data['振幅'], 
-                '涨跌幅': qfq_data['涨跌幅'],
-                '复权振幅': hfq_data['振幅'], 
-                '复权涨跌幅': hfq_data['涨跌幅'],
             })
-            new_data = pl.concat([all_data, updated_data]).unique(subset=['日期'], keep='last').sort('日期')
+            new_data = new_data if all_data.is_empty() else pl.concat([all_data, new_data]).unique(subset=['日期'], keep='last').sort('日期') 
             new_data.write_parquet(Config['Paths']['DataPath'] / 'stock' / symbol / 'raw.parquet')
-            print(f'{symbol} 全量 + 增量数据合并完成 \n{new_data}')
+            print(f'{symbol} 数据合并完成 \n{new_data}')
 
     @classmethod
-    def all_etfs_data(cls, symbol, refresh=False):  
-        if not refresh and os.path.exists(Config['Paths']['DataPath'] / 'etf' / symbol / 'raw.parquet'):
-            print(f'{symbol} 全量数据已存在')
+    def etf(cls, symbol, today, refresh=False):
+        if refresh or not os.path.exists(Config['Paths']['DataPath'] / 'etf' / symbol / 'raw.parquet'):
+            all_data = pl.DataFrame()
+            start_date = '20150101'
+            end_date = today.strftime('%Y%m%d')
+            update = True
         else:
-            raw_data = pl.from_pandas(ak.index_zh_a_hist(symbol=symbol, start_date='20150101', end_date='20251231'))
-            print(f'{symbol} 全量数据下载完成')
-            all_data = pl.DataFrame({
+            all_data = pl.read_parquet(Config['Paths']['DataPath'] / 'etf' / symbol / 'raw.parquet')
+            start_date = all_data['日期'].max().strftime('%Y%m%d')
+            end_date = today.strftime('%Y%m%d')
+            update = True if all_data['日期'].max() < today else False
+
+        print(f'数据日期: {start_date} 今天日期: {end_date}')
+        
+        if update:
+            raw_data = pl.from_pandas(ak.index_zh_a_hist(symbol=symbol, start_date=start_date, end_date=end_date))
+            print(f'{symbol} 数据下载完成')
+            
+            new_data = pl.DataFrame({
                 '日期': raw_data['日期'].cast(pl.Date),
                 '开盘': raw_data['开盘'],
                 '最高': raw_data['最高'], 
                 '最低': raw_data['最低'], 
                 '收盘': raw_data['收盘'],
+                '涨跌幅': raw_data['涨跌幅'], 
+                '振幅': raw_data['振幅'], 
+                '涨跌额': raw_data['涨跌额'], 
                 '成交量': raw_data['成交量'], 
-                '成交额': raw_data['成交额'],
-                '涨跌额': raw_data['涨跌额'],
-                '涨跌幅': raw_data['涨跌幅'],
-                '振幅': raw_data['振幅'],  
+                '成交额': raw_data['成交额'], 
                 '换手率': raw_data['换手率'],
             })
-            all_data.write_parquet(Config['Paths']['DataPath'] / 'etf' / symbol / 'raw.parquet')
-            print(f'{symbol} 全量数据下载完成 \n{all_data}')
-
-    @classmethod
-    def updated_etfs_data(cls, symbol):
-        all_data = pl.read_parquet(Config['Paths']['DataPath'] / 'etf' / symbol / 'raw.parquet')
-        last_date, today_date = all_data['日期'].max(), datetime.date.today()
-        print(f'{symbol} 数据日期: {last_date} 今天日期: {today_date}')
-
-        if last_date >= today_date:
-            print(f'{symbol} 增量数据已更新')
-        else:
-            raw_data = pl.from_pandas(ak.index_zh_a_hist(symbol=symbol, start_date=last_date.strftime('%Y%m%d'), end_date=today_date.strftime('%Y%m%d')))
-            print(f'{symbol} 增量数据下载完成')
-            updated_data = pl.DataFrame({
-                '日期': raw_data['日期'].cast(pl.Date),
-                '开盘': raw_data['开盘'],
-                '最高': raw_data['最高'], 
-                '最低': raw_data['最低'], 
-                '收盘': raw_data['收盘'],
-                '成交量': raw_data['成交量'], 
-                '成交额': raw_data['成交额'],
-                '涨跌额': raw_data['涨跌额'],
-                '涨跌幅': raw_data['涨跌幅'],
-                '振幅': raw_data['振幅'],  
-                '换手率': raw_data['换手率'],
-            })
-            new_data = pl.concat([all_data, updated_data]).unique(subset=['日期'], keep='last').sort('日期')
+            new_data = new_data if all_data.is_empty() else pl.concat([all_data, new_data]).unique(subset=['日期'], keep='last').sort('日期') 
             new_data.write_parquet(Config['Paths']['DataPath'] / 'etf' / symbol / 'raw.parquet')
-            print(f'{symbol} 全量 + 增量数据合并完成 \n{new_data}')
+            print(f'{symbol} 数据合并完成 \n{new_data}')
 
 
 class SplitData:
 
     @classmethod
-    def stocks(cls, symbol):
+    def run(cls, product,symbol, today):
         # 读入原始数据
-        raw_data = pl.read_parquet(Config['Paths']['DataPath'] / 'stock' / symbol / 'raw.parquet')
+        raw_data = pl.read_parquet(Config['Paths']['DataPath'] / product / symbol / 'raw.parquet')
+        if raw_data['日期'].max() < today:
+            # 按日天统计数据
+            day_data = raw_data.group_by(pl.col('日期').dt.year().alias('年'), pl.col('日期').dt.ordinal_day().alias('日'))
+            day_data = cls.aggregation(product, day_data)
+            day_data.write_parquet(Config['Paths']['DataPath'] / product / symbol / 'day.parquet')
+            print(day_data)
 
-        # 按日天统计数据
-        day_data = raw_data.with_columns(
-            pl.col('日期').dt.year().alias('年'),
-            pl.col('日期').dt.ordinal_day().alias('日'),
-            pl.when(pl.col('收盘') >= pl.col('开盘')).then(pl.lit('红')).otherwise(pl.lit('绿')).alias('颜色')
-        ).select(
-            '年', '日', pl.exclude('年', '日')
-        )
-        day_data.write_parquet(Config['Paths']['DataPath'] / 'stock' / symbol / 'day.parquet')
-        print(day_data)
+            # 按周度统计数据
+            week_data = raw_data.group_by(pl.col('日期').dt.year().alias('年'), pl.col('日期').dt.week().alias('周'))
+            week_data = cls.aggregation(product, week_data)
+            week_data.write_parquet(Config['Paths']['DataPath'] / product / symbol / 'week.parquet')
+            print(week_data)
 
-        # 按周度统计数据
-        week_data = raw_data.group_by(
-            pl.col('日期').dt.year().alias('年'),
-            pl.col('日期').dt.week().alias('周')
-        ).agg([
-            pl.col('日期').last().alias('日期'),
-            pl.col('开盘').first().alias('开盘'),
-            pl.col('最高').max().alias('最高'),
-            pl.col('最低').min().alias('最低'),
-            pl.col('收盘').last().alias('收盘'),
-            pl.col('复权开盘').first().alias('复权开盘'),
-            pl.col('复权最高').max().alias('复权最高'),
-            pl.col('复权最低').min().alias('复权最低'),
-            pl.col('复权收盘').last().alias('复权收盘'),
-            pl.col('除权开盘').first().alias('除权开盘'),
-            pl.col('除权最高').max().alias('除权最高'),
-            pl.col('除权最低').min().alias('除权最低'),
-            pl.col('除权收盘').last().alias('除权收盘'),
-            pl.col('成交量').sum().alias('成交量'),
-            pl.col('成交额').sum().alias('成交额'),
-            pl.col('换手率').sum().alias('换手率'), 
-        ]).with_columns(
-            ((pl.col('最高') - pl.col('最低')) / pl.col('最低') * 100).alias('振幅'), 
-            ((pl.col('收盘') - pl.col('开盘')) / pl.col('开盘') * 100).alias('涨跌幅'),
-            ((pl.col('复权最高') - pl.col('复权最低')) / pl.col('复权最低') * 100).alias('复权振幅'),
-            ((pl.col('复权收盘') - pl.col('复权开盘')) / pl.col('复权开盘') * 100).alias('复权涨跌幅'),
-            ((pl.col('除权最高') - pl.col('除权最低')) / pl.col('除权最低') * 100).alias('除权振幅'),
-            ((pl.col('除权收盘') - pl.col('除权开盘')) / pl.col('除权开盘') * 100).alias('除权涨跌幅'),
-            (pl.col('收盘') - pl.col('开盘')).alias('涨跌额'),
-            pl.when(pl.col('收盘') >= pl.col('开盘')).then(pl.lit('红')).otherwise(pl.lit('绿')).alias('颜色'),
-        ).sort('日期')
-        week_data.write_parquet(Config['Paths']['DataPath'] / 'stock' / symbol / 'week.parquet')
-        print(week_data)
-
-        # 按月度统计数据
-        month_data  = raw_data.group_by(
-            pl.col('日期').dt.year().alias('年'),
-            pl.col('日期').dt.month().alias('月')
-        ).agg([
-            pl.col('日期').last().alias('日期'),
-            pl.col('开盘').first().alias('开盘'),
-            pl.col('最高').max().alias('最高'),
-            pl.col('最低').min().alias('最低'),
-            pl.col('收盘').last().alias('收盘'),
-            pl.col('复权开盘').first().alias('复权开盘'),
-            pl.col('复权最高').max().alias('复权最高'),
-            pl.col('复权最低').min().alias('复权最低'),
-            pl.col('复权收盘').last().alias('复权收盘'),
-            pl.col('除权开盘').first().alias('除权开盘'),
-            pl.col('除权最高').max().alias('除权最高'),
-            pl.col('除权最低').min().alias('除权最低'),
-            pl.col('除权收盘').last().alias('除权收盘'),
-            pl.col('成交量').sum().alias('成交量'),
-            pl.col('成交额').sum().alias('成交额'),
-            pl.col('换手率').sum().alias('换手率'), 
-        ]).with_columns(
-            ((pl.col('最高') - pl.col('最低')) / pl.col('最低') * 100).alias('振幅'), 
-            ((pl.col('收盘') - pl.col('开盘')) / pl.col('开盘') * 100).alias('涨跌幅'),
-            ((pl.col('复权最高') - pl.col('复权最低')) / pl.col('复权最低') * 100).alias('复权振幅'),
-            ((pl.col('复权收盘') - pl.col('复权开盘')) / pl.col('复权开盘') * 100).alias('复权涨跌幅'),
-            ((pl.col('除权最高') - pl.col('除权最低')) / pl.col('除权最低') * 100).alias('除权振幅'),
-            ((pl.col('除权收盘') - pl.col('除权开盘')) / pl.col('除权开盘') * 100).alias('除权涨跌幅'),
-            (pl.col('收盘') - pl.col('开盘')).alias('涨跌额'),
-            pl.when(pl.col('收盘') >= pl.col('开盘')).then(pl.lit('红')).otherwise(pl.lit('绿')).alias('颜色'),
-        ).sort('日期')
-        month_data.write_parquet(Config['Paths']['DataPath'] / 'stock' / symbol / 'month.parquet')
-        print(month_data)
-        
-        # 按季度统计数据
-        quarter_data = raw_data.group_by(
-            pl.col('日期').dt.year().alias('年'),
-            pl.col('日期').dt.quarter().alias('季度')
-        ).agg([
-            pl.col('日期').last().alias('日期'),
-            pl.col('开盘').first().alias('开盘'),
-            pl.col('最高').max().alias('最高'),
-            pl.col('最低').min().alias('最低'),
-            pl.col('收盘').last().alias('收盘'),
-            pl.col('复权开盘').first().alias('复权开盘'),
-            pl.col('复权最高').max().alias('复权最高'),
-            pl.col('复权最低').min().alias('复权最低'),
-            pl.col('复权收盘').last().alias('复权收盘'),
-            pl.col('除权开盘').first().alias('除权开盘'),
-            pl.col('除权最高').max().alias('除权最高'),
-            pl.col('除权最低').min().alias('除权最低'),
-            pl.col('除权收盘').last().alias('除权收盘'),
-            pl.col('成交量').sum().alias('成交量'),
-            pl.col('成交额').sum().alias('成交额'),
-            pl.col('换手率').sum().alias('换手率'), 
-        ]).with_columns(
-            ((pl.col('最高') - pl.col('最低')) / pl.col('最低') * 100).alias('振幅'), 
-            ((pl.col('收盘') - pl.col('开盘')) / pl.col('开盘') * 100).alias('涨跌幅'),
-            ((pl.col('复权最高') - pl.col('复权最低')) / pl.col('复权最低') * 100).alias('复权振幅'),
-            ((pl.col('复权收盘') - pl.col('复权开盘')) / pl.col('复权开盘') * 100).alias('复权涨跌幅'),
-            ((pl.col('除权最高') - pl.col('除权最低')) / pl.col('除权最低') * 100).alias('除权振幅'),
-            ((pl.col('除权收盘') - pl.col('除权开盘')) / pl.col('除权开盘') * 100).alias('除权涨跌幅'),
-            (pl.col('收盘') - pl.col('开盘')).alias('涨跌额'),
-            pl.when(pl.col('收盘') >= pl.col('开盘')).then(pl.lit('红')).otherwise(pl.lit('绿')).alias('颜色'),
-        ).sort('日期')
-        quarter_data.write_parquet(Config['Paths']['DataPath'] / 'stock' / symbol / 'quarter.parquet')
-        print(quarter_data)
+            # 按月度统计数据
+            month_data  = raw_data.group_by(pl.col('日期').dt.year().alias('年'), pl.col('日期').dt.month().alias('月'))
+            month_data = cls.aggregation(product, month_data)
+            month_data.write_parquet(Config['Paths']['DataPath'] / product / symbol / 'month.parquet')
+            print(month_data)
+            
+            # 按季度统计数据
+            quarter_data = raw_data.group_by(pl.col('日期').dt.year().alias('年'), pl.col('日期').dt.quarter().alias('季度'))
+            quarter_data = cls.aggregation(product, quarter_data)
+            quarter_data.write_parquet(Config['Paths']['DataPath'] / product / symbol / 'quarter.parquet')
+            print(quarter_data)
 
     @classmethod
-    def etfs(cls, symbol):
-        # 读入原始数据
-        raw_data = pl.read_parquet(Config['Paths']['DataPath'] / 'etf' / symbol / 'raw.parquet')
-        print(raw_data)
-
-        # 按日天统计数据
-        day_data = raw_data.with_columns(
-            pl.col('日期').dt.year().alias('年'),
-            pl.col('日期').dt.ordinal_day().alias('日'),
-            pl.when(pl.col('收盘') >= pl.col('开盘')).then(pl.lit('红')).otherwise(pl.lit('绿')).alias('颜色')
-        ).select(
-            '年', '日', pl.exclude('年', '日')
-        )
-        day_data.write_parquet(Config['Paths']['DataPath'] / 'etf' / symbol / 'day.parquet')
-        print(day_data)
-
-        # 按周度统计数据
-        week_data = raw_data.group_by(
-            pl.col('日期').dt.year().alias('年'),
-            pl.col('日期').dt.week().alias('周')
-        ).agg([
-            pl.col('日期').last().alias('日期'),
-            pl.col('开盘').first().alias('开盘'),
-            pl.col('最高').max().alias('最高'),
-            pl.col('最低').min().alias('最低'),
-            pl.col('收盘').last().alias('收盘'),
-            pl.col('成交量').sum().alias('成交量'),
-            pl.col('成交额').sum().alias('成交额'),
-            pl.col('换手率').sum().alias('换手率'), 
-        ]).with_columns(
-            ((pl.col('最高') - pl.col('最低')) / pl.col('最低') * 100).alias('振幅'), 
-            ((pl.col('收盘') - pl.col('开盘')) / pl.col('开盘') * 100).alias('涨跌幅'),
-            (pl.col('收盘') - pl.col('开盘')).alias('涨跌额'),
-            pl.when(pl.col('收盘') >= pl.col('开盘')).then(pl.lit('红')).otherwise(pl.lit('绿')).alias('颜色'),
-        ).sort('日期')
-        week_data.write_parquet(Config['Paths']['DataPath'] / 'etf' / symbol / 'week.parquet')
-        print(week_data)
-
-        # 按月度统计数据
-        month_data = raw_data.group_by(
-            pl.col('日期').dt.year().alias('年'),
-            pl.col('日期').dt.month().alias('月')
-        ).agg([
-            pl.col('日期').last().alias('日期'),
-            pl.col('开盘').first().alias('开盘'),
-            pl.col('最高').max().alias('最高'),
-            pl.col('最低').min().alias('最低'),
-            pl.col('收盘').last().alias('收盘'),
-            pl.col('成交量').sum().alias('成交量'),
-            pl.col('成交额').sum().alias('成交额'),
-            pl.col('换手率').sum().alias('换手率'), 
-        ]).with_columns(
-            ((pl.col('最高') - pl.col('最低')) / pl.col('最低') * 100).alias('振幅'), 
-            ((pl.col('收盘') - pl.col('开盘')) / pl.col('开盘') * 100).alias('涨跌幅'),
-            (pl.col('收盘') - pl.col('开盘')).alias('涨跌额'),
-            pl.when(pl.col('收盘') >= pl.col('开盘')).then(pl.lit('红')).otherwise(pl.lit('绿')).alias('颜色'),
-        ).sort('日期')
-
-        month_data.write_parquet(Config['Paths']['DataPath'] / 'etf' / symbol / 'month.parquet')
-        print(month_data)
-        
-        # 按季度统计数据
-        quarter_data = raw_data.group_by(
-            pl.col('日期').dt.year().alias('年'),
-            pl.col('日期').dt.week().alias('周')
-        ).agg([
-            pl.col('日期').last().alias('日期'),
-            pl.col('开盘').first().alias('开盘'),
-            pl.col('最高').max().alias('最高'),
-            pl.col('最低').min().alias('最低'),
-            pl.col('收盘').last().alias('收盘'),
-            pl.col('成交量').sum().alias('成交量'),
-            pl.col('成交额').sum().alias('成交额'),
-            pl.col('换手率').sum().alias('换手率'), 
-        ]).with_columns(
-            ((pl.col('最高') - pl.col('最低')) / pl.col('最低') * 100).alias('振幅'), 
-            ((pl.col('收盘') - pl.col('开盘')) / pl.col('开盘') * 100).alias('涨跌幅'),
-            (pl.col('收盘') - pl.col('开盘')).alias('涨跌额'),
-            pl.when(pl.col('收盘') >= pl.col('开盘')).then(pl.lit('红')).otherwise(pl.lit('绿')).alias('颜色'),
-        ).sort('日期')
-        quarter_data.write_parquet(Config['Paths']['DataPath'] / 'etf' / symbol / 'quarter.parquet')
-        print(quarter_data)
+    def aggregation(cls, product, raw_data):
+        if product == 'stock':
+            raw_data = raw_data.agg([
+                pl.col('日期').last().alias('日期'),
+                pl.col('开盘').first().alias('开盘'),
+                pl.col('最高').max().alias('最高'),
+                pl.col('最低').min().alias('最低'),
+                pl.col('收盘').last().alias('收盘'),
+                pl.col('复权开盘').first().alias('复权开盘'),
+                pl.col('复权最高').max().alias('复权最高'),
+                pl.col('复权最低').min().alias('复权最低'),
+                pl.col('复权收盘').last().alias('复权收盘'),
+                pl.col('除权开盘').first().alias('除权开盘'),
+                pl.col('除权最高').max().alias('除权最高'),
+                pl.col('除权最低').min().alias('除权最低'),
+                pl.col('除权收盘').last().alias('除权收盘'),
+                pl.col('成交量').sum().alias('成交量'),
+                pl.col('成交额').sum().alias('成交额'),
+                pl.col('换手率').sum().alias('换手率'), 
+            ]).with_columns(
+                (pl.col('收盘') - pl.col('开盘')).alias('涨跌额'),
+                ((pl.col('最高') - pl.col('最低')) / pl.col('最低') * 100).alias('振幅'), 
+                ((pl.col('收盘') - pl.col('开盘')) / pl.col('开盘') * 100).alias('涨跌幅'),
+                ((pl.col('复权最高') - pl.col('复权最低')) / pl.col('复权最低') * 100).alias('复权振幅'),
+                ((pl.col('复权收盘') - pl.col('复权开盘')) / pl.col('复权开盘') * 100).alias('复权涨跌幅'),
+                ((pl.col('除权最高') - pl.col('除权最低')) / pl.col('除权最低') * 100).alias('除权振幅'),
+                ((pl.col('除权收盘') - pl.col('除权开盘')) / pl.col('除权开盘') * 100).alias('除权涨跌幅'),
+                pl.when(pl.col('收盘') >= pl.col('开盘')).then(pl.lit('红')).otherwise(pl.lit('绿')).alias('颜色'),
+            ).sort('日期')
+        elif product == 'etf':
+            raw_data = raw_data.agg([
+                pl.col('日期').last().alias('日期'),
+                pl.col('开盘').first().alias('开盘'),
+                pl.col('最高').max().alias('最高'),
+                pl.col('最低').min().alias('最低'),
+                pl.col('收盘').last().alias('收盘'),
+                pl.col('成交量').sum().alias('成交量'),
+                pl.col('成交额').sum().alias('成交额'),
+                pl.col('换手率').sum().alias('换手率'), 
+            ]).with_columns(
+                (pl.col('收盘') - pl.col('开盘')).alias('涨跌额'),
+                ((pl.col('最高') - pl.col('最低')) / pl.col('最低') * 100).alias('振幅'), 
+                ((pl.col('收盘') - pl.col('开盘')) / pl.col('开盘') * 100).alias('涨跌幅'),
+                pl.when(pl.col('收盘') >= pl.col('开盘')).then(pl.lit('红')).otherwise(pl.lit('绿')).alias('颜色'),
+            ).sort('日期')
+        else:
+            raise ValueError(f'未知产品类型: {product}')
+        return raw_data
 
 
 class Indices:
 
     @classmethod
-    def run(cls):
+    def run(cls, product, symbol):
         for period in ['day', 'week', 'month', 'quarter']:
-            for stock in Stocks:
-                raw_data = pl.read_parquet(Config['Paths']['DataPath'] / 'stock' / stock / f'{period}.parquet')
-                
-                ma_data = cls.moving_average('stock', raw_data)
-                ma_data.write_parquet(Config['Paths']['DataPath'] / 'stock' / stock / f'ma_{period}.parquet')
-                
-                macd_data = cls.moving_average_convergence_divergence('stock', raw_data)
-                macd_data.write_parquet(Config['Paths']['DataPath'] / 'stock' / stock / f'macd_{period}.parquet')
-                
-                boll_data = cls.bollinger_bands('stock', raw_data)
-                boll_data.write_parquet(Config['Paths']['DataPath'] / 'stock' / stock / f'boll_{period}.parquet')
+            raw_data = pl.read_parquet(Config['Paths']['DataPath'] / product / symbol / f'{period}.parquet')
 
-            for etf in ETFs:
-                raw_data = pl.read_parquet(Config['Paths']['DataPath'] / 'etf' / etf / f'{period}.parquet')
-                
-                ma_data = cls.moving_average('etf', raw_data)
-                ma_data.write_parquet(Config['Paths']['DataPath'] / 'etf' / etf / f'ma_{period}.parquet')
-                
-                macd_data = cls.moving_average_convergence_divergence('etf', raw_data)
-                macd_data.write_parquet(Config['Paths']['DataPath'] / 'etf' / etf / f'macd_{period}.parquet')
-                
-                boll_data = cls.bollinger_bands('etf', raw_data)    
-                boll_data.write_parquet(Config['Paths']['DataPath'] / 'etf' / etf / f'boll_{period}.parquet')
+            ma_data = cls.moving_average(product, raw_data)
+            ma_data.write_parquet(Config['Paths']['DataPath'] / product / symbol / f'ma_{period}.parquet')
+            
+            macd_data = cls.moving_average_convergence_divergence(product, raw_data)
+            macd_data.write_parquet(Config['Paths']['DataPath'] / product / symbol / f'macd_{period}.parquet')
+            
+            boll_data = cls.bollinger_bands(product, raw_data)
+            boll_data.write_parquet(Config['Paths']['DataPath'] / product / symbol / f'boll_{period}.parquet')
 
     @classmethod
     def moving_average(cls, product, raw_data):
@@ -429,8 +245,10 @@ class Indices:
                 pl.col(f'除权收盘').rolling_mean(250).alias('除权MA250'), 
             ])
             new_data = basic_data.join(supplyment_data, on='日期', how='left')
-        else:
+        elif product == 'etf':
             new_data = basic_data
+        else:
+            raise ValueError(f"不支持的产品类型: {product}")
         
         print(new_data)
         return new_data
@@ -473,8 +291,10 @@ class Indices:
                 pl.when(pl.col('除权MACD') >= 0).then(pl.lit('红')).otherwise(pl.lit('绿')).alias('除权颜色'),
             )
             new_data = basic_data.join(supplyment_data, on='日期', how='left')
-        else:
+        elif product == 'etf':
             new_data = basic_data
+        else:
+            raise ValueError(f"不支持的产品类型: {product}")
 
         print(new_data)
         return new_data
@@ -500,17 +320,18 @@ class Indices:
                 (pl.col(f'除权收盘').rolling_mean(mean) - pl.col(f'除权收盘').rolling_std(mean) * std).alias('除权Boll下轨'),
             ])
             new_data = basic_data.join(supplyment_data, on='日期', how='left')
-        else:
+        elif product == 'etf':
             new_data = basic_data
+        else:
+            raise ValueError(f"不支持的产品类型: {product}")
 
         print(new_data)
         return new_data
 
 
 if __name__ == '__main__':
-    pass
-    # WriteData.etfs('000016', refresh=True)
-    SplitData()
-    Index.run()
+    # WriteData.stocks('000001')
+    # SplitData.run('stock', '000001')
+    # Indices.run('stock', '000001')
     # Plotting('sh600036', period='day')
-
+    pass

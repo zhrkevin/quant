@@ -5,8 +5,8 @@
 # ---------------------------------------------
 
 import json
+import uuid
 import sanic
-import shortuuid
 import traceback
 from functools import wraps
 from datetime import datetime
@@ -20,7 +20,7 @@ from project import Config
 
 FormatPrivate = PrivateFormat.PKCS8
 FormatPublic = PublicFormat.SubjectPublicKeyInfo
-Cipher = shortuuid.random(32).encode()
+Cipher = uuid.uuid8().hex.encode()
 SignatureAlgorithm = ECDSA(SHA512())
 Curve = BrainpoolP512R1()
 

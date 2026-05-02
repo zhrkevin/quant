@@ -12,8 +12,12 @@
 # RUN pip install --no-cache-dir --index-url https://mirrors.aliyun.com/pypi/simple --upgrade pdm
 
 FROM python:3.14
-WORKDIR /application
-ENV PATH=/application/.venv/bin:$PATH
-RUN git clone https://github.com/zhrkevin/quant.git /application
+WORKDIR /workspace
+ENV TZ=Asia/Shanghai
+ENV PATH=/workspace/.venv/bin:$PATH
+ADD docker/.bashrc /root/.bashrc
+ADD docker/debian.sources /etc/apt/sources.list.d/debian.sources
+RUN apt-get update -y && apt-get install -y vim git
+RUN git clone https://github.com/zhrkevin/quant.git /workspace
 RUN pdm update --no-self --update-all --unconstrained --verbose
 CMD bash run.sh

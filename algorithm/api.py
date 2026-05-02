@@ -8,8 +8,14 @@ import sanic
 from sanic.log import logger
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from algorithm.basic.authentication import Registration, Authorization, protect
+from project import Config
+from website import OpenAPI
+from algorithm.basic import Registration, Authorization, protect
 from algorithm.dividend.task import DataTask, AlgorithmTask, MainScheduler
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# - 算法平台 API 接口
 
 
 algorithms_blueprint = sanic.Blueprint(name='AlgorithmsBlueprint', url_prefix='/quant')
@@ -17,6 +23,7 @@ algorithms_blueprint = sanic.Blueprint(name='AlgorithmsBlueprint', url_prefix='/
 
 @algorithms_blueprint.listener('before_server_start')
 async def algorithm_listener(app, loop=None):
+    OpenAPI()
     Registration()
     logger.info(f"算法授权注册成功，签名可申请或验证。")
 
@@ -53,7 +60,7 @@ async def data_task_route(request, algorithm):
         'taskid': request.args.get('TaskID'),
         'callback': request.args.get('Callback'),
     }
-    message = await DataTask.run(body=body)
+    message = await DataTask.main(body=body)
     return sanic.response.json(message)
 
 
@@ -66,7 +73,7 @@ async def algorithm_task_route(request, algorithm):
         'callback': request.args.get('Callback'),
         'today': request.args.get('Today'),
     }
-    message = await AlgorithmTask.run(body=body)
+    message = await AlgorithmTask.main(body=body)
     return sanic.response.json(message)
 
 
@@ -78,3 +85,28 @@ async def mock_callback_route(request, callback):
         'taskid': request.json.get('taskid'),
     }
     return sanic.response.json(message)
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# - 网站 API 接口
+
+
+website_blueprint = sanic.Blueprint(name='WebsiteBlueprint')
+website_blueprint.static(uri='/quant/site', name='site', file_or_directory=Config['Paths']['WebsitePath'] / 'site')
+website_blueprint.static(uri='/quant/swagger', name='swagger', file_or_directory=Config['Paths']['WebsitePath'] / 'swagger')
+
+
+@website_blueprint.route(f"/")
+async def root_route_redirect(request):
+    return sanic.redirect("/quant/site/index.html")
+
+
+@website_blueprint.route(f"/quant")
+async def main_route_redirect(request):
+    return sanic.redirect("/quant/site/index.html")
+
+
+@website_blueprint.get('/quant/validator/<metrics:path>')
+async def swagger_validator(request, metrics):
+    valid = Config['Paths']['WebsitePath'] / 'swagger' / 'valid.png'
+    return await sanic.response.file(valid)

@@ -17,7 +17,7 @@ from algorithm.dividend.trend import AscendTrend, DescendTrend, SmallFluctuation
 from algorithm.dividend.judgement import ValuationSignal, BottomSignal
 
 
-pl.Config(tbl_rows=-1, tbl_cols=-1)
+pl.Config(tbl_rows=12, tbl_cols=8)
 
 
 class DataTask:
@@ -25,28 +25,29 @@ class DataTask:
     taskid, callback = None, Config['Callbacks']['Mock']
 
     @classmethod
-    async def run(cls, body):
+    async def main(cls, body):
         """创建并启动数据任务"""
         cls.taskid = body['taskid']
         cls.callback = body['callback']
 
-        data_task_process = Process(taskid=cls.taskid, function=cls.main)
+        data_task_process = Process(taskid=cls.taskid, function=cls.run)
         message = await data_task_process.start()
         return message
 
     @classmethod
-    def main(cls):
+    def run(cls, today=date.today()):
         """运行数据处理任务"""
         try:
             for symbol in Stocks:
-                WriteData.stocks(symbol)
-                SplitData.stocks(symbol)
+                WriteData.run('stock', symbol, today)
+                SplitData.run('stock', symbol, today)
+                Indices.run('stock', symbol)
 
             for symbol in ETFs:
-                WriteData.etfs(symbol)
-                SplitData.etfs(symbol)
+                WriteData.run('etf', symbol, today)
+                SplitData.run('etf', symbol, today)
+                Indices.run('etf', symbol)
 
-            Indices.run()
             message = Logger.info(taskid=cls.taskid, information="数据处理任务成功完成。")
         except Exception as error:
             message = Logger.error(taskid=cls.taskid, information=f"错误信息: {error}\n{traceback.format_exc()}")
@@ -59,21 +60,21 @@ class AlgorithmTask:
     today, taskid, callback = None, None, Config['Callbacks']['Mock']
 
     @classmethod
-    async def run(cls, body):
+    async def main(cls, body):
         cls.taskid = body['taskid']
         cls.callback = body['callback']
         cls.today = date.fromisoformat(body['today'])
 
-        algorithm_process = Process(taskid=cls.taskid, function=cls.main, kwargs={'today': cls.today})
+        algorithm_process = Process(taskid=cls.taskid, function=cls.run, kwargs={'today': cls.today})
         message = await algorithm_process.start()
         return message
 
     @classmethod
-    def main(cls, today):
+    def run(cls, today):
         """运行算法任务"""
         try:
-            stock_report = cls.stock(today)
-            etf_report = cls.etf(today)
+            stock_report = cls.stocks(today)
+            etf_report = cls.etfs(today)
 
             with pd.ExcelWriter(Config['Paths']['DataPath'] / 'output' / f'report-{today.strftime("%Y%m%d")}.xlsx', mode='w+', engine='openpyxl') as xlsx:
                 stock_report.to_pandas().to_excel(xlsx, sheet_name='stock', index=False)
@@ -86,7 +87,7 @@ class AlgorithmTask:
         Callback(url=cls.callback, message=message)
 
     @classmethod
-    def stock(cls, today):
+    def stocks(cls, today):
         report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / 'all.xlsx', sheet_name='stock')
 
         for stock, name in Stocks.items():
@@ -105,7 +106,7 @@ class AlgorithmTask:
         return report
 
     @classmethod
-    def etf(cls, today):  
+    def etfs(cls, today):  
         report = pl.read_excel(Config['Paths']['DataPath'] / 'output' / 'all.xlsx', sheet_name='etf')
 
         for etf, name in ETFs.items():
@@ -127,11 +128,11 @@ class MainScheduler:
 
     @classmethod
     def run(cls, today=date.today()):
-        DataTask.main()
-        AlgorithmTask.main(today)
+        DataTask.run(today)
+        AlgorithmTask.run(today)
         print(f'\n{'-'*20} {datetime.now()} 星期{ today.weekday()+1} {'-'*20}')
 
 
 if __name__ == '__main__':
-    # MainScheduler.run(today=date(2026, 4, 24))
+    # MainScheduler.run(today=date(2026, 4, 30))
     MainScheduler.run()
