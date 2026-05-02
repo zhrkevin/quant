@@ -1,4 +1,13 @@
 {
     "python.pythonPath": "${workspaceFolder}/.venv/bin/python",
     "python.terminal.executeInFileDir": true,
+    "terminal.integrated.env.windows": {
+        "PYTHONPATH":"${workspaceFolder}"
+    },
+    "terminal.integrated.env.osx": {
+        "PYTHONPATH":"${workspaceFolder}"
+    },
+    "terminal.integrated.env.linux": {
+        "PYTHONPATH":"${workspaceFolder}"
+    }
 }
