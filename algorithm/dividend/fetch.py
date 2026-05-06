@@ -22,7 +22,6 @@ class WriteData:
     def run(cls, product, symbol, today, refresh=False):
         if not os.path.exists(Config['Paths']['DataPath'] / f'dividend/{product}/{symbol}'):
             os.makedirs(Config['Paths']['DataPath'] / f'dividend/{product}/{symbol}')
-        
         if refresh or not os.path.exists(Config['Paths']['DataPath'] / f'dividend/{product}/{symbol}' / 'raw.parquet'):
             all_data = pl.DataFrame()
             start_date = '20150101'
@@ -32,7 +31,7 @@ class WriteData:
             all_data = pl.read_parquet(Config['Paths']['DataPath'] / f'dividend/{product}/{symbol}' / 'raw.parquet')
             start_date = all_data['日期'].max().strftime('%Y%m%d')
             end_date = today.strftime('%Y%m%d')
-            update = True if all_data['日期'].max() < today else False
+            update = True if all_data['日期'].max() <= today else False
         
         if update:
             new_data = cls.main(product, symbol, start_date, end_date)
@@ -47,7 +46,6 @@ class WriteData:
             qfq_data = pl.from_pandas(ak.stock_zh_a_hist(symbol=symbol, start_date=start_date, end_date=end_date, adjust='qfq'))
             hfq_data = pl.from_pandas(ak.stock_zh_a_hist(symbol=symbol, start_date=start_date, end_date=end_date, adjust='hfq'))
             print(f'{symbol} 数据下载完成')
-            
             new_data = pl.DataFrame({
                 '日期': raw_data['日期'],
                 '开盘': qfq_data['开盘'],
@@ -77,7 +75,6 @@ class WriteData:
         elif product == 'etf':
             raw_data = pl.from_pandas(ak.index_zh_a_hist(symbol=symbol, start_date=start_date, end_date=end_date))
             print(f'{symbol} 数据下载完成')
-
             new_data = pl.DataFrame({
                 '日期': raw_data['日期'].cast(pl.Date),
                 '开盘': raw_data['开盘'],
@@ -103,7 +100,8 @@ class SplitData:
     def run(cls, product, symbol, today):
         # 读入原始数据
         raw_data = pl.read_parquet(Config['Paths']['DataPath'] / f'dividend/{product}/{symbol}' / 'raw.parquet')
-        if raw_data['日期'].max() < today:
+        update = True if raw_data['日期'].max() <= today else False
+        if update:
             # 按日天统计数据
             day_data = raw_data.group_by(pl.col('日期').dt.year().alias('年'), pl.col('日期').dt.ordinal_day().alias('日'))
             day_data = cls.aggregation(product, day_data)
@@ -185,15 +183,12 @@ class Indices:
     def run(cls, product, symbol):
         for period in ['day', 'week', 'month', 'quarter']:
             raw_data = pl.read_parquet(Config['Paths']['DataPath'] / f'dividend/{product}/{symbol}' / f'{period}.parquet')
-
             ma_data = cls.moving_average(product, raw_data)
-            ma_data.write_parquet(Config['Paths']['DataPath'] / f'dividend/{product}/{symbol}' / f'{period}.parquet')
-            
+            ma_data.write_parquet(Config['Paths']['DataPath'] / f'dividend/{product}/{symbol}' / f'ma_{period}.parquet')
             macd_data = cls.moving_average_convergence_divergence(product, raw_data)
-            macd_data.write_parquet(Config['Paths']['DataPath'] / f'dividend/{product}/{symbol}' / f'{period}.parquet')
-            
+            macd_data.write_parquet(Config['Paths']['DataPath'] / f'dividend/{product}/{symbol}' / f'macd_{period}.parquet')
             boll_data = cls.bollinger_bands(product, raw_data)
-            boll_data.write_parquet(Config['Paths']['DataPath'] / f'dividend/{product}/{symbol}' / f'{period}.parquet')
+            boll_data.write_parquet(Config['Paths']['DataPath'] / f'dividend/{product}/{symbol}' / f'boll_{period}.parquet')
 
     @classmethod
     def moving_average(cls, product, raw_data):
@@ -207,7 +202,6 @@ class Indices:
             pl.col(f'收盘').rolling_mean(60).alias('MA60'), 
             pl.col(f'收盘').rolling_mean(250).alias('MA250'), 
         ])
-
         if product == 'stock':
             supplyment_data = raw_data.select([
                 pl.col('日期'),
@@ -229,8 +223,7 @@ class Indices:
             new_data = basic_data
         else:
             raise ValueError(f"不支持的产品类型: {product}")
-        
-        print(new_data)
+        print(f'移动平均 MA: \n{new_data}')
         return new_data
 
     @classmethod
@@ -238,8 +231,8 @@ class Indices:
         # 计算指数移动平均线 EMA、快线 DIF、慢线 DEA、柱状图 MACD 
         basic_ema = pl.DataFrame({
             '日期': raw_data['日期'],
-            'EMA快线': raw_data.select([pl.col(f'收盘').ewm_mean(span=fast, adjust=False)]),
-            'EMA慢线': raw_data.select([pl.col(f'收盘').ewm_mean(span=slow, adjust=False)]),
+            'EMA快线': raw_data['收盘'].ewm_mean(span=fast, adjust=False),
+            'EMA慢线': raw_data['收盘'].ewm_mean(span=slow, adjust=False),
         })
         basic_data = basic_ema.select([
             pl.col('日期'),
@@ -249,7 +242,6 @@ class Indices:
         ]).with_columns(
             pl.when(pl.col('MACD') >= 0).then(pl.lit('红')).otherwise(pl.lit('绿')).alias('颜色'),
         )
-
         if product == 'stock':
             supplyment_ema = pl.DataFrame({
                 '日期': raw_data['日期'],
@@ -275,8 +267,7 @@ class Indices:
             new_data = basic_data
         else:
             raise ValueError(f"不支持的产品类型: {product}")
-
-        print(new_data)
+        print(f'指数平滑异动平均 MACD: \n{new_data}')
         return new_data
 
     @classmethod
@@ -288,7 +279,6 @@ class Indices:
             (pl.col(f'收盘').rolling_mean(mean) + pl.col(f'收盘').rolling_std(mean) * std).alias('Boll上轨'),
             (pl.col(f'收盘').rolling_mean(mean) - pl.col(f'收盘').rolling_std(mean) * std).alias('Boll下轨'),
         ])
-
         if product == 'stock':
             supplyment_data = raw_data.select([
                 pl.col('日期'),
@@ -304,8 +294,7 @@ class Indices:
             new_data = basic_data
         else:
             raise ValueError(f"不支持的产品类型: {product}")
-
-        print(new_data)
+        print(f'布林线指标 Bollinger Bands: \n{new_data}')
         return new_data
 
 
